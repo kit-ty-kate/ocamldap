@@ -22,6 +22,12 @@
      - Deal with protocol errors according to rfc2251
      - Use the new readbyte implementations in lber.ml instead of a
        custom one
+     - Implemented a logging harness. You pass in a function (optional) to
+       init which takes a log level, and a string. The server will send your
+       function log lines which exactly match the log format of OpenLDAP. 
+       The default function does nothing with the log lines. A parser for
+       this log format is in the works and will be released as a seperate
+       library.
    * LDIF Parser improvements
      - Improved the performance of write_entry, and to_string in Ldif_oo
      - Fixed a bug in the LDIF parser which could cause it to return
