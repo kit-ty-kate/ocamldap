@@ -1,3 +1,5 @@
+2.0.1
+   * Fixed a major bug in async calls.
 2.0
    * Complete reimplementation of the low levels.
      - Pure Ocaml lber, and ldap protocol implementation. Ocamldap is
