@@ -204,46 +204,60 @@ let run si =
     while true
     do
       let fds = keys si.si_client_sockets in
-      let (reading, writing, excond) = 
+      let reading = ref []
+      and writing = ref []
+      and excond = ref [] in
+      let (rd, wr, ex) = 
 	select (si.si_listening_socket :: fds) 
 	  (pending_writes si) (* nothing to write? don't bother *)
 	  fds (-1.0) 
-      in 
-      let process_read (fd:file_descr) =
-	if Hashtbl.mem si.si_client_sockets fd then
-	  (* an existing client has requested a new operation *)
-	  let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-	    try
-	      Hashtbl.replace si.si_client_sockets fd
-		(conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
-	    with Server_error "socket error" ->
-	      (match si.si_backend.bi_op_unbind with
-		   Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
-		 | None -> ());
-	      Hashtbl.remove si.si_client_sockets fd
-	else (* a new connection has come in, accept it *)
-	  let (newfd, sockaddr) = accept fd in
-	  let rb = rb_of_fd newfd in
-	    Hashtbl.add si.si_client_sockets newfd (allocate_connection_id si, [], rb)
       in
-	(* service connections which are ready to be read *)
-	List.iter process_read reading;
-	List.iter (* service connections which are ready to be written to *)
-	  (fun (fd: file_descr) ->
-	     if Hashtbl.mem si.si_client_sockets fd then
-	       let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-		 try
-		   match pending_ops with
-		       [] -> ()
-		     | hd :: tl -> 
-			 try hd () with Finished ->
-			   Hashtbl.replace si.si_client_sockets fd (conn_id, tl, rb)
-		 with Server_error "data cannot be written" ->
-		   (match si.si_backend.bi_op_unbind with
-			Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
-		      | None -> ());
-		   Hashtbl.remove si.si_client_sockets fd
-	     else raise (Server_error "socket to write to not found"))
-	  writing;
-	List.iter process_read excond (* Process out of band data*)
+	reading := rd;writing := wr;excond := ex;
+	let process_read (fd:file_descr) =
+	  if Hashtbl.mem si.si_client_sockets fd then
+	    (* an existing client has requested a new operation *)
+	    let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
+	      try
+		Hashtbl.replace si.si_client_sockets fd
+		  (conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
+	      with Server_error "socket error" ->
+		(match si.si_backend.bi_op_unbind with
+		     Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
+		   | None -> ());
+		(* remove the client from our table of clients, and
+		   from the list of readable/writable fds, that way we
+		   don't try to do a write to them, even though we may
+		   have pending writes *)
+		Hashtbl.remove si.si_client_sockets fd;
+		reading := List.filter ((<>) fd) !reading;
+		writing := List.filter ((<>) fd) !writing;
+		excond := List.filter ((<>) fd) !excond
+	  else (* a new connection has come in, accept it *)
+	    let (newfd, sockaddr) = accept fd in
+	    let rb = rb_of_fd newfd in
+	      Hashtbl.add si.si_client_sockets newfd (allocate_connection_id si, [], rb)
+	in
+	  (* service connections which are ready to be read *)
+	  List.iter process_read !reading;
+	  List.iter (* service connections which are ready to be written to *)
+	    (fun (fd: file_descr) ->
+	       if Hashtbl.mem si.si_client_sockets fd then
+		 let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
+		   try
+		     match pending_ops with
+			 [] -> ()
+		       | hd :: tl -> 
+			   try hd () with Finished ->
+			     Hashtbl.replace si.si_client_sockets fd (conn_id, tl, rb)
+		   with Server_error "data cannot be written" ->
+		     (match si.si_backend.bi_op_unbind with
+			  Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
+			| None -> ());
+		     Hashtbl.remove si.si_client_sockets fd;
+		     reading := List.filter ((<>) fd) !reading;
+		     writing := List.filter ((<>) fd) !writing;
+		     excond := List.filter ((<>) fd) !excond
+	       else raise (Server_error "socket to write to not found"))
+	    !writing;
+	  List.iter process_read !excond (* Process out of band data*)
     done
