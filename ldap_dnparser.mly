@@ -28,18 +28,23 @@
 %token <string> Oid
 %token <string> AttributeValue
 %type <Ldap_types.dn> dn
+%start dn
+%%
 
 attrval:
    AttributeType {$1}
  | AttributeValue {$1}
  | Oid {$1}
+;
 
 attrname:
    AttributeType {$1}
  | Oid {$1}
+;
 
 dn:
    dn Plus attrname Equals attrval {{attr_type=$3;attr_vals=[$5]} :: $1}
  | dn Comma attrname Equals attrval {{attr_type=$3;attr_vals=[$5]} :: $1}
  | attrname Equals attrval {[{attr_type=$1;attr_vals=[$3]}]}
  | End_of_input {[]}
+;

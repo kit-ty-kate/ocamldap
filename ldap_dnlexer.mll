@@ -19,14 +19,7 @@
 *)
 
 {
-  type token =
-      Equals
-    | Plus
-    | Comma
-    | AttributeType of string
-    | Oid of string
-    | AttributeValue of string
-    | End_of_input
+  open Ldap_dnparser
 }
 
 let whsp = [ '\t' ' ' ]*
