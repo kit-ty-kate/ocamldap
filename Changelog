@@ -18,6 +18,10 @@
        change, it is an opaque type).
      - Refactored readbyte implementations, moved them to lber.ml, and
        tightened their exception handling.
+   * ldap_funserver
+     - Deal with protocol errors according to rfc2251
+     - Use the new readbyte implementations in lber.ml instead of a
+       custom one
    * LDIF Parser improvements
      - Improved the performance of write_entry, and to_string in Ldif_oo
      - Fixed a bug in the LDIF parser which could cause it to return
@@ -37,6 +41,9 @@
      - Handled the case where the entry being checked does not have the
        objectclass attribute. Objectclass: top will be now be added in
        this case.
+     - Fixed a bug in the "of_entry" method. It did not do a full schema
+       check after importing the entry, so after calling of_entry the
+       scldapentry was not proven to be valid.
    * Error Handling
      - moved err2string to a new module Ldap_error, which will contain
        functions for doing various things with LDAP_Failure exceptions.
