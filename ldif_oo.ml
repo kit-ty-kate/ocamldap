@@ -66,6 +66,7 @@ class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
   val in_ch  = {stream=(Stream.of_channel in_ch);buf=Buffer.create 256;line=1}
   val out_ch = out_ch
+  val outbuf = Buffer.create 50
   method read_entry =
     match (ldif_attrval_record in_ch) with
 	{dn=dn;attrs=attrs} -> 
@@ -90,16 +91,25 @@ object (self)
 		attrs;
 	      e
   method to_string (e:ldapentry_t) =
-    ("dn" ^ (safe_val (e#dn)) ^ 
-     (String.concat ""
-        (List.map 
-           (fun attr ->
-              (String.concat "" 
-                 (List.map 
-                    (fun value -> safe_attr_val attr value)
-                    (e#get_value attr))))
-           (e#attributes))) ^
-     "\n")
+    try
+      Buffer.add_string outbuf "dn";
+      Buffer.add_string outbuf (safe_val e#dn);
+      (List.iter
+	 (fun attr ->
+            (List.iter
+               (fun value -> 
+		  Buffer.add_string outbuf attr;
+		  Buffer.add_string outbuf ": ";
+		  Buffer.add_string outbuf (safe_attr_val attr value);
+		  Buffer.add_char outbuf '\n')
+               (e#get_value attr)))
+	 e#attributes);
+      let res = Buffer.contents outbuf in
+	Buffer.clear outbuf;
+	res
+    with exn ->
+      Buffer.clear outbuf;
+      raise exn
   method write_entry (e:ldapentry_t) =
     output_string out_ch (self#to_string e)      
 end
