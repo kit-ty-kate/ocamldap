@@ -3,6 +3,7 @@
    * BER Decoder
      - Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
        decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
+     - Fixed decoding of negative integers
    * BER Encoder
      - Fixed several bugs in the encoding of two's complement integers
        where the sign bit was not being handled correctly. This never
