@@ -1,15 +1,26 @@
-#use "topfind";;
-#require "ocamldap";;
+(* 
+   Copyright (C) 2004 Eric Stokes, and The California State University
+   at Northridge
+
+   This library is free software; you can redistribute it and/or               
+   modify it under the terms of the GNU Lesser General Public                  
+   License as published by the Free Software Foundation; either                
+   version 2.1 of the License, or (at your option) any later version.          
+   
+   This library is distributed in the hope that it will be useful,             
+   but WITHOUT ANY WARRANTY; without even the implied warranty of              
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
+   Lesser General Public License for more details.                             
+   
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+   USA
+*)
 
 open Ldap_ooclient;;
 open Ldap_types;;
 open Ldif_oo;;
-
-let ldap_config_readhost = "ldap://odir.csun.edu";;
-let ldap_config_writehost = "ldap://mallard.csun.edu";;
-let ldap_config_base = "o=csun";;
-let ldap_config_readdn = "cn=rmwd read,ou=proxies,ou=auth,o=csun";;
-let ldap_config_writedn = "cn=directory manager,o=csun";;
 
 let print_entries es = 
   let ldif = new ldif () in
@@ -28,10 +39,7 @@ let ldap_cmd_harness ~h ~d ~w f =
     with exn -> ldap#unbind;raise exn
 ;;
 
-let ldapsearch ?(s=`SUBTREE) 
-               ?(a=[]) ?(b=ldap_config_base) 
-	       ?(d=ldap_config_searchdn) ?(w="") 
-	       ?(h=ldap_config_readhost) filter =
+let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap -> 
        ldap#search 
@@ -39,14 +47,19 @@ let ldapsearch ?(s=`SUBTREE)
 	 ~attrs:a filter)
 ;;
 
-let ldapsearch_p ?(s=`SUBTREE) 
-                 ?(a=[]) ?(b=ldap_config_base) 
-		 ?(d=ldap_config_searchdn) ?(w="") 
-		 ?(h=ldap_config_readhost) filter =
+let ldapsearch_p ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
   print_entries (ldapsearch ~s ~a ~b ~h ~d ~w filter)
 ;;
 
-let ldapmodify ?(h=ldap_config_writehost) ?(d=ldap_config_writedn) ~w dn mods = 
+let ldapmodify ~h ~d ~w dn mods = 
   ldap_cmd_harness ~h ~d ~w 
     (fun ldap -> ldap#modify dn mods)
+;;
+
+let ldapadd ~h ~d ~w entries = 
+  ldap_cmd_harness ~h ~d ~w
+    (fun ldap -> 
+       List.iter
+	 (fun entry -> ldap#add entry)
+	 entries)
 ;;
