@@ -8,6 +8,10 @@
        codes will now be returned as `OTHER according to the rfc.
      - Fixed buggy decoding of ldap controls. They were not well tested
        until now, and several misinterpertations of the standard existed.
+     - Fixed a bug which only happens when controls are asserted, some
+       operations with optional values at the end would fail to decode
+       when the control was present because of improper boundry setting.
+       Boundries are now set at the end of each operation.
    * BER Encoder
      - Fixed several bugs in the encoding of two's complement integers
        where the sign bit was not being handled correctly. This never
