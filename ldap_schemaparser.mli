@@ -41,7 +41,7 @@ type attribute = {
   at_ordering : string;
   at_substr : Oid.t;
   at_syntax : Oid.t;
-  at_length : int;
+  at_length : Int64.t;
   at_obsolete : bool;
   at_single_value : bool;
   at_collective : bool;

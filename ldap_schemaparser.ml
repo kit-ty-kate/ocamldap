@@ -69,7 +69,7 @@ type attribute = {at_name:string list;
 		  at_ordering:string;
 		  at_substr:Oid.t;
 		  at_syntax:Oid.t;
-		  at_length: int;
+		  at_length: Int64.t;
 		  at_obsolete:bool;
 		  at_single_value:bool;
 		  at_collective:bool;
@@ -93,33 +93,33 @@ let rec readSchema oclst attrlst =
 		  oc_must=[];oc_may=[];oc_type=Abstract;oc_xattr=[]} 
   in
   let empty_attr = {at_name=[];at_oid=Oid.of_string "";at_desc="";at_equality="";at_ordering="";
-		    at_usage=""; at_substr=Oid.of_string "";at_syntax=Oid.of_string "";at_length=0;
-		    at_obsolete=false;at_single_value=false;at_collective=false;
-		    at_no_user_modification=false;at_sup=[];at_xattr=[]} 
+		    at_usage=""; at_substr=Oid.of_string "";at_syntax=Oid.of_string "";
+		    at_length=0L;at_obsolete=false;at_single_value=false;
+		    at_collective=false;at_no_user_modification=false;at_sup=[];at_xattr=[]} 
   in
   let readOc lxbuf oc =
     let rec readOptionalFields lxbuf oc =
       try match (lexoc lxbuf) with
-	  Name(s)                -> readOptionalFields lxbuf {oc with oc_name=s}
-	| Desc(s)                -> readOptionalFields lxbuf {oc with oc_desc=s}
-	| Obsolete               -> readOptionalFields lxbuf {oc with oc_obsolete=true}
-	| Sup(s)                 -> (readOptionalFields 
+	  Name s                -> readOptionalFields lxbuf {oc with oc_name=s}
+	| Desc s                -> readOptionalFields lxbuf {oc with oc_desc=s}
+	| Obsolete              -> readOptionalFields lxbuf {oc with oc_obsolete=true}
+	| Sup s                 -> (readOptionalFields 
 				       lxbuf 
 				       {oc with oc_sup=(List.rev_map (Lcstring.of_string) s)})
 	| Ldap_schemalexer.Abstract   -> readOptionalFields lxbuf {oc with oc_type=Abstract}
 	| Ldap_schemalexer.Structural -> readOptionalFields lxbuf {oc with oc_type=Structural}
 	| Ldap_schemalexer.Auxiliary  -> readOptionalFields lxbuf {oc with oc_type=Auxiliary}
-	| Must(s)                -> (readOptionalFields 
+	| Must s                -> (readOptionalFields 
 				       lxbuf 
 				       {oc with oc_must=(List.rev_map (Lcstring.of_string) s)})
-	| May(s)                 -> (readOptionalFields 
+	| May s                 -> (readOptionalFields 
 				       lxbuf
 				       {oc with oc_may=(List.rev_map (Lcstring.of_string) s)})
-	| Xstring(t)             -> (readOptionalFields 
+	| Xstring t             -> (readOptionalFields 
 				       lxbuf 
 				       {oc with oc_xattr=(t :: oc.oc_xattr)})
-	| Rparen                 -> oc
-	| _                      -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
+	| Rparen                -> oc
+	| _                     -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
       with Failure(_) -> raise (Parse_error_oc (lxbuf, oc, "Expected right parenthesis"))
     in
     let readOid lxbuf oc = 
@@ -146,22 +146,22 @@ let rec readSchema oclst attrlst =
   let rec readAttr lxbuf attr =
     let rec readOptionalFields lxbuf attr =
       try match (lexattr lxbuf) with	  
-	  Name(s)              -> readOptionalFields lxbuf {attr with at_name=s}
-	| Desc(s)              -> readOptionalFields lxbuf {attr with at_desc=s}
-	| Obsolete             -> readOptionalFields lxbuf {attr with at_obsolete=true}
-	| Sup(s)               -> 
+	  Name s              -> readOptionalFields lxbuf {attr with at_name=s}
+	| Desc s              -> readOptionalFields lxbuf {attr with at_desc=s}
+	| Obsolete            -> readOptionalFields lxbuf {attr with at_obsolete=true}
+	| Sup s               -> 
 	    readOptionalFields lxbuf {attr with at_sup=(List.rev_map (Lcstring.of_string) s)}
-	| Equality(s)          -> readOptionalFields lxbuf {attr with at_equality=s}
-	| Substr(s)            -> readOptionalFields lxbuf {attr with at_substr=Oid.of_string s}
-	| Ordering(s)          -> readOptionalFields lxbuf {attr with at_ordering=s}
-	| Syntax(s, l)         -> 
+	| Equality s          -> readOptionalFields lxbuf {attr with at_equality=s}
+	| Substr s            -> readOptionalFields lxbuf {attr with at_substr=Oid.of_string s}
+	| Ordering s          -> readOptionalFields lxbuf {attr with at_ordering=s}
+	| Syntax (s, l)       -> 
 	    readOptionalFields lxbuf {attr with at_syntax=Oid.of_string s;at_length=l}
 	| Single_value         -> readOptionalFields lxbuf {attr with at_single_value=true}
 	| Collective           -> readOptionalFields lxbuf {attr with at_collective=true}
 	| No_user_modification -> readOptionalFields lxbuf {attr with at_no_user_modification=true}
-	| Usage(s)             -> readOptionalFields lxbuf {attr with at_usage=s}
+	| Usage s              -> readOptionalFields lxbuf {attr with at_usage=s}
 	| Rparen               -> attr
-	| Xstring(t)           -> (readOptionalFields 
+	| Xstring t            -> (readOptionalFields 
 				     lxbuf 
 				     {attr with at_xattr=(t :: attr.at_xattr)})
 	| _                    -> raise (Parse_error_at (lxbuf, attr, "unexpected token"))

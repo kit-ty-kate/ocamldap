@@ -30,7 +30,7 @@
     | Equality of string
     | Ordering of string
     | Substr of string
-    | Syntax of string * int
+    | Syntax of string * Int64.t
     | Single_value
     | Collective
     | No_user_modification
@@ -53,18 +53,20 @@
 }
 
 (* conversion definitions, from rfc 2252. I've tried to keep the names
-the same, or close. I've changed some names to make them more descriptive *)
+   the same, or close. I've changed some names to make them more
+   descriptive *)
 let alpha  = [ 'a' - 'z' 'A' - 'Z' ]
 let digit  = [ '0' - '9' ]
 let hdigit = [ 'a' - 'f' 'A' - 'F' '0' - '9' ]
 let k = [ 'a' - 'z' 'A' - 'Z' '0' - '9' '-' ';' ]
 let p = [ 'a' - 'z' 'A' - 'Z' '0' - '9' '"' '(' ')' '+' ',' '-' '.' '/' ':' '?' ' ' ]
-let utf8 = [ '\t' ' ' '!' - '~' ] (* for now, this works, need to read about this *)
+let utf8 = [ '\t' ' ' '!' - '&' '(' - '~' ] (* for now, this works, need to read about this *)
+let xstring = [ 'A' - 'Z' '-' ';' '_' ] +
 let whsp = ' ' +
 let dstring = utf8 *
-let qdstring = whsp ''' (dstring as qdstringval) ''' whsp
+let qdstring = (whsp)? '\'' (dstring as qdstringval) '\'' (whsp)?
 let qdstringlist = qdstring +
-let qdstrings = qdstring | ( whsp '(' qdstringlist ')' whsp )
+let qdstrings = qdstring | ( (whsp)? '(' qdstringlist ')' (whsp)? )
 let letterstring = alpha +
 let numericstring = digit +
 let anhstring = k +
@@ -89,7 +91,6 @@ let attributeUsage = "userApplication" | "directoryOperation" | "distributedOper
 
 rule lexattr = parse
     '(' whsp {Lparen}
-  | numericoid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | "NAME" qdescr {Name [qdescrval]}
   | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes 
 						 (splitoidlst 
@@ -102,20 +103,21 @@ rule lexattr = parse
   | "ORDERING" whsp (woid as ord) {Ordering (stripspace ord)}
   | "SUBSTR" whsp (woid as substr) {Substr (stripspace substr)}
   | "SYNTAX" noidlen whsp {match (splitoidlst oid (Str.regexp "{")) with
-			       [syntax]        -> Syntax (syntax,0)
-			     | [syntax;length] -> Syntax (syntax,(int_of_string (extract length 0 1)))
+			       [syntax]        -> Syntax (syntax, Int64.zero)
+			     | [syntax;length] -> Syntax (syntax, 
+							  Int64.of_string
+							    (extract length 0 1))
 			     | _               -> failwith "syntax error"}
   | "SINGLE-VALUE" whsp {Single_value}
   | "COLLECTIVE" whsp {Collective}
   | "NO-USER-MODIFICATION" whsp {No_user_modification}
   | "USAGE" whsp attributeUsage whsp {Usage (extract (Lexing.lexeme lexbuf) 6 1)}
-  | "X-" dstring qdstring {Xstring (Lexing.lexeme lexbuf)}
-  | "X-" dstring whsp '(' oidlist ')' whsp {Xstring (Lexing.lexeme lexbuf)}
+  | "X-" xstring qdstrings {Xstring (Lexing.lexeme lexbuf)}
+  | oid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | ')' {Rparen}
 
 and lexoc = parse
     '(' whsp {Lparen}
-  | numericoid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | "NAME" qdescr {Name [qdescrval]}
   | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes
 							      (splitoidlst 
@@ -138,6 +140,7 @@ and lexoc = parse
   | "MAY" whsp '(' oidlist ')' whsp {May (List.rev_map stripspace
 					    (splitoidlst oidlst
 					       (Str.regexp " *\\$ *")))}
-  | "X-" dstring qdstring {Xstring (Lexing.lexeme lexbuf)}
-  | "X-" dstring whsp '(' oidlist ')' whsp {Xstring (Lexing.lexeme lexbuf)}
+  | "X-" xstring qdstrings {Xstring (Lexing.lexeme lexbuf)}
+  | oid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | ')' {Rparen}
+

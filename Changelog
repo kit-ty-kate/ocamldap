@@ -7,11 +7,8 @@
    * Fixed a typo in the rfc2252 schema parser which would cause it
      not to correctly lex non numeric OIDs
    * Changed the type of the attribute length field in the attribute
-     record of the schema parser to be a native int. The standard does
-     not define the maximum lenght, and vendors often use 2^31 - 1,
-     which does not work with caml ints. An int32 was considered,
-     however, since no limit is defined that would be restrictive in
-     the future, while and int64 would make things slow now.
+     record of the schema parser to be an Int64. The standard does
+     not define the maximum lenght, and vendors often use huge numbers.
    * moved err2string to a new module Ldap_error, which will contain
      functions for doing various things with LDAP_Failure exceptions.
      This WILL break existing applications which use err2string,
