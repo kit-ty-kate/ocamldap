@@ -187,16 +187,18 @@ let of_entry ldapentry =
     {sr_dn=(ldapentry#dn);
      sr_attributes=(extract_attrs ldapentry ldapentry#attributes)}
 	      
-let iter (f: ldapentry -> unit) res =   
-  try while true
-  do
-    f (res ());
-  done
+let iter (f: ldapentry -> unit) (res: ?abandon:bool -> unit -> ldapentry) =   
+  try
+    while true
+    do
+      f (res ());
+    done
   with
       LDAP_Failure (`SUCCESS, _, _)
     | LDAP_Failure (`LOCAL_ERROR, _, _) -> ()
+    | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
       
-let rev_map (f: ldapentry -> 'a) res =
+let rev_map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
   let lst = ref [] in
     (try while true
      do
@@ -204,16 +206,21 @@ let rev_map (f: ldapentry -> 'a) res =
      done
      with 
 	 LDAP_Failure (`SUCCESS, _, _)
-       | LDAP_Failure (`LOCAL_ERROR, _, _) -> ());
+       | LDAP_Failure (`LOCAL_ERROR, _, _) -> ()
+       | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn);
     !lst
 
-let map (f: ldapentry -> 'a) res = List.rev (rev_map f res)
-let fold f v res =
+let map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) = 
+  List.rev (rev_map f res)
+
+let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapentry) =
   let rec apply f v =
       try let e = res () in
 	apply f (f e v)
-      with LDAP_Failure (`SUCCESS, _, _)
+      with
+	  LDAP_Failure (`SUCCESS, _, _)
 	| LDAP_Failure (`LOCAL_ERROR, _, _) -> v
+	| exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
     in
       apply f v
 
@@ -299,7 +306,13 @@ object (self)
     ?(attrsonly = false)
     ?(base = "")
     filter =
-      let fetch_result con (msgid:msgid) () = to_entry (get_search_entry con msgid) in
+      let fetch_result con (msgid:msgid) ?(abandon=false) () = 
+	if abandon then
+	  (Ldap_funclient.abandon con msgid;
+	   to_entry (`Entry {sr_dn="";sr_attributes=[]}))
+	else
+	  to_entry (get_search_entry con msgid)
+      in
 	if not (reconnect_successful && bound) then self#reconnect;
 	try 
 	  fetch_result con

@@ -129,6 +129,11 @@ val get_search_entry :
   msgid ->
   [> `Entry of Ldap_types.search_result_entry | `Referral of string list ]
 
+(** abandon the async request attached to msgid.
+
+  @raise Encoding_error for encoder errors (unlikely, probably a bug) *)
+val abandon : conn -> msgid -> unit
+
 (** This is the syncronus version of search. It blocks until the
   search is complete, and returns a list of objects. It is exactly the
   same in all other ways. *)

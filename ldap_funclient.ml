@@ -95,7 +95,9 @@ let send_message con msg =
   let write ld_socket buf off len = 
     IFDEF SSL THEN
       match ld_socket with
-	  Ssl s -> Ssl.write s buf off len
+	  Ssl s -> 
+	    try Ssl.write s buf off len
+	    with Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", ""))
 	| Plain s -> Unix.write s buf off len
     ELSE
       match ld_socket with
@@ -139,9 +141,11 @@ let receive_message con msgid =
 	  read_message con msgid
   in
   let q = q_for_msgid con msgid in
-    if Queue.is_empty q then
-      read_message con msgid
-    else Queue.take q
+    try
+      if Queue.is_empty q then
+	read_message con msgid
+      else Queue.take q
+    with Sys_error e -> raise (LDAP_Failure (`SERVER_DOWN, e, ext_res))
 
 (* test all functionality, especially dns awareness 
    - implement connect timeouts. 
@@ -257,7 +261,10 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	and peek_pos = ref 0 in
 	let rec rb ?(peek=false) () = 
 	  if !pos = !len || (peek && !peek_pos = !len) then
-	    let result = Ssl.read fd buf 0 16384 in	      
+	    let result = 
+	      try Ssl.read fd buf 0 16384 
+	      with Read_error _ -> raise (Sys_error "")
+	    in
 	      if result >= 1 then
 		(len := result;
 		 (if peek then peek_pos := 1 else pos := 1);	    
@@ -353,17 +360,30 @@ let get_search_entry con msgid =
       | _ -> raise (LDAP_Failure (`LOCAL_ERROR, "unexpected search response", ext_res))
   with exn -> free_messageid con msgid;raise exn      
 
+let abandon con msgid =
+  let my_msgid = allocate_messageid con in
+    try
+      (try free_messageid con msgid with _ -> ());
+      send_message con
+	{messageID=my_msgid;
+	 protocolOp=(Abandon_request msgid);
+	 controls=None}
+    with exn -> free_messageid con my_msgid;raise exn      
+
 let search_s ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES) 
   ?(sizelimit=0l) ?(timelimit=0l) ?(attrs = []) ?(attrsonly = false) con filter =
   let msgid = search ~base:base ~scope:scope ~aliasderef:aliasderef ~sizelimit:sizelimit 
 		~timelimit:timelimit ~attrs:attrs ~attrsonly:attrsonly con filter
   in
   let result = ref [] in
-    (try while true
-     do
-       result := (get_search_entry con msgid) :: !result
-     done
-     with LDAP_Failure (`SUCCESS, _, _) -> ());
+    (try 
+       while true
+       do
+	 result := (get_search_entry con msgid) :: !result
+       done
+     with 
+	 LDAP_Failure (`SUCCESS, _, _) -> ()
+       | exn -> (try abandon con msgid with _ -> ());raise exn);
     free_messageid con msgid;
     !result
 

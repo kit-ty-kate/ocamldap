@@ -120,21 +120,21 @@ val of_entry : ldapentry -> search_result_entry
 (** given a source of ldapentry objects (unit -> ldapentry), such as
     the return value of ldapcon#search_a apply f (first arg) to each entry
     See List.iter *)
-val iter : (ldapentry -> unit) -> (unit -> ldapentry) -> unit
+val iter : (ldapentry -> unit) -> (?abandon:bool -> unit -> ldapentry) -> unit
 
 (** given a source of ldapentry objects (unit -> ldapentry), such as
   the return value of ldapcon#search_a apply f (first arg) to each
   entry in reverse, and return a list containing the result of each
   application. See List.map *)
-val rev_map : (ldapentry -> 'a) -> (unit -> ldapentry) -> 'a list
+val rev_map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
 
 (** same as rev_map, but does it in order *)
-val map : (ldapentry -> 'a) -> (unit -> ldapentry) -> 'a list
+val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
 
 (** given a source of ldapentry objects (unit -> ldapentry), such as
   the return value of ldapcon#search_a compute (f eN ... (f e2 (f e1
   intial))) see List.fold_right. *)
-val fold : ('a -> 'b -> 'b) -> 'b -> (unit -> 'a) -> 'b
+val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
 class ldapcon :
   ?referral_policy:[> `RETURN ] ->
@@ -158,7 +158,7 @@ class ldapcon :
     method search_a :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> string -> unit -> ldapentry
+      ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
     method unbind : unit
     method update_entry : ldapentry -> unit
   end
