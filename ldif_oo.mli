@@ -22,6 +22,14 @@
 
 (** an object oriented interface to the ldif parser *)
 
+(** Ldif_oo.iter f ldif, iterate accross all ldif entries in the
+    specified ldif object, applying f to each one *)
+val iter : ('a -> unit) -> < read_entry : 'a; .. > -> unit
+
+(** Ldif_oo.fold f ldif value, for each ldif entry en in the ldif
+    object fold computes f (... (f (f value e1) e2) ...) en *)
+val fold : ('a -> 'b -> 'a) -> < read_entry : 'b; .. > -> 'a -> 'a
+
 class ldif: 
   ?in_ch:Pervasives.in_channel -> 
   ?out_ch:Pervasives.out_channel -> 

@@ -40,6 +40,27 @@ let safe_attr_val a v =
   if Str.string_match password_regex a 0 then
     a ^ ":: " ^ Base64.encode v ^ "\n"
   else a ^ safe_val v
+
+let iter (f: ('a -> unit)) ldif = 
+  try
+    while true
+    do
+      f ldif#read_entry
+    done
+  with End -> ()
+
+let fold f ldif v = 
+  let objects = 
+    let objects = ref [] in
+      try
+	while true
+	do
+	  objects := (ldif#read_entry) :: !objects
+	done;
+	!objects
+      with End -> !objects
+  in
+    List.fold_left f v objects
     
 class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
