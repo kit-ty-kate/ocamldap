@@ -327,7 +327,7 @@ let run si =
 		     (op_nr + 1),
 		     (dispatch_request si conn_id op_nr rb fd) :: pending_ops, 
 		     rb)
-		with LDAP_Decoder e -> (* handle protocol errors *)
+		with LDAP_Decoder e | Decoding_error e -> (* handle protocol errors *)
 		  send_message si conn_id 0 fd (* send a notice of disconnection *)
 		    {messageID=0l;
 		     protocolOp=Extended_response
