@@ -137,23 +137,36 @@ let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =
      ber_length=Definite length}
 
 let decode_ldapcontrol rb =
-  let rb = (* set the context to this control *)
-    (match decode_ber_header rb with
-	 {ber_class=Context_specific;ber_tag=0;ber_length=control_length} ->
-	   readbyte_of_ber_element control_length rb
-       | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected control (controls [0])"))
-  in
-  let controlType = decode_ber_octetstring rb in
-  let criticality = decode_ber_bool rb in
-  let controlValue = try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None in
-    {controlType=controlType;criticality=criticality;controlValue=controlValue}
+  match decode_ber_header rb with
+      {ber_class=Universal;ber_tag=16;ber_length=len} ->
+	let rb = readbyte_of_ber_element len rb in
+	let controlType = decode_ber_octetstring rb in
+	let criticality = 
+	  try decode_ber_bool rb
+	  with Readbyte_error End_of_stream -> false
+	in
+	let controlValue = 
+	  try Some (decode_ber_octetstring rb) 
+	  with Readbyte_error End_of_stream -> None 
+	in
+	  {controlType=controlType;criticality=criticality;controlValue=controlValue}
+    | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected sequence")
 
-let rec decode_ldapcontrols ?(controls=[]) rb =
-  try decode_ldapcontrols ~controls:((decode_ldapcontrol rb) :: controls) rb
-  with Readbyte_error End_of_stream -> 
-    match controls with
-	[] -> None
-      | controls -> Some (List.rev controls) (* return them in order *)
+let decode_ldapcontrols rb =
+  let rb = (* set the context to this control *)
+    match decode_ber_header rb with
+	{ber_class=Context_specific;ber_tag=0;ber_length=control_length} ->
+	  readbyte_of_ber_element control_length rb
+      | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected control (controls [0])")
+  in
+  let decode_ldapcontrols' ?(controls=[]) rb =
+    try decode_ldapcontrols' ~controls:((decode_ldapcontrol rb) :: controls) rb
+    with Readbyte_error End_of_stream -> 
+      match controls with
+	  [] -> None
+	| controls -> Some (List.rev controls) (* return them in order *)
+  in
+    decode_ldapcontrols' rb
 
 let encode_components_of_ldapresult {result_code=resultcode;
 				     matched_dn=dn;error_message=msg;
@@ -743,7 +756,10 @@ let decode_modification rb =
 	   (readbyte_of_ber_element len rb, None)
        | {ber_class=Universal;ber_tag=10;ber_length=len} -> (* sequence is omitted *)
 	   (rb, Some (read_contents rb len))
-       | _ -> raise (LDAP_Decoder "decode_modification: expected sequence, or enum"))
+       | {ber_class=cls;ber_tag=tag;ber_length=len} -> 
+	   raise (LDAP_Decoder
+		    ("decode_modification: expected sequence, or enum, " ^
+		       ("tag: " ^ (string_of_int tag)))))
   in
   let op = (match decode_ber_enum ~contents:contents rb with
 		0l -> `ADD
@@ -781,8 +797,9 @@ let decode_modifyrequest rb =
   let dn = decode_ber_octetstring rb in
   let mods = 
     match decode_ber_header rb with
-	{ber_class=Universal;ber_tag=16} ->
-	  decode_berval_list decode_modification rb
+	{ber_class=Universal;ber_tag=16;ber_length=len} ->
+	  let rb = readbyte_of_ber_element len rb in
+	    decode_berval_list decode_modification rb
       | _ -> raise (LDAP_Decoder "decode_modifyrequest: expected sequence")
   in
     Modify_request {mod_dn=dn;modification=mods}
@@ -1009,7 +1026,7 @@ let encode_ldapmessage {messageID=msgid;protocolOp=protocol_op;controls=controls
     Buffer.add_string buf encoded_op;
     Buffer.contents buf
 
-let decode_ldapmessage rb = (* unwrap their package *)
+let decode_ldapmessage rb =
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=total_length} ->
 	(* set up our context to be this message *)
