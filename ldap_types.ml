@@ -122,6 +122,8 @@ type attribute = {
   attr_vals: string list;
 }
 
+type dn = attribute list
+
 type search_result_entry = {
   sr_dn: string;
   sr_attributes: attribute list;

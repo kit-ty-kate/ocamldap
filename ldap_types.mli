@@ -142,6 +142,8 @@ type attribute = {
   attr_vals: string list;
 }
 
+type dn = attribute list
+
 (** the type used to encode and decode a search entry. Also the type
   returned by search_s and search_a in Ldap_funclient *)
 type search_result_entry = {

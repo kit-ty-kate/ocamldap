@@ -26,20 +26,21 @@
     | AttributeType of string
     | Oid of string
     | AttributeValue of string
+    | End_of_input
 }
 
-let whsp = ['\t',' ']*
+let whsp = [ '\t' ' ' ]*
 let alpha = [ 'a' - 'z' 'A' - 'Z' ]
 let digit = [ '0' - '9' ]
-let hexchar = [ digit 'A' - 'F' 'a' - 'f' ]
-let keychar = [ alpha digit '-' ]
+let hexchar = [ '0' - '9' 'A' - 'F' 'a' - 'f' ]
+let keychar = [ 'a' - 'z' 'A' - 'Z' '0' - '9' '-' ]
 let attributetype = (alpha keychar*) as attribute
-let oid = digit [ digit '.' ]*
+let oid = [ '0' - '9' '.' ]*
 let special = [ ','  '='  '+'  '<'   '>'  '#'  ';' ]
 let quotechar = [^ '\\' '"' ]
 let hexpair = hexchar hexchar
 let hexstring = hexpair *
-let stringchar = [^ special '\\' '"' ]
+let stringchar = [^ '\\' '"' ] # special
 let pair = '\\' (special | '\\' | '"' | hexpair)
 let string = (stringchar | pair)* | '#' hexstring | '"' (quotechar | pair)* '"'
 
@@ -49,4 +50,5 @@ rule lexdn = parse
   | whsp ',' whsp {Comma}
   | oid {Oid (Lexing.lexeme lexbuf)}
   | attributetype {AttributeType (Lexing.lexeme lexbuf)}
-  | string {AttributeValue of string}
+  | string {AttributeValue (Lexing.lexeme lexbuf)}
+  | eof {End_of_input}

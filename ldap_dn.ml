@@ -21,7 +21,5 @@
 
 open Ldap_types
 
-type dn = attribute list
-
 let of_string dn_string = 
   
