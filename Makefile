@@ -8,8 +8,8 @@ ldap_schemalexer.mll ldap_schemaparser.mli ldap_schemaparser.ml		\
 ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml ldif_oo.ml		\
 ldif_oo.mli ldap_funserver.mli ldap_funserver.ml
 RESULT=ocamldap
-PACKS=str netstring
-OCAMLNCFLAGS=-inline 1000
+PACKS=netstring str
+#OCAMLNCFLAGS=-inline 1000
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so)
 OCAMLDOCFLAGS=-colorize-code

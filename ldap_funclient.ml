@@ -204,7 +204,10 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 		         signal sigalrm 
 			   (Signal_handle (fun _ -> failwith "timeout"));
 		       ignore (alarm connect_timeout);
-		       let ssl = Ssl (Ssl.open_connection (ADDR_INET (addr, port))) in
+		       let ssl = Ssl (Ssl.open_connection 
+					Ssl.SSLv23 
+					(ADDR_INET (addr, port))) 
+		       in
 			 ignore (alarm 0);
 			 set_signal sigalrm !previous_signal;
 			 ssl
