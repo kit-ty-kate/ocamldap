@@ -61,25 +61,7 @@ type log_level =
     socket, all the connected client sockets, and some internal data
     structures. *)
 
-(* for debug *)
-open Unix
-open Lber
-type msgid = int
-type opcnt = int
-type pending_operations = (unit -> unit) list
-
-type server_info = {
-  si_listening_socket: file_descr;
-  si_client_sockets: (file_descr, connection_id * opcnt * pending_operations * readbyte) Hashtbl.t;  
-  si_backend: backendInfo;
-  si_log: (log_level -> string -> unit);
-  mutable si_current_connection_id: int;
-}
-(* end debug *)
-
-(* for non debug
 type server_info
-end non debug *)
 
 (** Initialize the server, create the listening socket and return the
     server context, which you will pass to serv to process

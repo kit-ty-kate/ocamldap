@@ -19,4 +19,8 @@ reallyall: byte-code-library native-code-library
 install: libinstall
 uninstall: libuninstall
 
+documentation:
+	ocamlfind ocamldoc -html -d doc -package netstring,str,ssl lber.mli ldap_types.mli ldap_error.mli ldap_protocol.mli ldap_url.mli ldap_filter.mli ldap_funclient.mli ldap_ooclient.mli ldap_schemaparser.mli ldap_funserver.mli ldif_oo.mli
+
+
 -include OCamlMakefile
