@@ -4,12 +4,18 @@
      - Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
        decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
      - Fixed decoding of negative integers
+     - Fixed decoding of error codes to comply with rfc2251. Unknown error
+       codes will now be returned as `OTHER
    * BER Encoder
      - Fixed several bugs in the encoding of two's complement integers
        where the sign bit was not being handled correctly. This never
        effected ldap clients, but severly limited the functionality of ldap
        servers. They would be unable to respond to requests with message id
        128, which would cause most clients to hang
+     - Fixed discrepancies between the ldap_errorcode variant type, and the
+       type recognized by encode_ldapresultcode. They are not the same type,
+       and no exception can be raised, the compiler will prove that client
+       code doesn't send a variant which cannot be recognized.
    * ldap_funclient
      - Studied OpenLDAP's client library in depth, and adapted msgid
        allocation to look exactly like theirs. This will expose fewer
