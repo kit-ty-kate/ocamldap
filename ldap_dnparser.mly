@@ -43,8 +43,8 @@ attrname:
 ;
 
 dn:
-   dn Plus attrname Equals attrval {{attr_type=$3;attr_vals=[$5]} :: $1}
- | dn Comma attrname Equals attrval {{attr_type=$3;attr_vals=[$5]} :: $1}
- | attrname Equals attrval {[{attr_type=$1;attr_vals=[$3]}]}
+   attrname Equals attrval Plus dn {{attr_type=$1;attr_vals=[$3]} :: $5}
+ | attrname Equals attrval Comma dn {{attr_type=$1;attr_vals=[$3]} :: $5}
+ | attrname Equals attrval End_of_input {[{attr_type=$1;attr_vals=[$3]}]}
  | End_of_input {[]}
 ;
