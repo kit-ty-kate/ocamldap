@@ -23,20 +23,71 @@
   open Ldap_types
 
   exception Invalid_dn of string
+
+  let unhex hex = 
+    match hex with
+	'0' -> 0
+      | '1' -> 1
+      | '2' -> 2
+      | '3' -> 3
+      | '4' -> 4
+      | '5' -> 5
+      | '6' -> 6
+      | '7' -> 7
+      | '8' -> 8
+      | '9' -> 9
+      | 'a' -> 10
+      | 'b' -> 11
+      | 'c' -> 12
+      | 'd' -> 13
+      | 'e' -> 14
+      | 'f' -> 15
+      | _ -> raise (Invalid_dn "invalid hex digit")
+    
+  let unescape_stringwithpair s = 
+    let strm = Stream.of_string s in
+    let buf = Buffer.create (String.length s) in
+    let rec unescape strm buf = 
+      try
+	match Stream.next strm with
+	    '\\' -> 
+	      (match Stream.next strm with
+		   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
+		     Buffer.add_char buf c;
+		     unescape strm buf
+		 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as c -> 
+		     let c1 = Stream.next strm in
+		       Buffer.add_char buf 
+			 (char_of_int 
+			    ((lor) 
+			       ((lsl) (unhex c) 4)
+			       (unhex c1)));
+		       unescape strm buf
+		 | _ -> raise (Invalid_dn "invalid escape sequence"))
+	  | c -> Buffer.add_char buf c;unescape strm buf
+      with Stream.Failure -> Buffer.contents buf
+    in
+      unescape strm buf
 %}
 
 %token Equals Plus Comma End_of_input
 %token <string> AttributeType
 %token <string> Oid
-%token <string> AttributeValue
+%token <string> StringChar
+%token <string> StringWithPair
+%token <string> HexString
+%token <string> QuoteString
 %type <Ldap_types.dn> dn
 %start dn
 %%
 
 attrval:
    AttributeType {$1}
- | AttributeValue {$1}
  | Oid {$1}
+ | StringChar {$1}
+ | StringWithPair {$1} /* unescape the pair */
+ | HexString {$1} /* unescape the hex */
+ | QuoteString {$1} /* remove the quotes */
 ;
 
 attrname:
@@ -50,7 +101,7 @@ dn:
        {attr_type=attr_name;attr_vals=vals} :: tl ->
 	 if $1 = attr_name then
 	   {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
-	 else raise (Invalid_dn ("invalid multivalued dn, expected: " ^ $1))
+	 else raise (Invalid_dn ("invalid multivalued rdn, expected: " ^ $1))
      | [] -> [{attr_type=$1;attr_vals=[$3]}]}
  | attrname Equals attrval Comma dn {{attr_type=$1;attr_vals=[$3]} :: $5}
  | attrname Equals attrval End_of_input {[{attr_type=$1;attr_vals=[$3]}]}

@@ -35,7 +35,13 @@ let hexpair = hexchar hexchar
 let hexstring = hexpair *
 let stringchar = [^ '\\' '"' ] # special
 let pair = '\\' (special | '\\' | '"' | hexpair)
-let string = (stringchar | pair)* | '#' hexstring | '"' (quotechar | pair)* '"'
+(* 
+   According to the rfc this is the set of possible values for an attribute value
+   We don't implement it directly, instead we split each one into a seperate token
+   to make unescaping easier 
+
+   string = (stringchar | pair)* | '#' hexstring | '"' (quotechar | pair)* '"' 
+*)
 
 rule lexdn = parse
     whsp '=' whsp {Equals}
@@ -43,5 +49,8 @@ rule lexdn = parse
   | whsp ',' whsp {Comma}
   | oid {Oid (Lexing.lexeme lexbuf)}
   | attributetype {AttributeType (Lexing.lexeme lexbuf)}
-  | string {AttributeValue (Lexing.lexeme lexbuf)}
+  | stringchar* {StringChar (Lexing.lexeme lexbuf)}
+  | (stringchar | pair)* {StringCharWithPair (Lexing.lexeme lexbuf)}
+  | '#' hexstring {HexString (Lexing.lexeme lexbuf)}
+  | '"' (quotechar | pair)* '"' {QuoteString (Lexing.lexeme lexbuf)}
   | eof {End_of_input}
