@@ -23,6 +23,8 @@ open Ldap_filterparser
 open Ldap_filterlexer
 open Str
 
+exception Invalid_filter of Lexing.lexbuf * string
+
 (* escape a string to be put in a string representation of a search
    filter *)
 let star_rex = Pcre.regexp ~study:true "\\*"

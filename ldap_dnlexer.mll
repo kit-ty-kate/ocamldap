@@ -28,11 +28,11 @@ let digit = [ '0' - '9' ]
 let hexchar = [ '0' - '9' 'A' - 'F' 'a' - 'f' ]
 let keychar = [ 'a' - 'z' 'A' - 'Z' '0' - '9' '-' ]
 let attributetype = (alpha keychar*) as attribute
-let oid = [ '0' - '9' '.' ]*
+let oid = [ '0' - '9' '.' ]+
 let special = [ ','  '='  '+'  '<'   '>'  '#'  ';' ]
 let quotechar = [^ '\\' '"' ]
 let hexpair = hexchar hexchar
-let hexstring = hexpair *
+let hexstring = hexpair +
 let stringchar = [^ '\\' '"' ] # special
 let pair = '\\' (special | ' ' | '\\' | '"' | hexpair)
 (* 

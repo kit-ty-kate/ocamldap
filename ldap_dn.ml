@@ -24,10 +24,14 @@ open Ldap_dnparser
 open Ldap_dnlexer
 open Printf
 
+exception Invalid_dn of int * string
+
 let of_string dn_string = 
-  try Ldap_dnparser.dn lexdn (Lexing.from_string dn_string)
-  with Parsing.Parse_error | Failure _ ->
-    raise (Invalid_dn "parse error")
+  let lexbuf = Lexing.from_string dn_string in
+    try Ldap_dnparser.dn lexdn lexbuf
+    with 
+	Parsing.Parse_error -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, "parse error"))
+      | Failure msg -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, msg))
 
 let hexpair_of_char c = 
   let hexify i = 
@@ -106,7 +110,10 @@ let to_string dn =
 	     | [] -> s
 	 in
 	   if List.length vals = 0 then
-	     raise (Invalid_dn ("no attribute value specified for attribute: " ^ attr))
+	     raise 
+	       (Invalid_dn
+		  (0, "invalid dn structure. no attribute " ^ 
+		     "value specified for attribute: " ^ attr)
 	   else
 	     string_values "" attr vals)
       dn

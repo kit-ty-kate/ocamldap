@@ -22,8 +22,6 @@
   open Ldap_dnlexer
   open Ldap_types
 
-  exception Invalid_dn of string
-
   let unhex hex = 
     match hex with
 	'0' -> 0
@@ -42,7 +40,7 @@
       | 'd' -> 13
       | 'e' -> 14
       | 'f' -> 15
-      | _ -> raise (Invalid_dn "invalid hex digit")
+      | _ -> failwith "invalid hex digit"
 
   let unescape_hexpair hex1 hex2 = 
     (char_of_int 
@@ -65,7 +63,7 @@
 		     let hex2 = Stream.next strm in
 		       Buffer.add_char buf (unescape_hexpair hex1 hex2);
 		       unescape strm buf
-		 | _ -> raise (Invalid_dn "invalid escape sequence"))
+		 | _ -> failwith "invalid escape sequence")
 	  | c -> Buffer.add_char buf c;unescape strm buf
       with Stream.Failure -> Buffer.contents buf
     in
@@ -87,7 +85,7 @@
     in
       match Stream.next strm with
 	  '#' -> unescape strm buf
-	| _ -> raise (Invalid_dn "invalid hexstring")
+	| _ -> failwith "invalid hexstring"
 %}
 
 %token Equals Plus Comma End_of_input
@@ -121,7 +119,7 @@ dn:
        {attr_type=attr_name;attr_vals=vals} :: tl ->
 	 if $1 = attr_name then
 	   {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
-	 else raise (Invalid_dn ("invalid multivalued rdn, expected: " ^ $1))
+	 else failwith ("invalid multivalued rdn, expected: " ^ $1)
      | [] -> [{attr_type=$1;attr_vals=[$3]}]}
  | attrname Equals attrval Comma dn {{attr_type=$1;attr_vals=[$3]} :: $5}
  | attrname Equals attrval End_of_input {[{attr_type=$1;attr_vals=[$3]}]}

@@ -20,7 +20,7 @@
 
 
 {
-  type lexeme =
+  type token =
       Lparen
     | Rparen
     | Numericoid of string

@@ -34,9 +34,6 @@ exception LDAP_Encoder of string
   any case.*)
 exception LDAP_Decoder of string
 
-(** raised when the dn parser finds an invalid dn *)
-exception Invalid_dn of string
-
 type ldap_resultcode = [
     `SUCCESS
   | `OPERATIONS_ERROR

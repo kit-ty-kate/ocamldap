@@ -19,10 +19,8 @@
    USA
 *)
 
-
 exception LDAP_Encoder of string
 exception LDAP_Decoder of string
-exception Invalid_dn of string
 
 type ldap_resultcode = [
     `SUCCESS
