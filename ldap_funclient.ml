@@ -24,6 +24,7 @@ open Ldap_types
 open Ldap_protocol
 open Lber
 open Unix
+open Sys
 
 type msgqueue = {
   msg_queue: ldap_message Queue.t;
@@ -143,7 +144,7 @@ let receive_message con msgid =
    - do we really want to fail
    if any host after the first is unknown? 
    - allow the use of ldapurls in the hosts list*)
-let init ?(version = 3) hosts =
+let init ?(connect_timeout = 1) ?(version = 3) hosts =
   if ((version < 2) || (version > 3)) then
     raise (LDAP_Failure (`LOCAL_ERROR, "invalid protocol version", ext_res))
   else
@@ -157,7 +158,7 @@ let init ?(version = 3) hosts =
 		      (fun addr -> (mech, addr, port))
 		      (Array.to_list ((gethostbyname host).h_addr_list)))
 		 with Not_found -> [])
-	      (List.rev_map
+	      (List.map
 		 (fun host -> 
 		    (match Ldap_url.of_string host with
 			 {url_mech=mech;url_host=(Some host);url_port=(Some port)} -> 
@@ -169,27 +170,49 @@ let init ?(version = 3) hosts =
 		 hosts)))
       in
       let rec open_con addrs =
-	match addrs with
-	    (mech, addr, port) :: tl -> 
-	      (try
-		 if mech = `PLAIN then
-		   let s =  socket PF_INET SOCK_STREAM 0 in
-		     try connect s (ADDR_INET (addr, port));Plain s
-		     with exn -> close s;raise exn
-		 else
-	      	   IFDEF SSL THEN Ssl (Ssl.open_connection (ADDR_INET (addr, port)))
-		   ELSE raise (LDAP_Failure 
-				 (`LOCAL_ERROR, 
-				  "ssl support is not enabled", 
-				  ext_res)) END
-	       with
-		   Unix_error (ECONNREFUSED, _, _) 
-		 | Unix_error (EHOSTDOWN, _, _)
-		 | Unix_error (EHOSTUNREACH, _, _) 
-		 | Unix_error (ECONNRESET, _, _)
-		 | Unix_error (ECONNABORTED, _, _)  ->
-		     open_con tl)
-	  | [] -> raise (LDAP_Failure (`SERVER_DOWN, "", ext_res))
+	let previous_signal = ref Signal_default in
+	  match addrs with
+	      (mech, addr, port) :: tl -> 
+		(try
+		   if mech = `PLAIN then
+		     let s = socket PF_INET SOCK_STREAM 0 in
+		       try
+			 previous_signal :=
+			   signal sigalrm 
+			     (Signal_handle (fun _ -> failwith "timeout"));
+			 ignore (alarm connect_timeout);
+			 connect s (ADDR_INET (addr, port));
+			 ignore (alarm 0);
+			 set_signal sigalrm !previous_signal;
+			 Plain s
+		       with exn -> close s;raise exn
+		   else
+	      	     IFDEF SSL THEN 
+		       previous_signal := 
+		         signal sigalrm 
+			   (Signal_handle (fun _ -> failwith "timeout"));
+		       ignore (alarm connect_timeout);
+		       let ssl = Ssl (Ssl.open_connection (ADDR_INET (addr, port))) in
+			 ignore (alarm 0);
+			 set_signal sigalrm !previous_signal;
+			 ssl
+		     ELSE 
+		       raise (LDAP_Failure 
+				(`LOCAL_ERROR, 
+				 "ssl support is not enabled", 
+				 ext_res)) 
+		     END
+		 with
+		     Unix_error (ECONNREFUSED, _, _) 
+		   | Unix_error (EHOSTDOWN, _, _)
+		   | Unix_error (EHOSTUNREACH, _, _) 
+		   | Unix_error (ECONNRESET, _, _)
+		   | Unix_error (ECONNABORTED, _, _)
+		   | Failure "timeout" ->
+		       ignore (alarm 0);
+		       set_signal sigalrm !previous_signal;
+		       open_con tl)
+	    | [] -> raise (LDAP_Failure (`SERVER_DOWN, "", ext_res))
       in
 	open_con addrs
     in
@@ -205,26 +228,26 @@ let init ?(version = 3) hosts =
 	rb
     in
     let ssl_rb_of_fd fd = 
-IFDEF SSL THEN
-      let buf = String.create 16384 (* the size of an ssl record *) in
-      let pos = ref 0 in
-      let len = ref 0 in
-      let rec rb ?(peek=false) () = 
-	if !pos = !len then
-	  let result = Ssl.read fd buf 0 16384 in
-	    if result >= 1 then
-	      (len := result;
-	       pos := 1;	    
-	       buf.[0])
-	    else (Ssl.shutdown fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
-	else
-	  let c = buf.[!pos] in
-	    pos := !pos + 1;c	    
-      in
-	rb
-ELSE
-      raise (LDAP_Failure (`LOCAL_ERROR, "ssl support is not enabled", ext_res))
-END
+      IFDEF SSL THEN
+        let buf = String.create 16384 (* the size of an ssl record *) in
+	let pos = ref 0 in
+	let len = ref 0 in
+	let rec rb ?(peek=false) () = 
+	  if !pos = !len then
+	    let result = Ssl.read fd buf 0 16384 in
+	      if result >= 1 then
+		(len := result;
+		 pos := 1;	    
+		 buf.[0])
+	      else (Ssl.shutdown fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
+	  else
+	    let c = buf.[!pos] in
+	      pos := !pos + 1;c	    
+	in
+	  rb
+      ELSE
+        raise (LDAP_Failure (`LOCAL_ERROR, "ssl support is not enabled", ext_res))
+      END
     in
       {rb=(IFDEF SSL THEN
 	     match fd with
