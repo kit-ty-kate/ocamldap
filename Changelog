@@ -1,25 +1,34 @@
 2.1.0
-   * Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
-     decoder by about 5% (on PPC Mac OS X, and Intel Linux)
-   * Improved the performance of write_entry, and to_string in LDIF_oo
-   * Fixed a bug in the LDIF parser which could cause it to return
-     the wrong line count when it finds a syntax error.
-   * Fixed a typo in the rfc2252 schema parser which would cause it
-     not to correctly lex non numeric OIDs
-   * Fixed bad lexing of X- attributes. There was an error in 
-     the definition of qdstring which would cause the lexer to eat
-     all of the X- attributes in one pass. Tested with Active Directory
-     2003, OpenLDAP, and Novell eDirectory.
-   * Changed the type of the attribute length field in the attribute
-     record of the schema parser to be an Int64. The standard does
-     not define the maximum lenght, and vendors often use huge numbers.
-   * moved err2string to a new module Ldap_error, which will contain
-     functions for doing various things with LDAP_Failure exceptions.
-     This WILL break existing applications which use err2string,
-     however it is a simple matter of opening Ldap_error to fix them.
-   * Implemented ldap_perror, and ldap_strerror functions, which
-     either print, or return nicely formatted strings describing an
-     LDAP_Failure exception.
+   * Decoder optimizations
+     - Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
+       decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
+   * LDIF Parser improvements
+     - Improved the performance of write_entry, and to_string in LDIF_oo
+     - Fixed a bug in the LDIF parser which could cause it to return
+       the wrong line count when it finds a syntax error.
+   * RFC 2252 schema parser/lexer
+     - Fixed a typo in the lexer which would cause it
+       not to correctly lex non numeric OIDs
+     - Fixed bad lexing of X- attributes. There was an error in 
+       the definition of qdstring which would cause the lexer to eat
+       all of the X- attributes in one pass. Tested fix 
+       with Active Directory 2003, OpenLDAP, and Novell eDirectory.
+     - Changed the type of the attribute length field in the attribute
+       record of the schema parser to be an Int64. The standard 
+       does not define the numeric range, and vendors 
+       (Novell) use huge numbers.
+   * Schema Checker
+     - Handled the case where the entry being checked does not have the
+       objectclass attribute. Objectclass: top will be now be added in
+       this case.
+   * Error Handling
+     - moved err2string to a new module Ldap_error, which will contain
+       functions for doing various things with LDAP_Failure exceptions.
+       This WILL break existing applications which use err2string,
+       however it is a simple matter of opening Ldap_error to fix them.
+     - Implemented ldap_perror, and ldap_strerror functions, which
+       either print, or return nicely formatted strings describing an
+       LDAP_Failure exception.
 2.0.3
    * Handle additional Unix_error exceptions as reconnection events,
      including EPIPE, ECONNRESET, and ECONNABORTED. Not handling these
