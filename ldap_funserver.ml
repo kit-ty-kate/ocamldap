@@ -301,6 +301,76 @@ let run si =
 	   | _ -> k :: pending)
       si.si_client_sockets []
   in
+  let process_read reading writing excond (fd:file_descr) =
+    if Hashtbl.mem si.si_client_sockets fd then
+      (* an existing client has requested a new operation *)	  
+      let (conn_id, op_nr, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
+	try
+	  try
+	    Hashtbl.replace 
+	      si.si_client_sockets 
+	      fd
+	      (conn_id,
+	       (op_nr + 1),
+	       (dispatch_request si conn_id op_nr rb fd) :: pending_ops, 
+	       rb)
+	  with LDAP_Decoder e | Decoding_error e -> (* handle protocol errors *)
+	    send_message si conn_id 0 fd (* send a notice of disconnection *)
+	      {messageID=0l;
+	       protocolOp=Extended_response
+		  {ext_result={result_code=`PROTOCOL_ERROR;
+			       matched_dn="";
+			       error_message=e;
+			       ldap_referral=None};
+		   ext_responseName=(Some "1.3.6.1.4.1.1466.20036");
+		   ext_response=None};
+	       controls=None};
+	    raise (Readbyte_error Transport_error) (* close the connection *)
+	with Readbyte_error Transport_error ->
+	  (match si.si_backend.bi_op_unbind with
+	       Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
+	     | None -> ());
+	  (* remove the client from our table of clients, and
+	     from the list of readable/writable fds, that way we
+	     don't try to do a write to them, even though we may
+	     have pending writes *)
+	  Hashtbl.remove si.si_client_sockets fd;
+	  reading := List.filter ((<>) fd) !reading;
+	  writing := List.filter ((<>) fd) !writing;
+	  excond := List.filter ((<>) fd) !excond;
+	  (try close fd with _ -> ());
+	  si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
+    else (* a new connection has come in, accept it *)
+      let (newfd, sockaddr) = accept fd in
+      let rb = readbyte_of_fd newfd in
+      let connid = allocate_connection_id si in
+	Hashtbl.add si.si_client_sockets newfd (connid, 0, [], rb);
+	si.si_log `CONNECTION 
+	  (sprintf "conn=%d fd=0 ACCEPT from IP=%s (IP=%s)"
+	     connid
+	     (string_of_sockaddr sockaddr)
+	     (string_of_sockaddr (getsockname fd)))
+  in
+  let process_write reading writing excond (fd: file_descr) = 
+    if Hashtbl.mem si.si_client_sockets fd then
+      let (conn_id, op_nr, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
+	try
+	  match pending_ops with
+	      [] -> ()
+	    | hd :: tl -> 
+		try hd () with Finished ->
+		  Hashtbl.replace si.si_client_sockets fd (conn_id, op_nr, tl, rb)
+	with Server_error "data cannot be written" ->
+	  (match si.si_backend.bi_op_unbind with
+	       Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
+	     | None -> ());
+	  Hashtbl.remove si.si_client_sockets fd;
+	  reading := List.filter ((<>) fd) !reading;
+	  writing := List.filter ((<>) fd) !writing;
+	  excond := List.filter ((<>) fd) !excond;
+	  si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
+    else raise (Server_error "socket to write to not found")
+  in
     si.si_log `GENERAL "starting";
     while true
     do
@@ -314,81 +384,13 @@ let run si =
 	  fds (-1.0) 
       in
 	reading := rd;writing := wr;excond := ex;
-	let process_read (fd:file_descr) =
-	  if Hashtbl.mem si.si_client_sockets fd then
-	    (* an existing client has requested a new operation *)	  
-	    let (conn_id, op_nr, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-	      try
-		try
-		  Hashtbl.replace 
-		    si.si_client_sockets 
-		    fd
-		    (conn_id,
-		     (op_nr + 1),
-		     (dispatch_request si conn_id op_nr rb fd) :: pending_ops, 
-		     rb)
-		with LDAP_Decoder e | Decoding_error e -> (* handle protocol errors *)
-		  send_message si conn_id 0 fd (* send a notice of disconnection *)
-		    {messageID=0l;
-		     protocolOp=Extended_response
-			{ext_result={result_code=`PROTOCOL_ERROR;
-				     matched_dn="";
-				     error_message=e;
-				     ldap_referral=None};
-			 ext_responseName=(Some "1.3.6.1.4.1.1466.20036");
-			 ext_response=None};
-		     controls=None};
-		  raise (Readbyte_error Transport_error) (* close the connection *)
-	      with Readbyte_error Transport_error ->
-		(match si.si_backend.bi_op_unbind with
-		     Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
-		   | None -> ());
-		(* remove the client from our table of clients, and
-		   from the list of readable/writable fds, that way we
-		   don't try to do a write to them, even though we may
-		   have pending writes *)
-		Hashtbl.remove si.si_client_sockets fd;
-		reading := List.filter ((<>) fd) !reading;
-		writing := List.filter ((<>) fd) !writing;
-		excond := List.filter ((<>) fd) !excond;
-		si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
-	  else (* a new connection has come in, accept it *)
-	    let (newfd, sockaddr) = accept fd in
-	    let rb = readbyte_of_fd newfd in
-	    let connid = allocate_connection_id si in
-	      Hashtbl.add si.si_client_sockets newfd (connid, 0, [], rb);
-	      si.si_log `CONNECTION 
-		(sprintf "conn=%d fd=0 ACCEPT from IP=%s (IP=%s)"
-		   connid
-		   (string_of_sockaddr sockaddr)
-		   (string_of_sockaddr (getsockname fd)))
-	in
-	  (* service connections which are ready to be read *)
-	  List.iter process_read !reading;
 
-	  (* service connections which are ready to be written to *)
-	  List.iter
-	    (fun (fd: file_descr) ->
-	       if Hashtbl.mem si.si_client_sockets fd then
-		 let (conn_id, op_nr, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-		   try
-		     match pending_ops with
-			 [] -> ()
-		       | hd :: tl -> 
-			   try hd () with Finished ->
-			     Hashtbl.replace si.si_client_sockets fd (conn_id, op_nr, tl, rb)
-		   with Server_error "data cannot be written" ->
-		     (match si.si_backend.bi_op_unbind with
-			  Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
-			| None -> ());
-		     Hashtbl.remove si.si_client_sockets fd;
-		     reading := List.filter ((<>) fd) !reading;
-		     writing := List.filter ((<>) fd) !writing;
-		     excond := List.filter ((<>) fd) !excond;
-		     si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
-	       else raise (Server_error "socket to write to not found"))
-	    !writing;
+	(* service connections which are ready to be read *)
+	List.iter (process_read reading writing excond) !reading;
 
-	  (* Process out of band data *)
-	  List.iter process_read !excond
+	(* service connections which are ready to be written to *)
+	List.iter (process_write reading writing excond) !writing;
+
+	(* Process out of band data *)
+	List.iter (process_read reading writing excond) !excond
     done
