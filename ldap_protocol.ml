@@ -730,18 +730,29 @@ let encode_modification {mod_op=op;mod_value=attr} =
     Buffer.contents buf
 
 let decode_modification rb =
-  match decode_ber_header rb with
-      {ber_class=Universal;ber_tag=16;ber_length=len} ->
-	let rb = readbyte_of_ber_element len rb in
-	let op = (match decode_ber_enum rb with
-		      0l -> `ADD
-		    | 1l -> `DELETE
-		    | 2l -> `REPLACE
-		    | _  -> raise (LDAP_Decoder "decode_modification: unknown operation"))
-	in
-	let attr = decode_attribute rb in
-	  {mod_op=op;mod_value=attr}
-    | _ -> raise (LDAP_Decoder "decode_modification: expected sequence")
+  (* Each modification is supposed to start with a sequence, but some
+     encoders omit it.  If the sequence is omitted then the first
+     element will be the enum containing the op. Because there is
+     disagreement about whether to omit or not omit the sequence we
+     support both. If the sequence is omitted, and we find the enum
+     first, we will behave correctly. Conversely, if the sequence is
+     specified, we will make use of it. *)
+  let (rb, contents) =
+    (match decode_ber_header rb with
+	 {ber_class=Universal;ber_tag=16;ber_length=len} -> (* sequence is specified *)
+	   (readbyte_of_ber_element len rb, None)
+       | {ber_class=Universal;ber_tag=10;ber_length=len} -> (* sequence is omitted *)
+	   (rb, Some (read_contents rb len))
+       | _ -> raise (LDAP_Decoder "decode_modification: expected sequence, or enum"))
+  in
+  let op = (match decode_ber_enum ~contents:contents rb with
+		0l -> `ADD
+	      | 1l -> `DELETE
+	      | 2l -> `REPLACE
+	      | _  -> raise (LDAP_Decoder "decode_modification: unknown operation"))
+  in
+  let attr = decode_attribute rb in
+    {mod_op=op;mod_value=attr}
 
 let encode_modifyrequest {mod_dn=dn;modification=mods} =
   let e_dn = encode_ber_octetstring dn in
