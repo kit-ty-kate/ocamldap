@@ -70,20 +70,20 @@ val readbyte_of_string : string -> readbyte
     essential for reading certian structures because lenght is only
     encoded in the toplevel in order to save space. 
 
-    @raise Readbyte_error in the event of a an io, or the end of file *)
+    @raise Readbyte_error in the event of a an io error, or the end of file *)
 val readbyte_of_ber_element : ber_length -> readbyte -> readbyte
 
 (** a readbyte implementation which reads from an FD. It implements a
     peek buffer, so it can garentee that it will work with
     rb_of_ber_element, even with blocking fds. 
 
-    @raise Readbyte_error in the event of a an io, or the end of file *)
+    @raise Readbyte_error in the event of a an io error, or the end of file *)
 val readbyte_of_fd: Unix.file_descr -> readbyte
 
 (** a readbyte implementation which reads from an SSL socket. It is
     otherwise the same as readbyte_of_fd.
 
-    @raise Readbyte_error in the event of a an io, or the end of file *)
+    @raise Readbyte_error in the event of a an io error, or the end of file *)
 val readbyte_of_ssl: Ssl.socket -> readbyte
 
 (** decoding and encoding of the ber header *)
