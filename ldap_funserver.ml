@@ -148,7 +148,35 @@ let dispatch_request si conn_id rb fd =
 	  (match bi.bi_op_unbind with
 	       Some f -> (fun () -> f conn_id message;raise Finished)
 	     | None -> (fun () -> raise Finished))
-      | {protocolOp=Search_request _} ->
+      | {protocolOp=(Search_request 
+		       {baseObject=base;
+			scope=scope;
+			derefAliases=deref;
+			sizeLimit=sizelimit;
+			timeLimit=timelimit;
+			typesOnly=attrsonly;
+			filter=filter;
+			s_attributes=attrs})} ->
+	  si.si_log `OPERATIONS
+	    (sprintf "conn=%d op=0 SRCH base=\"%s\" scope=%d deref=%d filter=\"%s\""
+	       conn_id base
+	       (match scope with
+		    `BASE -> 0
+		  | `ONELEVEL -> 1
+		  | `SUBTREE -> 2)
+	       (match deref with
+		    `NEVERDEREFALIASES -> 0
+		  | `DEREFINSEARCHING -> 1
+		  | `DEREFFINDINGBASE -> 2
+		  | `DEREFALWAYS -> 3)
+	       (Ldap_filter.to_string filter));
+	  (match attrs with
+	       [] -> ()
+	     | lst -> si.si_log `OPERATIONS
+		 (sprintf "conn=%d op=0 SRCH attr=%s" conn_id 
+		    (List.fold_left
+		       (fun s attr -> if s = "" then attr else (attr ^ " " ^ s))
+		       lst)));
 	  (match bi.bi_op_search with
 	       Some f -> 
 		 let get_srch_result = f conn_id message in		   
@@ -156,13 +184,25 @@ let dispatch_request si conn_id rb fd =
 	     | None -> (fun () -> send_message fd 
 			  (not_imp message (Search_result_done not_implemented));
 			  raise Finished))
-      | {protocolOp=Modify_request _} ->
+      | {protocolOp=Modify_request {mod_dn=modify;modification=modlst}} ->	  
+	  si.si_log `OPERATIONS
+	    (sprintf "conn=%d op=0 MOD dn=\"%s\"" conn_id modify);
+	  si.si_log `OPERATIONS
+	    (sprintf "conn=%d op=0 MOD attr=\"%s\"" conn_id
+	       (List.fold_left
+		  (fun s attr -> 
+		     if s = "" then 
+		       attr.mod_value.attr_type 
+		     else 
+		       (attr.mod_value.attr_type ^ " " ^ s))
+		  modlst));
 	  (match bi.bi_op_modify with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Modify_response not_implemented));
 			  raise Finished))
-      | {protocolOp=Add_request _} ->
+      | {protocolOp=Add_request {sr_dn=dn}} ->
+	  si.si_log `OPERATIONS (sprintf "conn=%d op=0 ADD dn=\"%s\"" conn_id dn);
 	  (match bi.bi_op_add with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
