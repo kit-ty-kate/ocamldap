@@ -35,7 +35,7 @@ val of_string : string -> Ldap_types.dn
 (** Given a structural representation of a dn, return a string
     representation.  Performs all the necessary escaping to correctly
     represent any structured representation. *)
-val to_string : attribute list -> string
+val to_string : Ldap_types.dn -> string
 
 (** Escape a string which you intend to be part of a VALUE in the
     dn. Do not use on the whole dn, just an attribute value. It is NOT

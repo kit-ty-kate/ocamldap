@@ -19,7 +19,7 @@ Prerequisites
 
 1) findlib
 2) ocamlnet
-3) optional ocaml-ssl for ldaps support
+3) ocaml-ssl
 
 ---------------------------------------------------------------------------
 Features
@@ -41,7 +41,6 @@ Features
 ---------------------------------------------------------------------------
 Known Bugs/Missing Features
 ---------------------------------------------------------------------------
-* transparent reconnection may not work with ldaps under certian conditions
 
 ---------------------------------------------------------------------------
 Obtaining ocamldap
