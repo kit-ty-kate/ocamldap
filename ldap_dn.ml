@@ -21,10 +21,11 @@
 
 open Ldap_types
 open Ldap_dnparser
+open Ldap_dnlexer
 open Printf
 
 let of_string dn_string = 
-  try Ldap_dnparser.dn dn_string
+  try Ldap_dnparser.dn lexdn (Lexing.from_string dn_string)
   with Parsing.Parse_error | Failure _ ->
     raise (Invalid_dn "parse error")
 
