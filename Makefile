@@ -4,9 +4,9 @@ SOURCES=lber.mli lber.ml ldap_types.ml ldap_protocol.mli		\
 ldap_protocol.ml ulist.ml ldap_urllexer.mll ldap_url.mli ldap_url.ml	\
 ldap_filterparser.mly ldap_filterlexer.mll ldap_filter.mli		\
 ldap_filter.ml ldap_funclient.mli ldap_funclient.ml			\
-ldap_schemalexer.mll ldap_schemaparser.ml ldap_ooclient.mli		\
-ldap_ooclient.ml ldif_parser.ml ldif_oo.ml ldif_oo.mli			\
-ldap_funserver.mli ldap_funserver.ml
+ldap_schemalexer.mll ldap_schemaparser.mli ldap_schemaparser.ml		\
+ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml ldif_oo.ml		\
+ldif_oo.mli ldap_funserver.mli ldap_funserver.ml
 RESULT=ocamldap
 PACKS=netstring
 OCAMLNCFLAGS=-inline 1000
@@ -20,10 +20,12 @@ ifneq ($(strip $(shell ocamlfind query ssl)),)
 	PACKS+=ssl
 endif
 
-all: byte-code-library clean-doc htdoc
-opt: native-code-library
+all: byte-code-library clean-doc htdoc meta
+opt: native-code-library meta
 reallyall: byte-code-library native-code-library
 install: libinstall
 uninstall: libuninstall
+meta:
+	@cat META.in | sed -e "s/@PACKS@/$(PACKS)/" >META
 
 -include OCamlMakefile
