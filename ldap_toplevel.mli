@@ -19,7 +19,9 @@ val print_entries : Ldap_ooclient.ldapentry list -> unit
 
     The last argument is the search filter.
 
-    @raise LDAP_Failure
+    @raise LDAP_Failure raised when the ldap operation fails. All
+    internal resources are cleaned up beforehand. eg. exceptions won't
+    cause fd leaks.
 *)
 val ldapsearch :
   ?s:Ldap_types.search_scope ->
@@ -41,7 +43,9 @@ val ldapsearch :
 
     The last argument is the search filter.
 
-    @raise LDAP_Failure
+    @raise LDAP_Failure raised when the ldap operation fails. All
+    internal resources are cleaned up beforehand. eg. exceptions won't
+    cause fd leaks.
 *)
 val ldapsearch_p :
   ?s:Ldap_types.search_scope ->
@@ -62,7 +66,9 @@ val ldapsearch_p :
 
     The string argument is the dn you want to modify
 
-    @raise LDAP_Failure
+    @raise LDAP_Failure raised when the ldap operation fails. All
+    internal resources are cleaned up beforehand. eg. exceptions won't
+    cause fd leaks.
 *)
 val ldapmodify :
   h:string ->
@@ -78,7 +84,9 @@ val ldapmodify :
     work for an anonymous bind
     @param h the ldapurl of the host/port to connect to
 
-    @raise LDAP_Failure
+    @raise LDAP_Failure raised when the ldap operation fails. All
+    internal resources are cleaned up beforehand. eg. exceptions won't
+    cause fd leaks.
 *)
 val ldapadd :
   h:string -> d:string -> w:string -> Ldap_ooclient.ldapentry list -> unit
