@@ -208,7 +208,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 		   | Unix_error (EHOSTUNREACH, _, _) 
 		   | Unix_error (ECONNRESET, _, _)
 		   | Unix_error (ECONNABORTED, _, _)
-		   | Ssl.Connection_error _
+		   | IFDEF SSL THEN Ssl.Connection_error _ ELSE Failure "" END
 		   | Failure "timeout" ->
 		       ignore (alarm 0);
 		       set_signal sigalrm !previous_signal;

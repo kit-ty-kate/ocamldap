@@ -38,7 +38,7 @@ type search_result = [ `Entry of entry | `Referral of string list ]
   init is round robin dns aware, if dns returns multiple mappings it
   will try each one before finially failing. It also takes a list of
   hostnames, so you can specify backup servers to try. SSL and TLS are
-  not yet supported. 
+  supported if selected at compile time. 
 
   @param version the protocol version to use to
   connect, default is version 3. And actually, version 2 will probably
