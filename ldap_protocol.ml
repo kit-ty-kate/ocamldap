@@ -776,15 +776,7 @@ let decode_addresponse rb =
   Add_response (decode_components_of_ldapresult rb)
 
 let encode_deleterequest req =
-  let e_req = encode_ber_octetstring req in
-  let len = String.length e_req in
-  let buf = Buffer.create (len + 10) in
-    Buffer.add_string buf
-      (encode_ber_header
-	 {ber_class=Application;ber_tag=10;ber_primitive=true;
-	  ber_length=(Definite len)});
-    Buffer.add_string buf e_req;
-    Buffer.contents buf
+  encode_ber_octetstring ~cls:Application ~tag:10 req
 
 let decode_deleterequest len rb =
   Delete_request 
