@@ -47,8 +47,8 @@
   let unescape_hexpair hex1 hex2 = 
     (char_of_int 
        ((lor) 
-	  ((lsl) (unhex hex2) 4)
-	  (unhex hex1)))
+	  ((lsl) (unhex hex1) 4)
+	  (unhex hex2)))
     
   let unescape_stringwithpair s = 
     let strm = Stream.of_string s in
