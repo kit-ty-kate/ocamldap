@@ -178,14 +178,17 @@ let readbyte_of_fd fd =
   let peek_buf_len = ref 0 in
   let rb ?(peek=false) () = 
     if !peek_buf_len = 0 || peek then
-      let result = input in_ch buf 0 1 in
+      let result = 
+	try input in_ch buf 0 1 
+	with exn -> raise (Readbyte_error Transport_error)
+      in
 	if result = 1 then
 	  if peek then
 	    (peek_buf.[!peek_buf_len] <- buf.[0];
 	     peek_buf_len := !peek_buf_len + 1;	       
 	     buf.[0])
 	  else buf.[0]
-	else (Unix.close fd;raise (Readbyte_error Transport_error))
+	else (close_in in_ch;raise (Readbyte_error Transport_error))
     else if !peek_buf_pos = !peek_buf_len - 1 then (* last char in peek buf *)
       let b = peek_buf.[!peek_buf_pos] in
 	peek_buf_pos := 0;
@@ -209,7 +212,7 @@ let readbyte_of_ssl fd =
     if !pos = !len || (peek && !peek_pos = !len) then
       let result = 
 	try Ssl.read fd buf 0 16384 
-	with Ssl.Read_error _ -> raise (Readbyte_error Transport_error)
+	with exn -> raise (Readbyte_error Transport_error)
       in
 	if result >= 1 then
 	  (len := result;

@@ -225,7 +225,7 @@ let run si =
 		  (conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
 	      with Readbyte_error Transport_error ->
 		(match si.si_backend.bi_op_unbind with
-		     Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
+		     Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
 		   | None -> ());
 		(* remove the client from our table of clients, and
 		   from the list of readable/writable fds, that way we
@@ -256,7 +256,7 @@ let run si =
 			     Hashtbl.replace si.si_client_sockets fd (conn_id, tl, rb)
 		   with Server_error "data cannot be written" ->
 		     (match si.si_backend.bi_op_unbind with
-			  Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
+			  Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
 			| None -> ());
 		     Hashtbl.remove si.si_client_sockets fd;
 		     reading := List.filter ((<>) fd) !reading;

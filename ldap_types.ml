@@ -237,7 +237,7 @@ type protocol_op = Bind_request of bind_request
 		   | Modify_dn_response of ldap_result
 		   | Compare_request of compare_request
 		   | Compare_response of ldap_result
-		   | Abandon_request of int
+		   | Abandon_request of Int32.t
 		   | Extended_request of extended_request
 		   | Extended_response of extended_response
 
@@ -250,7 +250,7 @@ type ldap_control = {
 type ldap_controls = ldap_control list
     
 type ldap_message = {
-  messageID: int;
+  messageID: Int32.t;
   protocolOp: protocol_op;
   controls: ldap_controls option;
 }

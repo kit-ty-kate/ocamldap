@@ -861,7 +861,7 @@ let decode_compareresponse rb =
   Compare_response (decode_components_of_ldapresult rb)
 
 let encode_abandonrequest msgid =
-  let e_msgid = encode_ber_int32 (Int32.of_int msgid) in
+  let e_msgid = encode_ber_int32 msgid in
   let len = String.length e_msgid in
   let buf = Buffer.create (len + 10) in
     Buffer.add_string buf
@@ -872,7 +872,7 @@ let encode_abandonrequest msgid =
     Buffer.contents buf
 
 let decode_abandonrequest rb =
-  Abandon_request (Int32.to_int (decode_ber_int32 rb))
+  Abandon_request (decode_ber_int32 rb)
 
 let encode_extendedrequest {ext_requestName=reqname;ext_requestValue=reqval} =
   let e_reqname = encode_ber_octetstring reqname in
@@ -971,7 +971,7 @@ let encode_ldapmessage {messageID=msgid;protocolOp=protocol_op;controls=controls
       | Extended_response res -> encode_extendedresponse res
   in
   let buf = Buffer.create ((String.length encoded_op) + 20) in
-  let msgid = encode_ber_int32 (Int32.of_int msgid) in
+  let msgid = encode_ber_int32 msgid in
     Buffer.add_string buf 
       (encode_seq_hdr ((String.length encoded_op) + (String.length msgid)));
     Buffer.add_string buf msgid;
@@ -983,7 +983,7 @@ let decode_ldapmessage rb = (* unwrap their package *)
       {ber_class=Universal;ber_tag=16;ber_length=total_length} ->
 	(* set up our context to be this message *)
 	let rb = readbyte_of_ber_element total_length rb in
-	let messageid = Int32.to_int (decode_ber_int32 rb) in
+	let messageid = decode_ber_int32 rb in
 	let protocol_op =
 	  match decode_ber_header rb with
 	      {ber_class=Application;ber_tag=0} ->

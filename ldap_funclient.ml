@@ -24,12 +24,7 @@ open Lber
 open Unix
 open Sys
 
-type msgqueue = {
-  msg_queue: ldap_message Queue.t;
-  mutable msg_inuse: bool;
-}
-
-type msgid = int
+type msgid = Int32.t
 
 type ld_socket = Ssl of Ssl.socket
 		 | Plain of file_descr
@@ -37,9 +32,9 @@ type ld_socket = Ssl of Ssl.socket
 type conn = {
   mutable rb: readbyte;
   mutable socket: ld_socket; (* communications channel to the ldap server *)
-  mutable current_msgid: int; (* the largest message id allocated so far *)
-  pending_messages: (int, msgqueue) Hashtbl.t;
-  protocol_version: msgid;
+  mutable current_msgid: Int32.t; (* the largest message id allocated so far *)
+  pending_messages: (int32, ldap_message Queue.t) Hashtbl.t;
+  protocol_version: int;
 }
 
 type attr = { attr_name: string; attr_values: string list }
@@ -55,14 +50,13 @@ let ext_res = {ext_matched_dn="";
 
 let _ = Ssl.init ()
 
-exception Free of int
 let find_free_msgid con = 
-  try 
-    Hashtbl.iter 
-      (fun k v -> if not v.msg_inuse then raise (Free k))
-      con.pending_messages;
-    con.current_msgid
-  with Free k -> k
+  let msgid = con.current_msgid in
+    (if msgid = Int32.max_int then
+       con.current_msgid <- 0l
+     else 
+       con.current_msgid <- Int32.succ con.current_msgid);
+    msgid
 
 (* test async operations, make sure we can't screw
    something up with an async op *)
@@ -70,18 +64,11 @@ let find_free_msgid con =
 (* allocate a message id from the free message id pool *)
 let allocate_messageid con =
   let msgid = find_free_msgid con in
-    (if msgid = con.current_msgid then
-       con.current_msgid <- con.current_msgid + 1);
-    Hashtbl.replace con.pending_messages msgid 
-      {msg_queue=(Queue.create ());
-       msg_inuse=true};
+    Hashtbl.replace con.pending_messages msgid (Queue.create ());
     msgid
 
 let free_messageid con msgid =
-  try
-    let msgid_s = Hashtbl.find con.pending_messages msgid in
-      msgid_s.msg_inuse <- false;
-      Queue.clear msgid_s.msg_queue
+  try Hashtbl.remove con.pending_messages msgid
   with Not_found -> 
     raise (LDAP_Failure (`LOCAL_ERROR, "free_messageid: invalid msgid", ext_res))
 
@@ -119,7 +106,7 @@ let send_message con msg =
    all other ids will be read and queued. They can be retreived later) *)
 let receive_message con msgid =
   let q_for_msgid con msgid =
-    try (Hashtbl.find con.pending_messages msgid).msg_queue
+    try Hashtbl.find con.pending_messages msgid
     with Not_found -> raise (LDAP_Failure (`LOCAL_ERROR, "invalid message id", ext_res))
   in
   let rec read_message con msgid =
@@ -136,8 +123,7 @@ let receive_message con msgid =
 	read_message con msgid
       else Queue.take q
     with 
-	Sys_error _ 
-      | Readbyte_error Transport_error -> 
+	Readbyte_error Transport_error -> 
 	  raise (LDAP_Failure (`SERVER_DOWN, "read error", ext_res))
       | Readbyte_error End_of_stream ->
 	  raise (LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
@@ -220,7 +206,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	       Ssl s -> Lber.readbyte_of_ssl s
 	     | Plain s -> Lber.readbyte_of_fd s);
        socket=fd;
-       current_msgid=1;
+       current_msgid=1l;
        pending_messages=(Hashtbl.create 3);
        protocol_version=version}
 
