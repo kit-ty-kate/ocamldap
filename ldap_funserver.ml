@@ -23,6 +23,7 @@ open Lber
 open Ldap_types
 open Ldap_protocol
 open Unix
+open Printf
 
 exception Server_error of string
 exception Finished
@@ -112,7 +113,8 @@ let shutdown si =
   Hashtbl.clear si.si_client_sockets;
   si.si_log `GENERAL "stopped."
 
-let dispatch_request bi conn_id rb fd =
+let dispatch_request si conn_id rb fd =
+  let bi = si.si_backend in
   let not_imp msg op = 
     {messageID=msg.messageID;
      protocolOp=op;
@@ -238,8 +240,7 @@ let run si =
 		    si.si_client_sockets 
 		    fd
 		    (conn_id, 
-		     (dispatch_request 
-			si.si_backend conn_id rb fd) :: pending_ops, 
+		     (dispatch_request si conn_id rb fd) :: pending_ops, 
 		     rb)
 		with LDAP_Decoder e -> (* handle protocol errors *)
 		  send_message fd (* send a notice of disconnection *)

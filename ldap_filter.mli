@@ -19,9 +19,13 @@
   USA
 *)
 
-
-
 (** turn the string representation into the internal representation
-  defined in ldap_types.ml. This representation is suitable for sending
-  on the wire, and can also have all sorts of operations performed on it *)
+    defined in ldap_types.ml. This representation is suitable for
+    sending on the wire, and can also have all sorts of operations
+    performed on it.  play around with it in the toplevel to get a feel
+    for it *)
 val of_string : string -> Ldap_types.filter
+
+(** turn an internal representaion of a filter into a string
+    representaion compliant with rfc2254*)
+val to_string : Ldap_types.filter -> string

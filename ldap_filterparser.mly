@@ -23,11 +23,11 @@
   open Ldap_filterlexer
   open Ldap_types
 
-  let star_escape_rex = Pcre.regexp ~study:true "\\\2a"
-  let lparen_escape_rex = Pcre.regexp ~study:true "\\\28"
-  let rparen_escape_rex = Pcre.regexp ~study:true "\\\29"
-  let backslash_escape_rex = Pcre.regexp ~study:true "\\\5c"
-  let null_escape_rex = Pcre.regexp ~study:true "\\\00"
+  let star_escape_rex = Pcre.regexp ~study:true "\\\\2a"
+  let lparen_escape_rex = Pcre.regexp ~study:true "\\\\28"
+  let rparen_escape_rex = Pcre.regexp ~study:true "\\\\29"
+  let backslash_escape_rex = Pcre.regexp ~study:true "\\\\5c"
+  let null_escape_rex = Pcre.regexp ~study:true "\\\\00"
   let unescape s =
     (Pcre.qreplace ~rex:star_escape_rex ~templ:"*"
        (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
@@ -93,7 +93,9 @@ filter:
 				       ruletype=(Some (unescape (fst $1)));
 				       matchValue=(unescape $3);
 				       dnAttributes=false}}
-| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(unescape (snd $1));
+| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(match (snd $1) with
+								     Some s -> Some (unescape s)
+								   | None -> None);
 						   ruletype=(Some (unescape (fst $1)));
 						   matchValue=(unescape $3);
 						   dnAttributes=true}}

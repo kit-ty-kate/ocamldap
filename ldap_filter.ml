@@ -42,7 +42,7 @@ let of_string f =
     filter lexfilter lxbuf
 
 let double_star_rex = regexp "\\*\\*"
-let to_string f =
+let to_string (f:filter) =
   let rec to_string' buf f =
     match f with
 	`And lst -> 
@@ -140,6 +140,3 @@ let to_string f =
     to_string' buf f;
     Buffer.contents buf
 
-let f_not filterlist = `Not filterlist
-let f_or filterlist = `Or filterlist
-let f_and filterlist = `And filterlist

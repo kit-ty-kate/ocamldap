@@ -51,7 +51,8 @@ type backendInfo = {
 }
 
 type log_level = 
-    [ `CONNECTION
+    [ `GENERAL
+    | `CONNECTION
     | `OPERATIONS
     | `ERROR
     | `TRACE ]
