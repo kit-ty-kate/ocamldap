@@ -128,7 +128,7 @@ object (self)
 	Strset.fold
 	  (fun attr mods ->
 	     let attr = Lcstring.to_string attr in
-	       (`ADD, attr, e1#get_value attr) :: mods)
+	       (`REPLACE, attr, e1#get_value attr) :: mods)
 	  (Strset.diff e1attrs (Strset.inter e1attrs e2attrs))
 	  []
       in
@@ -146,28 +146,10 @@ object (self)
 	     let attr = Lcstring.to_string attr in
 	     let e1vals = setOfList (lcStringlst (e1#get_value attr)) in
 	     let e2vals = setOfList (lcStringlst (e2#get_value attr)) in
-	     let add_vals = 
-	       Strset.fold
-		 (fun valu addlst ->
-		    let valu = Lcstring.to_string valu in
-		      valu :: addlst)
-		 (Strset.diff e1vals (Strset.inter e1vals e2vals))
-		 []
-	     in
-	     let delete_vals =
-	       Strset.fold
-		 (fun valu dellst ->
-		    let valu = Lcstring.to_string valu in
-		      valu :: dellst)
-		 (Strset.diff e2vals (Strset.inter e1vals e2vals))
-		 []
-	     in
-	       match (add_vals, delete_vals) with
-		   ([], []) -> mods
-		 | (add_vals, []) -> (`ADD, attr, add_vals) :: mods
-		 | ([], delete_vals) -> (`DELETE, attr, delete_vals) :: mods
-		 | (add_vals, delete_vals) ->
-		     (`DELETE, attr, delete_vals) :: (`ADD, attr, add_vals) :: mods)
+	       if not (Strset.is_empty (Strset.diff e2vals e1vals)) then		
+		 (`REPLACE, attr, e1#get_value attr) :: mods
+	       else 
+		 mods)
 	  (Strset.inter e1attrs (Strset.inter e1attrs e2attrs))
 	  []
       in
