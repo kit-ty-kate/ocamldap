@@ -21,6 +21,8 @@
 %{
   open Ldap_dnlexer
   open Ldap_types
+
+  exception Invalid_dn of string
 %}
 
 %token Equals Plus Comma End_of_input
@@ -43,7 +45,13 @@ attrname:
 ;
 
 dn:
-   attrname Equals attrval Plus dn {{attr_type=$1;attr_vals=[$3]} :: $5}
+  attrname Equals attrval Plus dn 
+  {match $5 with 
+       {attr_type=attr_name;attr_vals=vals} :: tl ->
+	 if $1 = attr_name then
+	   {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
+	 else raise (Invalid_dn ("invalid multivalued dn, expected: " ^ attr_name))
+     | [] -> [{attr_type=$1;attr_vals=[$3]}]}
  | attrname Equals attrval Comma dn {{attr_type=$1;attr_vals=[$3]} :: $5}
  | attrname Equals attrval End_of_input {[{attr_type=$1;attr_vals=[$3]}]}
  | End_of_input {[]}
