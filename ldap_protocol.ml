@@ -373,20 +373,22 @@ let encode_substringfilter {attrtype=attr;
   let e_any = oencode 1 any in
   let e_final = oencode 2 final in
   let component_len = (olen e_initial) + (olen e_any) + (olen e_final) in
-  let len = (String.length e_attr) + component_len in
-  let buf = Buffer.create (len + 10) in
+  let component_buf = Buffer.create (component_len + 3) in
+    Buffer.add_string component_buf 
+      (encode_ber_header 
+	 {ber_class=Universal;ber_tag=16;ber_primitive=false;
+	  ber_length=(Definite component_len)});
+    oadd component_buf e_initial;
+    oadd component_buf e_any;
+    oadd component_buf e_final;
+    let len = ((Buffer.length component_buf) + (String.length e_attr)) in
+    let buf = Buffer.create (len + 3) in
     Buffer.add_string buf 
       (encode_ber_header
 	 {ber_class=Context_specific;ber_tag=4;ber_primitive=false;
 	  ber_length=(Definite len)});
     Buffer.add_string buf e_attr;
-    Buffer.add_string buf 
-      (encode_ber_header 
-	 {ber_class=Universal;ber_tag=16;ber_primitive=false;
-	  ber_length=(Definite component_len)});
-    oadd buf e_initial;
-    oadd buf e_any;
-    oadd buf e_final;
+    Buffer.add_buffer buf component_buf;
     Buffer.contents buf
 
 let decode_substringfilter rb =
