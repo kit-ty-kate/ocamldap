@@ -78,12 +78,11 @@ let find_free_msgid con =
 (* allocate a message id from the free message id pool *)
 let allocate_messageid con =
   let msgid = find_free_msgid con in
-    if msgid = con.current_msgid then
-      con.current_msgid <- con.current_msgid + 1;
-    if not (Hashtbl.mem con.pending_messages msgid) then
-      Hashtbl.add con.pending_messages msgid 
-	{msg_queue=(Queue.create ());
-	 msg_inuse=true};
+    (if msgid = con.current_msgid then
+       con.current_msgid <- con.current_msgid + 1);
+    Hashtbl.replace con.pending_messages msgid 
+      {msg_queue=(Queue.create ());
+       msg_inuse=true};
     msgid
 
 let free_messageid con msgid =
@@ -130,7 +129,7 @@ let receive_message con msgid =
     let msg = decode_ldapmessage con.rb in
       if msg.messageID = msgid then msg
       else
-	let q = q_for_msgid con msgid in
+	let q = q_for_msgid con msg.messageID in
 	  Queue.add msg q;
 	  read_message con msgid
   in
@@ -355,7 +354,6 @@ let add_s con (entry: entry) =
      with exn -> free_messageid con msgid;raise exn);
     free_messageid con msgid      
 
-
 let delete_s con ~dn =
   let msgid = allocate_messageid con in
     (try
@@ -391,7 +389,8 @@ let modify_s con ~dn ~mods =
 	(op, attr, values) :: tl ->
 	  (convertmods 
 	     ~converted:({mod_op=op;
-			  mod_value={attr_type=attr;attr_vals=values}} :: converted)
+			  mod_value={attr_type=attr;
+				     attr_vals=values}} :: converted)
 	     tl)
       | [] -> converted
   in
