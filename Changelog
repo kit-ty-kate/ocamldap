@@ -33,6 +33,9 @@
    * ldap_ooclient
      - connect_timeout is now available as an optional argument to
        ldapcon.
+     - added a method called "diff" to the ldapentry higharchy. It
+       takes an entry and returns a list of differences between itself
+       and the specified entry in the form of a modify record.
    * ldap_funserver
      - Deal with protocol errors according to rfc2251
      - Use the new readbyte implementations in lber.ml instead of a

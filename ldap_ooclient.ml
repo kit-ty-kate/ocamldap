@@ -44,6 +44,7 @@ object
   method attributes : string list
   method exists : string -> bool
   method get_value : string -> string list
+  method diff : ldapentry_t -> (modify_optype * string * string list) list
   method changes : (modify_optype * string * string list) list
   method changetype : changetype
   method set_changetype : changetype -> unit
@@ -52,6 +53,22 @@ object
   method set_dn : string -> unit
   method print : unit
 end;;
+
+module OrdOid =
+struct
+  type t = Oid.t
+  let compare = Oid.compare
+end;;
+
+module OrdStr = 
+struct
+  type t = Lcstring.t
+  let compare = Lcstring.compare
+end;;
+
+(* types for a set of Oids, and a set of strings *)
+module Strset = Set.Make (OrdStr)
+module Setstr = Set.Make (OrdOid)
 
 (********************************************************************************)
 (********************************************************************************)
@@ -92,6 +109,71 @@ object (self)
 		  Hashtbl.add data lcname current; Ulist.addlst current value; do_add lst
     in
       do_add x; self#push_change `ADD x
+
+  method diff (entry: ldapentry_t) = 
+    let diff_entries e1 e2 : (modify_optype * string * string list) list = 
+      let rec setOfList ?(set=Strset.empty) list = 
+	match list with
+	    a :: tail -> setOfList ~set:(Strset.add a set) tail
+	  | []  -> set
+      in
+      let lcStringlst list =
+	List.rev_map
+	  Lcstring.of_string
+	  list
+      in
+      let e1attrs = setOfList (lcStringlst e1#attributes) in
+      let e2attrs = setOfList (lcStringlst e2#attributes) in
+      let add_attrs = 
+	Strset.fold
+	  (fun attr mods ->
+	     let attr = Lcstring.to_string attr in
+	       (`ADD, attr, e1#get_value attr) :: mods)
+	  (Strset.diff e1attrs (Strset.inter e1attrs e2attrs))
+	  []
+      in
+      let remove_attrs = 
+	Strset.fold
+	  (fun attr mods ->
+	     let attr = Lcstring.to_string attr in
+	       (`DELETE, attr, []) :: mods)
+	  (Strset.diff e2attrs (Strset.inter e2attrs e1attrs))
+	  []
+      in
+      let sync_attrs = 
+	Strset.fold
+	  (fun attr mods ->
+	     let attr = Lcstring.to_string attr in
+	     let e1vals = setOfList (lcStringlst (e1#get_value attr)) in
+	     let e2vals = setOfList (lcStringlst (e2#get_value attr)) in
+	     let add_vals = 
+	       Strset.fold
+		 (fun valu addlst ->
+		    let valu = Lcstring.to_string valu in
+		      valu :: addlst)
+		 (Strset.diff e1vals (Strset.inter e1vals e2vals))
+		 []
+	     in
+	     let delete_vals =
+	       Strset.fold
+		 (fun valu dellst ->
+		    let valu = Lcstring.to_string valu in
+		      valu :: dellst)
+		 (Strset.diff e2vals (Strset.inter e1vals e2vals))
+		 []
+	     in
+	       match (add_vals, delete_vals) with
+		   ([], []) -> mods
+		 | (add_vals, []) -> (`ADD, attr, add_vals) :: mods
+		 | ([], delete_vals) -> (`DELETE, attr, delete_vals) :: mods
+		 | (add_vals, delete_vals) ->
+		     (`DELETE, attr, delete_vals) :: (`ADD, attr, add_vals) :: mods)
+	  (Strset.inter e1attrs (Strset.inter e1attrs e2attrs))
+	  []
+      in
+	List.rev_append remove_attrs (List.rev_append sync_attrs add_attrs)
+    in
+      diff_entries self entry
 
   method delete (x:op_lst) = 
     let rec do_delete x = 
@@ -383,16 +465,6 @@ end;;
 (* A schema checking entry:
    An entry which validates its validity against the server's
    schema *)
-module OrdStr =
-struct
-  type t = Oid.t
-  let compare = Oid.compare
-end;;
-
-
-(* type for a set of strings *)
-module Setstr = Set.Make (OrdStr);;
-
 (* schema checking flavor *)
 type scflavor = Optimistic (* attempt to find objectclasses which make illegal
 			      attributes legal, delete them if no objectclass can
@@ -446,10 +518,10 @@ let getAttr schema (attr:Lcstring.t) =
 
 let equateAttrs schema a1 a2 = (attrToOid schema a1) = (attrToOid schema a2)
 
-let rec setOfList (list:Oid.t list) set = 
+let rec setOfList ?(set=Setstr.empty) list = 
   match list with
-      a :: tail -> setOfList tail (Setstr.add a set)
-    | []  -> set;;
+      a :: tail -> setOfList ~set:(Setstr.add a set) tail
+    | []  -> set
 
 class scldapentry schema =
 object (self)
@@ -483,7 +555,7 @@ object (self)
      I can ascert this having implimented it in other ways *)
   method private update_condition =
     let generate_present attrs schema = 
-      setOfList (List.rev_map (attrToOid schema) attrs) Setstr.empty in
+      setOfList (List.rev_map (attrToOid schema) attrs) in
     let rec generate_mustmay ocs schema set must =
       match ocs with
 	  oc :: tail -> 
@@ -492,7 +564,7 @@ object (self)
 			     (fun attr -> attrToOid schema attr)
 			     (if must then (getOc schema oc).oc_must
 			      else (getOc schema oc).oc_may))
-			  Setstr.empty in
+	    in
 	      generate_mustmay tail schema (Setstr.union musts set) must
 	| [] -> set
     in
@@ -505,7 +577,7 @@ object (self)
       setOfList 
 	(List.rev_map 
 	   (ocToOid schema)
-	   (List.flatten (List.rev_map (lstRequired schema) ocs))) Setstr.empty
+	   (List.flatten (List.rev_map (lstRequired schema) ocs)))
     in
     let generate_illegal_oc missing schema ocs =
       let is_illegal_oc missing schema oc =
@@ -551,8 +623,7 @@ object (self)
 			 (List.rev_map 
 			    (fun attr -> ocToOid schema (Lcstring.of_string attr)) 
 			    (try super#get_value "objectclass" 
-			     with Not_found -> raise Objectclass_is_required))
-			 Setstr.empty);
+			     with Not_found -> raise Objectclass_is_required)));
       missingOcs   <- Setstr.diff requiredOcs (Setstr.inter requiredOcs presentOcs);
       illegalOcs   <- (setOfList
 			 (List.rev_map
@@ -565,8 +636,7 @@ object (self)
 			       (List.rev_map
 				  (Lcstring.of_string)
 				  (try super#get_value "objectclass" 
-				   with Not_found -> raise Objectclass_is_required))))
-			 Setstr.empty);
+				   with Not_found -> raise Objectclass_is_required)))));
       if Setstr.is_empty (Setstr.union missingAttrs illegalAttrs) then
 	consistent <- true
       else
@@ -793,11 +863,8 @@ let apply_set_op_to_values schema (attr:string) e svcval opfun =
 		   (List.rev_map
 		      convert_to_oid
 		      (try e#get_value attr with Not_found -> []))
-		   Setstr.empty 
   in
-  let svcvals = setOfList
-		  (List.rev_map convert_to_oid (snd svcval))
-		  Setstr.empty 
+  let svcvals = setOfList (List.rev_map convert_to_oid (snd svcval))
   in
     opfun convert_to_oid convert_from_oid attr attrvals svcvals
 
@@ -833,7 +900,7 @@ object (self)
 		 if ((Hashtbl.mem generators g) && 
 		     (not (Setstr.mem
 			     (attrToOid schema (Lcstring.of_string g))
-			     (setOfList self#list_present Setstr.empty)))) then
+			     (setOfList self#list_present)))) then
 		   true
 		 else false)
 	      (List.filter (* we can only add it if it is allowed by the schema *)
@@ -868,7 +935,6 @@ object (self)
 					  (List.rev_map
 					     (fun e -> lowercase (oidToAttr schema e))
 					     generateing)))
-	  Setstr.empty
     in
     let generate_missing togen generators =
       setOfList
@@ -886,14 +952,13 @@ object (self)
 	      else
 		requiredlst)
 	   generators [])
-	Setstr.empty
     in
       toGenerate <- generate_togenerate generators super#list_missing toGenerate;
       neededByGenerators <- generate_missing toGenerate generators;
 
   method list_missing = 
     let allmissing = 
-      Setstr.union neededByGenerators (setOfList super#list_missing Setstr.empty) 
+      Setstr.union neededByGenerators (setOfList super#list_missing) 
     in
       Setstr.elements
 	(Setstr.diff
@@ -902,7 +967,7 @@ object (self)
 	      allmissing
 	      (Setstr.union 
 		 toGenerate 
-		 (setOfList super#list_present Setstr.empty))))
+		 (setOfList super#list_present))))
 
   method attributes =
     (List.rev_map (oidToAttr schema)
@@ -911,8 +976,7 @@ object (self)
 	     (setOfList 
 		(List.rev_map
 		   (fun a -> attrToOid schema (Lcstring.of_string a))
-		   super#attributes)
-		Setstr.empty))))
+		   super#attributes)))))
 
   method is_missing x = (not (Setstr.mem
 				(attrToOid schema (Lcstring.of_string x)) 

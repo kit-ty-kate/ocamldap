@@ -36,6 +36,7 @@ class type ldapentry_t =
     method changetype : changetype
     method delete : op_lst -> unit
     method dn : string
+    method diff : ldapentry_t -> (modify_optype * string * string list) list
     method exists : string -> bool
     method flush_changes : unit
     method get_value : string -> string list
@@ -75,6 +76,10 @@ class ldapentry :
 
     (** return the dn of the object *)
     method dn : string
+
+    (** given an ldapentry, return the differences between the current
+	entry and the specified entry *)
+    method diff : ldapentry_t -> (modify_optype * string * string list) list
 
     (** query whether the attribute type (name) exists in the object *)
     method exists : string -> bool
@@ -164,16 +169,16 @@ class ldapcon :
     method update_entry : ldapentry -> unit
   end
 
-module OrdStr :
-  sig
-    type t = Ldap_schemaparser.Oid.t
-    val compare : Ldap_schemaparser.Oid.t -> Ldap_schemaparser.Oid.t -> int
-  end
+module OrdOid :
+sig
+  type t = Ldap_schemaparser.Oid.t
+  val compare : t -> t -> int
+end
 
 module Setstr :
   sig
-    type elt = OrdStr.t
-    type t = Set.Make(OrdStr).t
+    type elt = OrdOid.t
+    type t = Set.Make(OrdOid).t
     val empty : t
     val is_empty : t -> bool
     val mem : elt -> t -> bool
@@ -252,6 +257,7 @@ class scldapentry :
     method exists : string -> bool
     method flush_changes : unit
     method get_value : string -> string list
+    method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
     method is_allowed : string -> bool
     method is_missing : string -> bool
     method list_allowed : Setstr.elt list
@@ -305,6 +311,7 @@ class ldapaccount :
     method delete_generate : string -> unit
     method delete_service : string -> unit
     method dn : string
+    method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
     method exists : string -> bool
     method flush_changes : unit
     method generate : unit

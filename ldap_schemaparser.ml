@@ -39,10 +39,10 @@ module Oid =
 
 module Lcstring =
   (struct
-     type t = string
-     let of_string s = String.lowercase s
-     let to_string lcs = lcs
-     let compare x y = String.compare (to_string x) (to_string y)
+     type t = string * string
+     let of_string s = (s, String.lowercase s)
+     let to_string x = fst x
+     let compare x y = String.compare (snd x) (snd y)
    end
      :
    sig
