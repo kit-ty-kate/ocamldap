@@ -40,14 +40,14 @@
 }
 
 let port = ['0' - '9']+
-let host = ['.' '0' - '9' 'a' - 'z' 'A' - 'Z']+
+let host = ['-' '.' '0' - '9' 'a' - 'z' 'A' - 'Z']+
 let dn = [',' '=' '0' - '9' 'a' - 'z' 'A' - 'Z']+
 let attribute = ['a' - 'z' 'A' - 'Z' '0' - '9']+
 let filter = [' ' '(' ')' '&' '|' '!' '~' '=' '>' '<' '.' '\\' '0' - '9' 'a' - 'z' 'A' - 'Z'] +
 let scope = "base" | "one" | "sub"
 
 rule lexurl = parse
-    (("ldap" 's'?) as mech) "://" (host as host)? (':' (port as port))? '/'?
+    (("ldap" 's'?) as mech) "://" (host as host)? (':' (port as port))? '/'? eof
       {{url_mech=(match mech with "ldap" -> `PLAIN | "ldaps" -> `SSL 
 		    | _ -> failwith "invalid mechanism") ;
 	url_host=host;

@@ -155,13 +155,7 @@ object (self)
       in
 	List.rev_append remove_attrs (List.rev_append sync_attrs add_attrs)
     in
-(*      List.sort (* objectclass modifications must appear first *)
-	(fun (_, attr1, _) (_, attr2, _) ->
-	   if attr1 = "objectclass" && attr2 = "objectclass" then 0
-	   else if attr1 = "objectclass" then (-1)
-	   else if attr2 = "objectclass" then 1
-	   else 0) *)
-	(diff_entries self entry)
+      (diff_entries self entry)
 
   method delete (x:op_lst) = 
     let rec do_delete x = 
