@@ -396,12 +396,21 @@ let decode_ber_int32 ?(peek=false) ?(cls=Universal) ?(tag=2) ?(contents=None)
       else if length > 0 then
 	let c i = Int32.of_int (int_of_char i) in
 	let rec convert octets l i v =
-	  if i <= l then
-	    convert octets l (i + 1) 
-	      (Int32.add v (Int32.shift_left (c octets.[i]) (8 * (l - i))))
+	  if i <= l then	    
+	    convert octets l (i + 1) 	      
+	      (Int32.logor v (Int32.shift_left (c octets.[i]) (8 * (l - i))))
 	  else v
 	in
-	  convert contents (length - 1) 0 0l
+	let v = convert contents (length - 1) 0 0l in
+	  if (Int32.logand (c contents.[0]) 0b10000000l) = 0b10000000l then 
+	    (* the number should be negative, fix it. For a less than
+	       4 byte encoding, we need to set all the bits left of the data to
+	       1. This operation will have no effect on a 4 byte encoding *)
+	    (Int32.logor
+	       (Int32.shift_left (-1l) (length * 8))
+	       v)	      
+	  else
+	    v
       else raise (Decoding_error "integer, no contents octets") (* sec 8.3.1 *)
   in
     match contents with
