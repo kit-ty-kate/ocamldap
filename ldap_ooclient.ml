@@ -54,6 +54,21 @@ object
   method print : unit
 end;;
 
+module CaseInsensitiveString =
+  (struct
+     type t = string * string
+     let of_string s = (s, String.lowercase s)
+     let to_string x = fst x
+     let compare x y = String.compare (snd x) (snd y)
+   end
+     :
+   sig
+     type t
+     val of_string: string -> t
+     val to_string: t -> string
+     val compare: t -> t -> int
+   end);;
+
 module OrdOid =
 struct
   type t = Oid.t
@@ -62,8 +77,8 @@ end;;
 
 module OrdStr = 
 struct
-  type t = Lcstring.t
-  let compare = Lcstring.compare
+  type t = CaseInsensitiveString.t
+  let compare = CaseInsensitiveString.compare
 end;;
 
 (* types for a set of Oids, and a set of strings *)
@@ -117,17 +132,17 @@ object (self)
 	    a :: tail -> setOfList ~set:(Strset.add a set) tail
 	  | []  -> set
       in
-      let lcStringlst list =
+      let ciStringlst list =
 	List.rev_map
-	  Lcstring.of_string
+	  CaseInsensitiveString.of_string
 	  list
       in
-      let e1attrs = setOfList (lcStringlst e1#attributes) in
-      let e2attrs = setOfList (lcStringlst e2#attributes) in
+      let e1attrs = setOfList (ciStringlst e1#attributes) in
+      let e2attrs = setOfList (ciStringlst e2#attributes) in
       let add_attrs = 
 	Strset.fold
 	  (fun attr mods ->
-	     let attr = Lcstring.to_string attr in
+	     let attr = CaseInsensitiveString.to_string attr in
 	       (`REPLACE, attr, e1#get_value attr) :: mods)
 	  (Strset.diff e1attrs (Strset.inter e1attrs e2attrs))
 	  []
@@ -135,7 +150,7 @@ object (self)
       let remove_attrs = 
 	Strset.fold
 	  (fun attr mods ->
-	     let attr = Lcstring.to_string attr in
+	     let attr = CaseInsensitiveString.to_string attr in
 	       (`DELETE, attr, []) :: mods)
 	  (Strset.diff e2attrs (Strset.inter e2attrs e1attrs))
 	  []
@@ -143,9 +158,9 @@ object (self)
       let sync_attrs = 
 	Strset.fold
 	  (fun attr mods ->
-	     let attr = Lcstring.to_string attr in
-	     let e1vals = setOfList (lcStringlst (e1#get_value attr)) in
-	     let e2vals = setOfList (lcStringlst (e2#get_value attr)) in
+	     let attr = CaseInsensitiveString.to_string attr in
+	     let e1vals = setOfList (ciStringlst (e1#get_value attr)) in
+	     let e2vals = setOfList (ciStringlst (e2#get_value attr)) in
 	       if not (Strset.is_empty (Strset.diff e1vals (Strset.inter e1vals e2vals))) then		
 		 (`REPLACE, attr, e1#get_value attr) :: mods
 	       else 

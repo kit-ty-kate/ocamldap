@@ -1,3 +1,7 @@
+2.1.1
+   * Changed Lcstring to work like it used to, added a new module
+     CaseInsensitiveString which does case preserving case insensitive
+     comparisons.
 2.1.0
    * ocaml-ssl is now required
    * BER Decoder
