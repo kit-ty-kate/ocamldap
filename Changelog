@@ -8,7 +8,8 @@
      not to correctly lex non numeric OIDs
    * Fixed bad lexing of X- attributes. There was an error in 
      the definition of qdstring which would cause the lexer to eat
-     all of the X- attributes in one pass.
+     all of the X- attributes in one pass. Tested with Active Directory
+     2003, OpenLDAP, and Novell eDirectory.
    * Changed the type of the attribute length field in the attribute
      record of the schema parser to be an Int64. The standard does
      not define the maximum lenght, and vendors often use huge numbers.
