@@ -19,6 +19,12 @@
   USA
 *)
 
+(** raised when something goes wrong in to_string or of_string. The
+    integer argument is, in the case of of_string, the position in the
+    string at which the error occurred. It has no meaning in to_string,
+    and may take any value. *)
+exception Invalid_filter of int * string
+
 (** turn the string representation into the internal representation
     defined in ldap_types.ml. This representation is suitable for
     sending on the wire, and can also have all sorts of operations

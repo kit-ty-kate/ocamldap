@@ -23,7 +23,7 @@ open Ldap_filterparser
 open Ldap_filterlexer
 open Str
 
-exception Invalid_filter of Lexing.lexbuf * string
+exception Invalid_filter of int * string
 
 (* escape a string to be put in a string representation of a search
    filter *)
@@ -41,7 +41,12 @@ let escape_filterstring s =
 
 let of_string f = 
   let lxbuf = Lexing.from_string f in
-    filter lexfilter lxbuf
+    try filter_and_eof lexfilter lxbuf
+    with 
+	Parsing.Parse_error ->
+	  raise (Invalid_filter (lxbuf.Lexing.lex_curr_pos, "parse error"))
+      | Failure msg ->
+	  raise (Invalid_filter (lxbuf.Lexing.lex_curr_pos, msg))
 
 let double_star_rex = regexp "\\*\\*"
 let to_string (f:filter) =
@@ -135,7 +140,10 @@ let to_string (f:filter) =
 			 Buffer.add_string buf r;
 			 Buffer.add_string buf ":=";
 			 Buffer.add_string buf (escape_filterstring matchval)
-		     | None -> failwith "matchingRule is required if type is unspecified")));
+		     | None -> 
+			 raise 
+			   (Invalid_filter 
+			      (0, "matchingRule is required if type is unspecified")))));
 	  Buffer.add_char buf ')'
   in
   let buf = Buffer.create 100 in

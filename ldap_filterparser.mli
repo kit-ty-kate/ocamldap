@@ -16,5 +16,5 @@ type token =
   | EXTENDEDDNATTR of (string * string option)
   | VALUE of (string)
 
-val filter :
+val filter_and_eof :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ldap_types.filter

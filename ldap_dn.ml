@@ -113,7 +113,7 @@ let to_string dn =
 	     raise 
 	       (Invalid_dn
 		  (0, "invalid dn structure. no attribute " ^ 
-		     "value specified for attribute: " ^ attr)
+		     "value specified for attribute: " ^ attr))
 	   else
 	     string_values "" attr vals)
       dn

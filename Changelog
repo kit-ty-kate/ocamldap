@@ -1,3 +1,9 @@
+2.1.2
+	* added a dn parser and pretty printer which conforms to rfc 2253
+	* added an exception Invalid_filter to the filter parser, it will
+	raise this exception whenever there is an error. In addition to a
+	string the exception contains an int, which indicates at which
+	charachter the parser failed.
 2.1.1
    * Changed Lcstring to work like it used to, added a new module
      CaseInsensitiveString which does case preserving case insensitive

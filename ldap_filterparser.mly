@@ -42,8 +42,8 @@
 %token <string * string> EXTENDEDMATCHATTR
 %token <string * string option> EXTENDEDDNATTR
 %token <string> VALUE
-%start filter
-%type <Ldap_types.filter> filter
+%start filter_and_eof
+%type <Ldap_types.filter> filter_and_eof
 %%
 
 filterlist:
@@ -103,3 +103,8 @@ filter:
 | ATTR GTE extvalue {`GreaterOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR LTE extvalue {`LessOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR EQUAL STAR {`Present $1}
+
+/* used to enforce EOF at the end of the filter */
+filter_and_eof:
+  filter EOF {$1}
+;
