@@ -22,6 +22,19 @@
 %{
   open Ldap_filterlexer
   open Ldap_types
+
+  let star_escape_rex = Pcre.regexp ~study:true "\\\2a"
+  let lparen_escape_rex = Pcre.regexp ~study:true "\\\28"
+  let rparen_escape_rex = Pcre.regexp ~study:true "\\\29"
+  let backslash_escape_rex = Pcre.regexp ~study:true "\\\5c"
+  let null_escape_rex = Pcre.regexp ~study:true "\\\00"
+  let unescape s =
+    (Pcre.qreplace ~rex:star_escape_rex ~templ:"*"
+       (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
+	  (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
+	     (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
+		(Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))  
+
 %}
 
 %token WHSP LPAREN RPAREN AND OR NOT EQUAL APPROX GTE LTE STAR EOF
@@ -47,40 +60,44 @@ filter:
 | LPAREN OR filterlist RPAREN {`Or $3}
 | LPAREN NOT filter RPAREN {`Not $3}
 | LPAREN filter RPAREN {$2}
-| ATTR EQUAL extvalue {`EqualityMatch {attributeDesc=$1;assertionValue=$3}}
-| ATTR EQUAL STAR extvalue {`Substrings {attrtype=$1;
-					 substrings={substr_initial=None;
-						    substr_any=None;
-						    substr_final=(Some $4)}}}
-| ATTR EQUAL extvalue STAR {`Substrings {attrtype=$1;
-					 substrings={substr_initial=(Some $3);
-						     substr_any=None;
-						     substr_final=None}}}
-| ATTR EQUAL STAR extvalue STAR {`Substrings {attrtype=$1;
-					      substrings={substr_initial=None;
-							  substr_any=(Some $4);
-							  substr_final=None}}}
+| ATTR EQUAL extvalue {`EqualityMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
+| ATTR EQUAL STAR extvalue {`Substrings 
+			      {attrtype=$1;
+			       substrings={substr_initial=None;
+					   substr_any=None;
+					   substr_final=(Some (unescape $4))}}}
+| ATTR EQUAL extvalue STAR {`Substrings 
+			      {attrtype=$1;
+			       substrings={substr_initial=(Some (unescape $3));
+					   substr_any=None;
+					   substr_final=None}}}
+| ATTR EQUAL STAR extvalue STAR {`Substrings
+				   {attrtype=$1;
+				    substrings={substr_initial=None;
+						substr_any=(Some (unescape $4));
+						substr_final=None}}}
 | ATTR EQUAL extvalue STAR extvalue STAR extvalue {`Substrings
 						     {attrtype=$1;
 						      substrings=
-							{substr_initial=(Some $3);
-							 substr_any=(Some $5);
-							 substr_final=(Some $7)}}}
+							{substr_initial=(Some (unescape $3));
+							 substr_any=(Some (unescape $5));
+							 substr_final=(Some (unescape $7))}}}
 | ATTR EQUAL extvalue STAR extvalue {`Substrings
 				       {attrtype=$1;
 					substrings=
-					  {substr_initial=(Some $3);
-					   substr_any=None;
-					   substr_final=(Some $5)}}}
-| EXTENDEDMATCHATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(Some (snd $1));
-						      ruletype=(Some (fst $1));
-						      matchValue=$3;
-						      dnAttributes=false}}
-| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(snd $1);
-						   ruletype=(Some (fst $1));
-						   matchValue=$3;
+					   {substr_initial=(Some (unescape $3));
+					    substr_any=None;
+					    substr_final=(Some (unescape $5))}}}
+| EXTENDEDMATCHATTR EQUAL extvalue {`ExtensibleMatch 
+				      {matchingRule=(Some (unescape (snd $1)));
+				       ruletype=(Some (unescape (fst $1)));
+				       matchValue=(unescape $3);
+				       dnAttributes=false}}
+| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(unescape (snd $1));
+						   ruletype=(Some (unescape (fst $1)));
+						   matchValue=(unescape $3);
 						   dnAttributes=true}}
-| ATTR APPROX extvalue {`ApproxMatch {attributeDesc=$1;assertionValue=$3}}
-| ATTR GTE extvalue {`GreaterOrEqual {attributeDesc=$1;assertionValue=$3}}
-| ATTR LTE extvalue {`LessOrEqual {attributeDesc=$1;assertionValue=$3}}
+| ATTR APPROX extvalue {`ApproxMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
+| ATTR GTE extvalue {`GreaterOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
+| ATTR LTE extvalue {`LessOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR EQUAL STAR {`Present $1}

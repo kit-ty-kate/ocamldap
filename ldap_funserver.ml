@@ -44,6 +44,13 @@ type backendInfo = {
   bi_close : (unit -> unit) option;
 }
 
+type log_level = 
+    [ `GENERAL
+    | `CONNECTION
+    | `OPERATIONS
+    | `ERROR
+    | `TRACE ]
+
 type msgid = int
 type pending_operations = (unit -> unit) list
 
@@ -51,6 +58,7 @@ type server_info = {
   si_listening_socket: file_descr;
   si_client_sockets: (file_descr, connection_id * pending_operations * readbyte) Hashtbl.t;  
   si_backend: backendInfo;
+  si_log: (log_level -> string -> unit);
   mutable si_current_connection_id: int;
 }
 
@@ -78,7 +86,7 @@ let send_message fd msg =
 
 let keys h = Hashtbl.fold (fun k v l -> k :: l) h []
 
-let init ?(port=389) bi =
+let init ?(log=(fun _ _ -> ())) ?(port=389) bi =
   let s = 
     let s = socket PF_INET SOCK_STREAM 0 in
       setsockopt s SO_REUSEADDR true;
@@ -92,6 +100,7 @@ let init ?(port=389) bi =
     {si_listening_socket=s;
      si_client_sockets=Hashtbl.create 10;
      si_current_connection_id=0;
+     si_log=log;
      si_backend=bi}
 
 let shutdown si = 
@@ -100,7 +109,8 @@ let shutdown si =
      | None -> ());
   close si.si_listening_socket;
   List.iter (fun fd -> close fd) (keys si.si_client_sockets);
-  Hashtbl.clear si.si_client_sockets
+  Hashtbl.clear si.si_client_sockets;
+  si.si_log `GENERAL "stopped."
 
 let dispatch_request bi conn_id rb fd =
   let not_imp msg op = 
@@ -115,7 +125,14 @@ let dispatch_request bi conn_id rb fd =
   in
   let message = decode_ldapmessage rb in
     match message with
-	{protocolOp=Bind_request _} -> 
+	{protocolOp=Bind_request {bind_name=dn;bind_authentication=auth}} -> 
+	  si.si_log `OPERATIONS 
+	    (sprintf "conn=%d op=0 BIND dn=\"%s\" method=128" conn_id dn);
+	  si.si_log `OPERATIONS
+	    (sprintf "conn=%d op=0 BIND dn=\"%s\" mech=%s ssf=0" conn_id dn
+	       (match auth with
+		    Simple _ -> "SIMPLE"
+		  | Sasl _ -> "SASL"));
 	  (match bi.bi_op_bind with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
@@ -124,6 +141,8 @@ let dispatch_request bi conn_id rb fd =
 					       bind_serverSaslCredentials=None}));
 			  raise Finished))
       | {protocolOp=Unbind_request} ->
+	  si.si_log `OPERATIONS
+	    (sprintf "conn=%d op=0 UNBIND" conn_id);
 	  (match bi.bi_op_unbind with
 	       Some f -> (fun () -> f conn_id message;raise Finished)
 	     | None -> (fun () -> raise Finished))
@@ -181,6 +200,12 @@ let dispatch_request bi conn_id rb fd =
 			  raise Finished))
       | _ -> raise (Server_error "invalid operation")
 
+let string_of_sockaddr sockaddr =
+  match sockaddr with 
+      ADDR_UNIX addr -> addr
+    | ADDR_INET (ip, port) -> 
+	(sprintf "%s:%d" (string_of_inet_addr ip) port)
+
 let run si = 
   let pending_writes si = (* do we have data to write? *)
     Hashtbl.fold 
@@ -190,6 +215,7 @@ let run si =
 	   | _ -> k :: pending)
       si.si_client_sockets []
   in
+    si.si_log `GENERAL "starting";
     while true
     do
       let fds = keys si.si_client_sockets in
@@ -238,11 +264,18 @@ let run si =
 		Hashtbl.remove si.si_client_sockets fd;
 		reading := List.filter ((<>) fd) !reading;
 		writing := List.filter ((<>) fd) !writing;
-		excond := List.filter ((<>) fd) !excond
+		excond := List.filter ((<>) fd) !excond;
+		si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
 	  else (* a new connection has come in, accept it *)
 	    let (newfd, sockaddr) = accept fd in
 	    let rb = readbyte_of_fd newfd in
-	      Hashtbl.add si.si_client_sockets newfd (allocate_connection_id si, [], rb)
+	    let connid = allocate_connection_id si in		   
+	      Hashtbl.add si.si_client_sockets newfd (connid, [], rb);
+	      si.si_log `CONNECTION 
+		(sprintf "conn=%d fd=0 ACCEPT from IP=%s (IP=%s)"
+		   connid
+		   (string_of_sockaddr sockaddr)
+		   (string_of_sockaddr (getsockname fd)))
 	in
 	  (* service connections which are ready to be read *)
 	  List.iter process_read !reading;
@@ -265,10 +298,11 @@ let run si =
 		     Hashtbl.remove si.si_client_sockets fd;
 		     reading := List.filter ((<>) fd) !reading;
 		     writing := List.filter ((<>) fd) !writing;
-		     excond := List.filter ((<>) fd) !excond
+		     excond := List.filter ((<>) fd) !excond;
+		     si.si_log `CONNECTION (sprintf "conn=%d fd=0 closed" conn_id)
 	       else raise (Server_error "socket to write to not found"))
 	    !writing;
 
-	  (* Process out of band data*)
+	  (* Process out of band data *)
 	  List.iter process_read !excond
     done

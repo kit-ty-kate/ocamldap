@@ -50,28 +50,22 @@ type backendInfo = {
   bi_close : (unit -> unit) option;
 }
 
+type log_level = 
+    [ `CONNECTION
+    | `OPERATIONS
+    | `ERROR
+    | `TRACE ]
+
 (** This abstract type contains the server context. It has the listening,
     socket, all the connected client sockets, and some internal data
     structures. *)
-(* old, just 
 type server_info
-*)
-open Unix
-open Lber
-type msgid = int
-type pending_operations = (unit -> unit) list
 
-type server_info = {
-  si_listening_socket: file_descr;
-  si_client_sockets: (file_descr, connection_id * pending_operations * readbyte) Hashtbl.t;  
-  si_backend: backendInfo;
-  mutable si_current_connection_id: int;
-}
-
-
-(** Initialize the server, create the listening socket and return the server
-    context, which you will pass to serv to process connections. *)
-val init : ?port:int -> backendInfo -> server_info
+(** Initialize the server, create the listening socket and return the
+    server context, which you will pass to serv to process
+    connections. log is a string -> log_level -> unit function to which log
+    messages will be sent. *)
+val init : ?log:(log_level -> string -> unit) -> ?port:int -> backendInfo -> server_info
 
 (** Shutdown the server *)
 val shutdown : server_info -> unit
