@@ -1,3 +1,18 @@
+2.1.0
+   * Vastly improved decoding performance, 2x speedup. Beats OpenLDAP
+     2.2's decoder by 5%
+   * Improved the performance of write_entry, and to_string in LDIF_oo
+   * Fixed a bug in the LDIF parser which could cause it to return the
+     wrong line count when it finds a syntax error.
+   * Fixed a typo in the rfc2252 schema parser which would cause it not
+     to correctly lex non numeric OIDs
+   * moved err2string to a new module Ldap_error, which will contain
+     functions for doing various things with LDAP_Failure exceptions.
+     This WILL break existing applications which use err2string, however
+     it is a simple matter of opening Ldap_error to fix them.
+   * Implemented ldap_perror, and ldap_strerror functions, which either
+     print, or return nicely formatted strings describing an LDAP_Failure
+     exception.
 2.0.3
    * Handle additional Unix_error exceptions as reconnection events,
      including EPIPE, ECONNRESET, and ECONNABORTED. Not handling these
