@@ -32,15 +32,42 @@ let safe_string_regex =
 let password_regex =
   Str.regexp_case_fold ".*p\\(ass\\)?w\\(or\\)?d$"
 
-let safe_val s = 
-  if Str.string_match safe_string_regex s 0 then ": " ^ s ^ "\n"
-  else ":: " ^ Base64.encode s ^ "\n"
+let safe_val buf s = 
+  if Str.string_match safe_string_regex s 0 then begin
+    Buffer.add_string buf ": ";
+     Buffer.add_string buf s
+  end
+  else begin
+    Buffer.add_string buf ":: ";
+    Buffer.add_string buf (Base64.encode s)
+  end
 
-let safe_attr_val a v =
-  if Str.string_match password_regex a 0 then
-    a ^ ":: " ^ Base64.encode v ^ "\n"
-  else a ^ safe_val v
+let safe_attr_val buf a v =
+  if Str.string_match password_regex a 0 then begin
+    Buffer.add_string buf a;
+    Buffer.add_string buf ":: ";
+    Buffer.add_string buf (Base64.encode v)
+  end
+  else begin
+    Buffer.add_string buf a;
+    safe_val buf v
+  end
 
+let entry2ldif outbuf e = 
+  Buffer.add_string outbuf "dn";
+  safe_val outbuf e#dn;
+  Buffer.add_char outbuf '\n';
+  (List.iter
+     (fun attr ->
+        (List.iter
+           (fun value -> 
+	      safe_attr_val outbuf attr value;
+	      Buffer.add_char outbuf '\n')
+           (e#get_value attr)))
+     e#attributes);
+  Buffer.add_char outbuf '\n';
+  outbuf
+    
 let iter (f: ('a -> unit)) ldif = 
   try
     while true
@@ -92,24 +119,17 @@ object (self)
 	      e
   method to_string (e:ldapentry_t) =
     try
-      Buffer.add_string outbuf "dn";
-      Buffer.add_string outbuf (safe_val e#dn);
-      (List.iter
-	 (fun attr ->
-            (List.iter
-               (fun value -> 
-		  Buffer.add_string outbuf attr;
-		  Buffer.add_string outbuf ": ";
-		  Buffer.add_string outbuf (safe_attr_val attr value);
-		  Buffer.add_char outbuf '\n')
-               (e#get_value attr)))
-	 e#attributes);
-      let res = Buffer.contents outbuf in
+      let contents = Buffer.contents (entry2ldif outbuf e) in
 	Buffer.clear outbuf;
-	res
+	contents
     with exn ->
       Buffer.clear outbuf;
       raise exn
   method write_entry (e:ldapentry_t) =
-    output_string out_ch (self#to_string e)      
+    try
+      Buffer.output_buffer out_ch (entry2ldif outbuf e);
+      Buffer.clear outbuf
+    with exn ->
+      Buffer.clear outbuf;
+      raise exn
 end

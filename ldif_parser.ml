@@ -95,12 +95,18 @@ let safe_chars s =
     with 
 	Illegal_char('\n',_) -> 
 	  (match (npeek 2 s.stream) with
-	       ['\n';' '] -> (junk s.stream);(junk s.stream);(do_safe_chars s)
-	     |       _    -> ())
+	       ['\n';' '] -> 
+		 (junk s.stream);(junk s.stream);
+		 s.line <- s.line + 1;
+		 (do_safe_chars s)
+	     | _ -> ())
       | Illegal_char('\r',_) -> 
 	  (match (npeek 3 s.stream) with
-	       ['\r';'\n';' '] -> (junk s.stream);(junk s.stream);(junk s.stream);(do_safe_chars s)
-	     |       _         -> ())
+	       ['\r';'\n';' '] -> 
+		 (junk s.stream);(junk s.stream);(junk s.stream);
+		 s.line <- s.line + 1;
+		 (do_safe_chars s)
+	     | _ -> ())
       | Illegal_char(_,_) -> ()
       | End -> ()
   in
