@@ -51,7 +51,7 @@ type attribute = {
   at_xattr : string list;
 }
 
-(** The type representing the whole schema. Consysts of hashtbls
+(** The type representing the whole schema. Consists of hashtbls
   indexed by two useful keys. For both attributes and objectclasses
   there exists a hashtbl indexed by OID, and one indexed by lower case
   canonical name. There exist functions in Ldap_ooclient to look up
