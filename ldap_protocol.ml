@@ -856,7 +856,7 @@ let decode_modifydnrequest rb =
   let dn = decode_ber_octetstring rb in
   let newrdn = decode_ber_octetstring rb in
   let deleteoldrdn = decode_ber_bool rb in
-  let newsup = (try Some (decode_ber_octetstring rb)
+  let newsup = (try Some (decode_ber_octetstring ~cls:Context_specific ~tag:0 rb)
 		with Readbyte_error End_of_stream -> None)
   in
     Modify_dn_request
@@ -1025,46 +1025,66 @@ let decode_ldapmessage rb =
 	let messageid = decode_ber_int32 rb in
 	let protocol_op =
 	  match decode_ber_header rb with
-	      {ber_class=Application;ber_tag=0} ->
-		decode_bindrequest rb
-	    | {ber_class=Application;ber_tag=1} ->
-		decode_bindresponse rb
-	    | {ber_class=Application;ber_tag=2} ->
-		decode_unbindrequest rb
-	    | {ber_class=Application;ber_tag=3} ->
-		decode_searchrequest rb
-	    | {ber_class=Application;ber_tag=4} ->
-		decode_searchresultentry rb
-	    | {ber_class=Application;ber_tag=5} ->
-		decode_searchresultdone rb
-	    | {ber_class=Application;ber_tag=19} ->
-		decode_searchresultreference rb
-	    | {ber_class=Application;ber_tag=6} ->
-		decode_modifyrequest rb
-	    | {ber_class=Application;ber_tag=7} ->
-		decode_modifyresponse rb
-	    | {ber_class=Application;ber_tag=8} ->
-		decode_addrequest rb
-	    | {ber_class=Application;ber_tag=9} ->
-		decode_addresponse rb
+	      {ber_class=Application;ber_tag=0;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_bindrequest rb
+	    | {ber_class=Application;ber_tag=1;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_bindresponse rb
+	    | {ber_class=Application;ber_tag=2;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_unbindrequest rb
+	    | {ber_class=Application;ber_tag=3;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_searchrequest rb
+	    | {ber_class=Application;ber_tag=4;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_searchresultentry rb
+	    | {ber_class=Application;ber_tag=5;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_searchresultdone rb
+	    | {ber_class=Application;ber_tag=19;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_searchresultreference rb
+	    | {ber_class=Application;ber_tag=6;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_modifyrequest rb
+	    | {ber_class=Application;ber_tag=7;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_modifyresponse rb
+	    | {ber_class=Application;ber_tag=8;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_addrequest rb
+	    | {ber_class=Application;ber_tag=9;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_addresponse rb
 	    | {ber_class=Application;ber_tag=10;ber_length=len} ->
-		decode_deleterequest len rb
-	    | {ber_class=Application;ber_tag=11} ->
-		decode_deleteresponse rb
-	    | {ber_class=Application;ber_tag=12} ->
-		decode_modifydnrequest rb
-	    | {ber_class=Application;ber_tag=13} ->
-		decode_modifydnresponse rb
-	    | {ber_class=Application;ber_tag=14} ->
-		decode_comparerequest rb
-	    | {ber_class=Application;ber_tag=15} ->
-		decode_compareresponse rb
-	    | {ber_class=Application;ber_tag=16} ->
-		decode_abandonrequest rb
-	    | {ber_class=Application;ber_tag=23} ->
-		decode_extendedrequest rb
-	    | {ber_class=Application;ber_tag=24} ->
-		decode_extendedresponse rb
+		let rb = readbyte_of_ber_element len rb in
+		  decode_deleterequest len rb
+	    | {ber_class=Application;ber_tag=11;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_deleteresponse rb
+	    | {ber_class=Application;ber_tag=12;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_modifydnrequest rb
+	    | {ber_class=Application;ber_tag=13;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_modifydnresponse rb
+	    | {ber_class=Application;ber_tag=14;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_comparerequest rb
+	    | {ber_class=Application;ber_tag=15;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_compareresponse rb
+	    | {ber_class=Application;ber_tag=16;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_abandonrequest rb
+	    | {ber_class=Application;ber_tag=23;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_extendedrequest rb
+	    | {ber_class=Application;ber_tag=24;ber_length=len} ->
+		let rb = readbyte_of_ber_element len rb in
+		  decode_extendedresponse rb
 	    | _ -> raise (LDAP_Decoder "protocol error")
 	in
 	let controls = decode_ldapcontrols rb in
