@@ -936,8 +936,11 @@ let encode_extendedrequest {ext_requestName=reqname;ext_requestValue=reqval} =
     Buffer.contents buf
 
 let decode_extendedrequest rb =
-  let reqname = decode_ber_octetstring rb in
-  let reqval = (try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None) in
+  let reqname = decode_ber_octetstring ~cls:Context_specific ~tag:0 rb in
+  let reqval = 
+    try Some (decode_ber_octetstring ~cls:Context_specific ~tag:1 rb) 
+    with Readbyte_error End_of_stream -> None 
+  in
     Extended_request
       {ext_requestName=reqname;ext_requestValue=reqval}
 
