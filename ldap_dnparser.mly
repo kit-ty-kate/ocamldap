@@ -43,6 +43,12 @@
       | 'e' -> 14
       | 'f' -> 15
       | _ -> raise (Invalid_dn "invalid hex digit")
+
+  let unescape_hexpair hex1 hex2 = 
+    (char_of_int 
+       ((lor) 
+	  ((lsl) (unhex hex2) 4)
+	  (unhex hex1)))
     
   let unescape_stringwithpair s = 
     let strm = Stream.of_string s in
@@ -55,19 +61,29 @@
 		   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
 		     Buffer.add_char buf c;
 		     unescape strm buf
-		 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as c -> 
-		     let c1 = Stream.next strm in
-		       Buffer.add_char buf 
-			 (char_of_int 
-			    ((lor) 
-			       ((lsl) (unhex c) 4)
-			       (unhex c1)));
+		 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 -> 
+		     let hex2 = Stream.next strm in
+		       Buffer.add_char buf (unescape_hexpair hex1 hex2);
 		       unescape strm buf
 		 | _ -> raise (Invalid_dn "invalid escape sequence"))
 	  | c -> Buffer.add_char buf c;unescape strm buf
       with Stream.Failure -> Buffer.contents buf
     in
       unescape strm buf
+
+  let unescape_hexstring s = 
+    let strm = Stream.of_string in
+    let buf = Buffer.create (String.length s) in
+    let rec unescape strm buf = 
+      try
+	let (hex1, hex2) = (Stream.next strm, Stream.next strm) in
+	  Buffer.add_char buf (unescape_hexpair hex1 hex2);
+	  unescape strm buf
+      with Stream.Failure -> Buffer.contents buf
+    in
+      match Stream.next strm with
+	  '#' -> unescape strm buf
+	| _ -> raise (Invalid_dn "invalid hexstring")
 %}
 
 %token Equals Plus Comma End_of_input
