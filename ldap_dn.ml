@@ -25,7 +25,7 @@ open Printf
 
 let of_string dn_string = 
   try Ldap_dnparser.dn dn_string
-  with Parsing.Parser_error | Failure _ ->
+  with Parsing.Parse_error | Failure _ ->
     raise (Invalid_dn "parse error")
 
 let hexpair_of_char c = 
