@@ -15,6 +15,9 @@
 	parser, and the filter parser. These functions are intended to be
 	used when you are manually manipulating stringified versions of
 	the dn or filter via regular expressions or other means.
+	* added some functions which are designed to be used from the
+	toplevel for quick searches, and modifies. These are a work
+	in progress.
 2.1.1
    * Changed Lcstring to work like it used to, added a new module
      CaseInsensitiveString which does case preserving case insensitive

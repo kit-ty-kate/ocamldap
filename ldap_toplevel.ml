@@ -22,6 +22,9 @@ open Ldap_ooclient;;
 open Ldap_types;;
 open Ldif_oo;;
 
+(** functions for using ocamldap on the toplevel. Designed to be as
+close to the OpenLDAP command line tools as possible. *)
+
 let print_entries es = 
   let ldif = new ldif () in
     List.iter

@@ -22,6 +22,8 @@
 open Ldap_types
 open Ldap_dnparser
 
+(** operations on ldap dns *)
+
 (** raised when something goes wrong with conversion to or from a
     string. The integer argument is the charachter which the lexer was
     looking at then the failure ocurred. In the case of to_string the
