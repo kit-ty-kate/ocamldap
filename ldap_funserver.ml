@@ -207,8 +207,26 @@ let run si =
 	    (* an existing client has requested a new operation *)	  
 	    let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
 	      try
-		Hashtbl.replace si.si_client_sockets fd
-		  (conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
+		try
+		  Hashtbl.replace 
+		    si.si_client_sockets 
+		    fd
+		    (conn_id, 
+		     (dispatch_request 
+			si.si_backend conn_id rb fd) :: pending_ops, 
+		     rb)
+		with LDAP_Decoder e -> (* handle protocol errors *)
+		  send_message fd (* send a notice of disconnection *)
+		    {messageID=0l;
+		     protocolOp=Extended_response
+			{ext_result={result_code=`PROTOCOL_ERROR;
+				     matched_dn="";
+				     error_message=e;
+				     ldap_referral=None};
+			 ext_responseName=(Some "1.3.6.1.4.1.1466.20036");
+			 ext_response=None};
+		     controls=None};
+		  raise (Readbyte_error Transport_error) (* close the connection *)
 	      with Readbyte_error Transport_error ->
 		(match si.si_backend.bi_op_unbind with
 		     Some f -> f conn_id {messageID=0l;protocolOp=Unbind_request;controls=None}
