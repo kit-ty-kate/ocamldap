@@ -5,7 +5,9 @@
        decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
      - Fixed decoding of negative integers
      - Fixed decoding of error codes to comply with rfc2251. Unknown error
-       codes will now be returned as `OTHER
+       codes will now be returned as `OTHER according to the rfc.
+     - Fixed buggy decoding of ldap controls. They were not well tested
+       until now, and several misinterpertations of the standard existed.
    * BER Encoder
      - Fixed several bugs in the encoding of two's complement integers
        where the sign bit was not being handled correctly. This never
