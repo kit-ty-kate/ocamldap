@@ -91,7 +91,7 @@ let free_messageid con msgid =
       msgid_s.msg_inuse <- false;
       Queue.clear msgid_s.msg_queue
   with Not_found -> 
-    raise (LDAP_Failure (`LOCAL_ERROR, "message id double free", ext_res))
+    raise (LDAP_Failure (`LOCAL_ERROR, "free_messageid: invalid msgid", ext_res))
 
 (* send an ldapmessage *)
 let send_message con msg =
@@ -139,9 +139,10 @@ let receive_message con msgid =
     let msg = decode_ldapmessage con.rb in
       if msg.messageID = msgid then msg
       else
-	let q = q_for_msgid con msg.messageID in
-	  Queue.add msg q;
-	  read_message con msgid
+	(print_endline (string_of_int msg.messageID);
+	 let q = q_for_msgid con msg.messageID in
+	   Queue.add msg q;
+	   read_message con msgid)
   in
   let q = q_for_msgid con msgid in
     try
@@ -386,6 +387,7 @@ let search_s ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
        done
      with 
 	 LDAP_Failure (`SUCCESS, _, _) -> ()
+       | LDAP_Failure (code, msg, ext) -> raise (LDAP_Failure (code, msg, ext))
        | exn -> (try abandon con msgid with _ -> ());raise exn);
     free_messageid con msgid;
     !result
