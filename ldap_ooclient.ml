@@ -417,7 +417,8 @@ object (self)
 				    ~base: "" 
 				    ~scope: `BASE 
 				    ~attrs: ["subschemasubentry"] 
-				    "(objectclass=*)") with
+				    "(objectclass=*)")
+			   with
 			       [e] -> List.hd (e#get_value "subschemasubentry")
 			     |  _  -> raise Not_found) in
 	  (match (self#search

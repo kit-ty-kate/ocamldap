@@ -35,3 +35,13 @@ val of_string : string -> Ldap_types.filter
 (** turn an internal representaion of a filter into a string
     representaion compliant with rfc2254*)
 val to_string : Ldap_types.filter -> string
+
+(** escape a string which is intended to be the VALUE of an attribute
+    assertion in a filter. Do not use this on a whole filter, it will
+    destroy all the meta chars. Use it only on the VALUE part of the
+    assertion. It is NOT necessary to use this function if you intend
+    to call to_string, escaping will be done for you in that
+    case. This function is exposed because you may want to manipulate
+    a filter with a regular expression, or other string means, and you
+    may find it necessary to escape values manually in that case. *)
+val escape_filterstring : string -> string
