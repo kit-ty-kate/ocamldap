@@ -475,16 +475,16 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 	 encoding. So we must turn the real sign bit off, and set the
 	 first bit of the first octet in the encoded stream, because
 	 it will become the sign bit on the other side. *)
-      (if value < 0b11111111_11111111_11111111_10000000l then
+      (if value > 0b11111111_11111111_11111111_10000000l then
 	 (* fits in 7 bits + sign bit *)
 	 Buffer.add_char buf (* byte one, MSB *)
 	   (to_char 
 	      (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
 		 0b1000_0000l
 		 (Int32.logand (* flip the sign bit for the WHOLE word OFF *)
-		    0b01111111_11111111_11111111_11111111l
+		    0b00000000_00000000_00000000_1111111l
 		    value)))
-       else if value < 0b11111111_11111111_10000000_00000000l then
+       else if value > 0b11111111_11111111_10000000_00000000l then
 	 (* fits in 15 bits + sign bit *)
 	 (Buffer.add_char buf (* byte one, MSB *)
 	    (to_char
@@ -495,8 +495,12 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 			0b00000000_00000000_11111111_00000000l
 			value)
 		     8)));
-	  Buffer.add_char buf (to_char (Int32.logand 0b11111111l value))) (* byte two *)
-       else if value < 0b11111111_10000000_00000000_00000000l then
+	  Buffer.add_char buf 
+	    (to_char 
+	       (Int32.logand 
+		  0b00000000_00000000_00000000_11111111l 
+		  value))) (* byte two *)
+       else if value > 0b11111111_10000000_00000000_00000000l then
 	 (* fits in 23 bits + sign bit *)
 	 (Buffer.add_char buf (* byte one, MSB *)
 	    (to_char
@@ -511,13 +515,13 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 	    (to_char
 	       (Int32.shift_right
 		  (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-		     0b11111111_00000000l
+		     0b00000000_00000000_11111111_00000000l
 		     value)
 		  8));
 	  Buffer.add_char buf (* byte three *)
 	    (to_char 
 	       (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-		  0b11111111l
+		  0b00000000_00000000_00000000_11111111l
 		  value)))
        else
 	 (* fits in 31 bits + sign bit *)
@@ -534,20 +538,20 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 	    (to_char
 	       (Int32.shift_right
 		  (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-		     0b11111111_00000000_00000000l
+		     0b00000000_11111111_00000000_00000000l
 		     value)
 		  16));
 	  Buffer.add_char buf (* byte three *)
 	    (to_char
 	       (Int32.shift_right
 		  (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-		     0b11111111_00000000l
+		     0b00000000_00000000_11111111_00000000l
 		     value)
 		  8));
 	  Buffer.add_char buf (* byte four *)
 	    (to_char 
 	       (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-		  0b11111111l
+		  0b00000000_00000000_00000000_11111111l
 		  value))));
       buf
   in
