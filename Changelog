@@ -10,8 +10,16 @@
        effected ldap clients, but severly limited the functionality of ldap
        servers. They would be unable to respond to requests with message id
        128, which would cause most clients to hang
+   * ldap_funclient
+     - Studied OpenLDAP's client library in depth, and adapted msgid
+       allocation to look exactly like theirs. This will expose fewer
+       bugs in ldap servers.
+     - Changed the msgid type to an int32 (this should not be a visible
+       change, it is an opaque type).
+     - Refactored readbyte implementations, moved them to lber.ml, and
+       tightened their exception handling.
    * LDIF Parser improvements
-     - Improved the performance of write_entry, and to_string in LDIF_oo
+     - Improved the performance of write_entry, and to_string in Ldif_oo
      - Fixed a bug in the LDIF parser which could cause it to return
        the wrong line count when it finds a syntax error.
    * RFC 2252 schema parser/lexer

@@ -181,20 +181,6 @@ let dispatch_request bi conn_id rb fd =
 			  raise Finished))
       | _ -> raise (Server_error "invalid operation")
 
-(* old rb_of_fd
-  let rb_of_fd fd =
-    let buf = String.create 1 in
-    let in_ch = in_channel_of_descr fd in (* greatly improves performace *)
-    let rec rb ?(peek=false) () = 
-      let result = input in_ch buf 0 1 in
-	if result = 1 then
-	  buf.[0]
-	else (close fd;raise (Server_error "socket error"))
-    in
-      rb
-  in    
-*)
-
 let run si = 
   let pending_writes si = (* do we have data to write? *)
     Hashtbl.fold 
