@@ -746,7 +746,7 @@ let decode_modification rb =
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=len} -> (* sequence is specified *)
 	let rb = readbyte_of_ber_element len rb in
-	let op = (match decode_ber_enum ~contents:contents rb with
+	let op = (match decode_ber_enum rb with
 		      0l -> `ADD
 		    | 1l -> `DELETE
 		    | 2l -> `REPLACE
