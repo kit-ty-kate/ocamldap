@@ -66,7 +66,6 @@ let send_message fd msg =
   let len = String.length e_msg in
   let written = ref 0 in
     try
-      print_endline ("sending message id: " ^ (string_of_int msg.messageID));
       while !written < len
       do
 	written := ((write fd e_msg 
@@ -115,10 +114,8 @@ let dispatch_request bi conn_id rb fd =
 			 ldap_referral=None}
   in
   let message = decode_ldapmessage rb in
-    print_endline ("message id: " ^ (string_of_int message.messageID));
     match message with
 	{protocolOp=Bind_request _} -> 
-	  print_endline "bind request";
 	  (match bi.bi_op_bind with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
@@ -127,12 +124,10 @@ let dispatch_request bi conn_id rb fd =
 					       bind_serverSaslCredentials=None}));
 			  raise Finished))
       | {protocolOp=Unbind_request} ->
-	  print_endline "unbind request";
 	  (match bi.bi_op_unbind with
 	       Some f -> (fun () -> f conn_id message;raise Finished)
 	     | None -> (fun () -> raise Finished))
       | {protocolOp=Search_request _} ->
-	  print_endline "search request";
 	  (match bi.bi_op_search with
 	       Some f -> 
 		 let get_srch_result = f conn_id message in		   
@@ -141,47 +136,40 @@ let dispatch_request bi conn_id rb fd =
 			  (not_imp message (Search_result_done not_implemented));
 			  raise Finished))
       | {protocolOp=Modify_request _} ->
-	  print_endline "modify request";
 	  (match bi.bi_op_modify with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Modify_response not_implemented));
 			  raise Finished))
       | {protocolOp=Add_request _} ->
-	  print_endline "add request";
 	  (match bi.bi_op_add with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Add_response not_implemented));
 			  raise Finished))
       | {protocolOp=Delete_request _} ->
-	  print_endline "delete request";
 	  (match bi.bi_op_delete with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Delete_response not_implemented));
 			  raise Finished))
       | {protocolOp=Modify_dn_request _} ->
-	  print_endline "modify request";
 	  (match bi.bi_op_modrdn with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Modify_dn_response not_implemented));
 			  raise Finished))
       | {protocolOp=Compare_request _} ->
-	  print_endline "compare request";
 	  (match bi.bi_op_compare with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
 			  (not_imp message (Compare_response not_implemented));
 			  raise Finished))
       | {protocolOp=Abandon_request _} ->
-	  print_endline "abandon request";
 	  (match bi.bi_op_abandon with
 	       Some f -> (fun () -> f conn_id message;raise Finished)
 	     | None -> (fun () -> raise Finished))
       | {protocolOp=Extended_request _} ->
-	  print_endline "extended request";
 	  (match bi.bi_op_extended with
 	       Some f -> (fun () -> send_message fd (f conn_id message);raise Finished)
 	     | None -> (fun () -> send_message fd
@@ -223,7 +211,6 @@ let run si =
       and writing = ref []
       and excond = ref [] in
       let (rd, wr, ex) = 
-	print_endline "waiting for data to come in";
 	select (si.si_listening_socket :: fds) 
 	  (pending_writes si) (* nothing to write? don't bother *)
 	  fds (-1.0) 
@@ -233,12 +220,10 @@ let run si =
 	  if Hashtbl.mem si.si_client_sockets fd then
 	    (* an existing client has requested a new operation *)	  
 	    let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-	      print_endline "processing read operation";
 	      try
 		Hashtbl.replace si.si_client_sockets fd
 		  (conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
 	      with Readbyte_error Transport_error ->
-		print_endline "closing client connection due to read error";
 		(match si.si_backend.bi_op_unbind with
 		     Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
 		   | None -> ());
@@ -257,32 +242,29 @@ let run si =
 	in
 	  (* service connections which are ready to be read *)
 	  List.iter process_read !reading;
-	  List.iter (* service connections which are ready to be written to *)
+
+	  (* service connections which are ready to be written to *)
+	  List.iter
 	    (fun (fd: file_descr) ->
 	       if Hashtbl.mem si.si_client_sockets fd then
 		 let (conn_id, pending_ops, rb) = Hashtbl.find si.si_client_sockets fd in
-		 let rec perform_writes si conn_id pending_ops rb =
-		   match pending_ops with
-		       [] -> 
-			 print_endline "finished processing writes";
-			 Hashtbl.replace si.si_client_sockets fd (conn_id, [], rb)
-		     | hd :: tl -> 
-			 try hd () with Finished ->
-			   print_endline "processed write";
-			   Hashtbl.replace si.si_client_sockets fd (conn_id, tl, rb);
-			   perform_writes si conn_id tl rb
-		 in
-		   try perform_writes si conn_id pending_ops rb
+		   try
+		     match pending_ops with
+			 [] -> ()
+		       | hd :: tl -> 
+			   try hd () with Finished ->
+			     Hashtbl.replace si.si_client_sockets fd (conn_id, tl, rb)
 		   with Server_error "data cannot be written" ->
 		     (match si.si_backend.bi_op_unbind with
 			  Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
 			| None -> ());
-		     print_endline "closing client connection on bad write";
 		     Hashtbl.remove si.si_client_sockets fd;
 		     reading := List.filter ((<>) fd) !reading;
 		     writing := List.filter ((<>) fd) !writing;
 		     excond := List.filter ((<>) fd) !excond
 	       else raise (Server_error "socket to write to not found"))
 	    !writing;
-	  List.iter process_read !excond (* Process out of band data*)
+
+	  (* Process out of band data*)
+	  List.iter process_read !excond
     done

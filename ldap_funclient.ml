@@ -126,8 +126,7 @@ let receive_message con msgid =
     let msg = decode_ldapmessage con.rb in
       if msg.messageID = msgid then msg
       else
-	(print_endline (string_of_int msg.messageID);
-	 let q = q_for_msgid con msg.messageID in
+	(let q = q_for_msgid con msg.messageID in
 	   Queue.add msg q;
 	   read_message con msgid)
   in

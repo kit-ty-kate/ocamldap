@@ -395,7 +395,7 @@ let decode_ber_int32 ?(peek=false) ?(cls=Universal) ?(tag=2) ?(contents=None)
 	raise (Decoding_error "integer overflow, use bigger decode function?")
       else if length > 0 then
 	let c i = Int32.of_int (int_of_char i) in
-	let rec convert octets l i v = (* test more, << 32 is undef in manual, but seems to work *)
+	let rec convert octets l i v =
 	  if i <= l then
 	    convert octets l (i + 1) 
 	      (Int32.add v (Int32.shift_left (c octets.[i]) (8 * (l - i))))
