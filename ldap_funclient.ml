@@ -236,7 +236,6 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	let rec rb ?(peek=false) () = 
 	  if !pos = !len then
 	    let result = Ssl.read fd buf 0 16384 in
-	      print_endline "reading a chunk";
 	      if result >= 1 then
 		(len := result;
 		 pos := 1;	    
