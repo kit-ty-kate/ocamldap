@@ -143,4 +143,3 @@ and lexoc = parse
   | "X-" xstring qdstrings {Xstring (Lexing.lexeme lexbuf)}
   | oid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | ')' {Rparen}
-

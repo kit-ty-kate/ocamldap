@@ -237,6 +237,7 @@ val equateAttrs :
 exception Invalid_objectclass of string
 exception Invalid_attribute of string
 exception Single_value of string
+exception Objectclass_is_required
 
 class scldapentry :
   Ldap_schemaparser.schema ->

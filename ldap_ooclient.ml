@@ -402,6 +402,7 @@ type scflavor = Optimistic (* attempt to find objectclasses which make illegal
 exception Invalid_objectclass of string
 exception Invalid_attribute of string
 exception Single_value of string
+exception Objectclass_is_required
 
 let attrToOid schema (attr:Lcstring.t) =
   try (Hashtbl.find schema.attributes attr).at_oid (* try canonical name first *)
@@ -521,14 +522,16 @@ object (self)
       must         <- (generate_mustmay 
 			 (List.rev_map 
 			    (Lcstring.of_string) 
-			    (super#get_value "objectclass"))
+			    (try super#get_value "objectclass" 
+			     with Not_found -> raise Objectclass_is_required))
 			 schema
 			 Setstr.empty
 			 true);
       may          <- (generate_mustmay 
 			 (List.rev_map 
 			    (Lcstring.of_string) 
-			    (super#get_value "objectclass"))
+			    (try super#get_value "objectclass" 
+			     with Not_found -> raise Objectclass_is_required))
 			 schema
 			 Setstr.empty
 			 false);
@@ -539,11 +542,13 @@ object (self)
 			 schema 
 			 (List.rev_map
 			    (Lcstring.of_string) 
-			    (super#get_value "objectclass")));
+			    (try super#get_value "objectclass" 
+			     with Not_found -> raise Objectclass_is_required)));
       presentOcs   <- (setOfList 
 			 (List.rev_map 
 			    (fun attr -> ocToOid schema (Lcstring.of_string attr)) 
-			    (super#get_value "objectclass"))
+			    (try super#get_value "objectclass" 
+			     with Not_found -> raise Objectclass_is_required))
 			 Setstr.empty);
       missingOcs   <- Setstr.diff requiredOcs (Setstr.inter requiredOcs presentOcs);
       illegalOcs   <- (setOfList
@@ -556,7 +561,8 @@ object (self)
 			       schema
 			       (List.rev_map
 				  (Lcstring.of_string)
-				  (super#get_value "objectclass"))))
+				  (try super#get_value "objectclass" 
+				   with Not_found -> raise Objectclass_is_required))))
 			 Setstr.empty);
       if Setstr.is_empty (Setstr.union missingAttrs illegalAttrs) then
 	consistent <- true
@@ -568,6 +574,7 @@ object (self)
     with 
 	Invalid_objectclass(s) -> super#delete [("objectclass",[s])];self#drive_updatecon
       | Invalid_attribute(s) -> super#delete [(s,[])];self#drive_updatecon
+      | Objectclass_is_required -> super#add [("objectclass", ["top"])]
 
   method private reconsile_illegal flavor =
     let find_in_oc oc attr = (List.exists
