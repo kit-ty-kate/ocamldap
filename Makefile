@@ -20,7 +20,7 @@ ifneq ($(strip $(shell ocamlfind query ssl)),)
 	PACKS+=ssl
 endif
 
-all: byte-code-library clean-doc htdoc meta
+all: debug-code-library clean-doc htdoc meta
 opt: native-code-library meta
 reallyall: byte-code-library native-code-library
 install: libinstall

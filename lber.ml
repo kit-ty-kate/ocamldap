@@ -89,7 +89,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 		 byte_counter := !byte_counter + 1;
 		 rb ())
 	      else raise Stream.Failure
-	    else if !peek_counter < limit then
+	    else if !peek_counter < limit && !byte_counter < limit then
 	      (peek_counter := !peek_counter + 1;
 	       rb ~peek:true ())
 	    else raise Stream.Failure

@@ -227,7 +227,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
       let peek_buf = String.create 50 in
       let peek_buf_pos = ref 0 in
       let peek_buf_len = ref 0 in
-      let rec rb ?(peek=false) () = 
+      let rb ?(peek=false) () = 
 	if !peek_buf_len = 0 || peek then
 	  let result = input in_ch buf 0 1 in
 	    if result = 1 then

@@ -38,7 +38,7 @@ let print_entry e =
 	  attrs
     | `Referral f -> ()
 
-let _ = 
+let main () = 
   let usg = "test -H <ldapurl> -D <dn> -w <pass> -b <base> <filter>" in
   let host = ref "" in
   let port = ref 389 in
@@ -70,3 +70,7 @@ let _ =
 	   with LDAP_Failure (`SUCCESS, _, _) -> print_endline "")
     else
       usage spec usg
+;;
+
+main ();;
+
