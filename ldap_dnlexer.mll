@@ -49,8 +49,8 @@ rule lexdn = parse
   | whsp (',' | ';') whsp {Comma}
   | oid {Oid (Lexing.lexeme lexbuf)}
   | attributetype {AttributeType (Lexing.lexeme lexbuf)}
-  | stringchar* [^ ' '] {String (Lexing.lexeme lexbuf)}
-  | (stringchar | pair)* (pair | [^ ' ']) {StringWithPair (Lexing.lexeme lexbuf)}
+  | stringchar* [^ ' '] # special {String (Lexing.lexeme lexbuf)}
+  | (stringchar | pair)* (pair | [^ ' '] # special) {StringWithPair (Lexing.lexeme lexbuf)}
   | '#' hexstring {HexString (Lexing.lexeme lexbuf)}
   | '"' (quotechar | pair)* '"' {QuoteString (Lexing.lexeme lexbuf)}
   | eof {End_of_input}
