@@ -24,7 +24,7 @@
 open Lber
 open Ldap_types
 
-let encode_resultcode code =
+let encode_resultcode (code:ldap_resultcode) =
   match code with
       `SUCCESS -> 0
     | `OPERATIONS_ERROR -> 1

@@ -24,6 +24,13 @@
 open Ldap_types
 open Lber
 
+(** return the int asociated with the specified result code *)
+val encode_resultcode : ldap_resultcode -> int
+
+(** return the result code for the specified int 
+    @raises Failure *)
+val decode_resultcode : int -> ldap_resultcode
+
 (** encode a value of type ldap_message using lber and return
   a string which is ready to be put on the wire *)
 val encode_ldapmessage : ldap_message -> string
