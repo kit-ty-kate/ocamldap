@@ -258,7 +258,7 @@ class scldapentry :
     method list_present : Setstr.elt list
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
-    method of_entry : ldapentry -> unit
+    method of_entry : ?scflavor:scflavor -> ldapentry -> unit
     method print : unit
     method replace : op_lst -> unit
     method set_changetype : changetype -> unit
@@ -315,7 +315,7 @@ class ldapaccount :
     method list_present : Setstr.elt list
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
-    method of_entry : ldapentry -> unit
+    method of_entry : ?scflavor:scflavor -> ldapentry -> unit
     method print : unit
     method replace : op_lst -> unit
     method service_exists : string -> bool

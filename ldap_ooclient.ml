@@ -658,7 +658,7 @@ object (self)
   (* for debugging *)
   method private getData = (must, may, present, missingOcs)
 
-  method of_entry (e:ldapentry) =
+  method of_entry ?(scflavor=Pessimistic) (e:ldapentry) =
     super#set_dn (e#dn);
     super#set_changetype `ADD;
     (List.iter
@@ -673,7 +673,8 @@ object (self)
 	  with (* single_val_check may encounter unknown attributes *)
 	      Invalid_attribute _ | Invalid_objectclass _ -> ())
        e#attributes);
-    self#drive_updatecon
+    self#drive_updatecon;
+    self#drive_reconsile scflavor
 
   (* raise an exception if the user attempts to have more than
      one value in a single valued attribute. *)
@@ -1058,7 +1059,7 @@ object (self)
 	 else l)
       services []
       
-  method of_entry e = super#of_entry e;self#resolve_missing
+  method of_entry ?(scflavor=Pessimistic) e = super#of_entry ~scflavor e;self#resolve_missing
 
   method add_generate x = 
     (if (Hashtbl.mem generators (lowercase x)) then

@@ -50,6 +50,8 @@ let ext_res = {ext_matched_dn="";
 
 let _ = Ssl.init ()
 
+(* limits us to Int32.max_int active async operations 
+   at any one time *)
 let find_free_msgid con = 
   let msgid = con.current_msgid in
     (if msgid = Int32.max_int then
@@ -57,9 +59,6 @@ let find_free_msgid con =
      else 
        con.current_msgid <- Int32.succ con.current_msgid);
     msgid
-
-(* test async operations, make sure we can't screw
-   something up with an async op *)
 
 (* allocate a message id from the free message id pool *)
 let allocate_messageid con =
