@@ -59,7 +59,7 @@ let ldap_strerror error ldaperror =
 		       else
 			 s ^ ", " ^ item)
 		    "" lst
-	      | None -> ""))
+	      | None -> "") ^ ": " ^ error)
     | _ -> failwith "not an ldap error"
 
 let ldap_perror error ldaperror = 

@@ -99,8 +99,8 @@ let send_message con msg =
     IFDEF SSL THEN
       match ld_socket with
 	  Ssl s -> 
-	    try Ssl.write s buf off len
-	    with Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", ""))
+	    (try Ssl.write s buf off len
+	     with Ssl.Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
 	| Plain s -> Unix.write s buf off len
     ELSE
       match ld_socket with
@@ -270,7 +270,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	  if !pos = !len || (peek && !peek_pos = !len) then
 	    let result = 
 	      try Ssl.read fd buf 0 16384 
-	      with Read_error _ -> raise (Sys_error "")
+	      with Ssl.Read_error _ -> raise (Sys_error "")
 	    in
 	      if result >= 1 then
 		(len := result;

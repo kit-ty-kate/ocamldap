@@ -1,3 +1,6 @@
+open Ldap_types
+
+(** given an ldap error code return a string describing it *)
 val err2string :
   [> `ADMINLIMIT_EXCEEDED
    | `ALIAS_DEREF_PROBLEM
@@ -40,5 +43,9 @@ val err2string :
    | `UNDEFINED_TYPE
    | `UNWILLING_TO_PERFORM ] ->
   string
-val ldap_strerror : 'a -> exn -> string
-val ldap_perror : 'a -> exn -> unit
+
+(** return a string with a human readable description of an LDAP_Failure exception *)
+val ldap_strerror : string -> exn -> string
+
+(** print to stderr a string with a human readable description of an LDAP_Failure exception *)
+val ldap_perror : string -> exn -> unit
