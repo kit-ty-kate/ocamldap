@@ -146,7 +146,7 @@ object (self)
 	     let attr = Lcstring.to_string attr in
 	     let e1vals = setOfList (lcStringlst (e1#get_value attr)) in
 	     let e2vals = setOfList (lcStringlst (e2#get_value attr)) in
-	       if not (Strset.is_empty (Strset.diff e2vals e1vals)) then		
+	       if not (Strset.is_empty (Strset.diff e1vals (Strset.inter e1vals e2vals))) then		
 		 (`REPLACE, attr, e1#get_value attr) :: mods
 	       else 
 		 mods)
@@ -155,7 +155,13 @@ object (self)
       in
 	List.rev_append remove_attrs (List.rev_append sync_attrs add_attrs)
     in
-      diff_entries self entry
+(*      List.sort (* objectclass modifications must appear first *)
+	(fun (_, attr1, _) (_, attr2, _) ->
+	   if attr1 = "objectclass" && attr2 = "objectclass" then 0
+	   else if attr1 = "objectclass" then (-1)
+	   else if attr2 = "objectclass" then 1
+	   else 0) *)
+	(diff_entries self entry)
 
   method delete (x:op_lst) = 
     let rec do_delete x = 
