@@ -94,14 +94,14 @@ let free_messageid con msgid =
 (* send an ldapmessage *)
 let send_message con msg =
   let write ld_socket buf off len = 
-IFDEF SSL THEN
-    match ld_socket with
-	Ssl s -> Ssl.write s buf off len
-      | Plain s -> Unix.write s buf off len
-ELSE
-    match ld_socket with
-	Plain s -> Unix.write s buf off len
-END
+    IFDEF SSL THEN
+      match ld_socket with
+	  Ssl s -> Ssl.write s buf off len
+	| Plain s -> Unix.write s buf off len
+    ELSE
+      match ld_socket with
+	  Plain s -> Unix.write s buf off len
+    END
   in
   let e_msg = encode_ldapmessage msg in
   let len = String.length e_msg in
@@ -208,6 +208,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 		   | Unix_error (EHOSTUNREACH, _, _) 
 		   | Unix_error (ECONNRESET, _, _)
 		   | Unix_error (ECONNABORTED, _, _)
+		   | Ssl.Connection_error _
 		   | Failure "timeout" ->
 		       ignore (alarm 0);
 		       set_signal sigalrm !previous_signal;
@@ -235,6 +236,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	let rec rb ?(peek=false) () = 
 	  if !pos = !len then
 	    let result = Ssl.read fd buf 0 16384 in
+	      print_endline "reading a chunk";
 	      if result >= 1 then
 		(len := result;
 		 pos := 1;	    
