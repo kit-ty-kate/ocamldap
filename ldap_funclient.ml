@@ -256,16 +256,23 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 	and len = ref 0
 	and peek_pos = ref 0 in
 	let rec rb ?(peek=false) () = 
-	  if !pos = !len then
-	    let result = Ssl.read fd buf 0 16384 in
+	  if !pos = !len || (peek && !peek_pos = !len) then
+	    let result = Ssl.read fd buf 0 16384 in	      
 	      if result >= 1 then
 		(len := result;
-		 pos := 1;	    
+		 (if peek then peek_pos := 1 else pos := 1);	    
 		 buf.[0])
 	      else (Ssl.shutdown fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
 	  else
-	    let c = buf.[!pos] in
-	      pos := !pos + 1;c	    
+	    if peek then
+	      let c = buf.[!peek_pos] in
+		peek_pos := !peek_pos + 1;
+		c
+	    else
+	      let c = buf.[!pos] in
+		pos := !pos + 1;
+		peek_pos := !pos;
+		c	    
 	in
 	  rb
       ELSE
