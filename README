@@ -1,18 +1,15 @@
-Highly out of date (2004-Nov-1)
-
 ---------------------------------------------------------------------------
 Synopsis
 ---------------------------------------------------------------------------
 
-Ocamldap is an ocaml-ldap toolkit.  It can be used by ocaml programs
-to communicate with ldap servers.
+Ocamldap is an ldap toolkit.  It can be used by ocaml programs to
+communicate with ldap servers, and to build your own ldap servers
 
 ---------------------------------------------------------------------------
 Contents
 ---------------------------------------------------------------------------
 Changes              - History of code changes.
 INSTALL              - Short notes on compiling and installing the library
-LICENSE              - A copy of the BSD license.
 Makefile             - Top Makefile
 README               - this file
 
@@ -20,8 +17,9 @@ README               - this file
 Prerequisites
 ---------------------------------------------------------------------------
 
-1) Openldap or a compatible ldap client library and headers.
-2) findlib (more info avaliable from the ocaml link database)
+1) findlib
+2) ocamlnet
+3) optional ocaml-ssl for ldaps support
 
 ---------------------------------------------------------------------------
 Features
@@ -36,21 +34,21 @@ Features
 * Ocamldap includes an ldif parser, which allows you to read ldif files into
   entry objects. (ldif content files only). see ooldif.mli
 * Ocamldap has a method call to grab the schema of an ldapv3 server
+* Basic ldap server functionality (ldap_funserver) allows you to easily
+  construct your own ldap servers. Perfect for meta directories, 
+  and other cool projects. Someday maybe your main database :-)
 
 ---------------------------------------------------------------------------
 Known Bugs/Missing Features
 ---------------------------------------------------------------------------
-* see Changelog for 1.6.0 issues
-* The schema call does not yet work with Microsoft's Active Directory, due to 
-  it's non-standard nature.
+* transparent reconnection may not work with ldaps under certian conditions
 
 ---------------------------------------------------------------------------
 Obtaining ocamldap
 ---------------------------------------------------------------------------
-Up-to-date information (newest release of distribution) can be
-found in the ocaml link database.
+Up to date info, can be found at
 
-http://www.npc.de/ocaml/linkdb/
+http://ocamldap.sourceforge.net
 
 ---------------------------------------------------------------------------
 Contact
