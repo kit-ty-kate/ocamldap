@@ -161,7 +161,9 @@ object (self)
 	     let attr = CaseInsensitiveString.to_string attr in
 	     let e1vals = setOfList (ciStringlst (e1#get_value attr)) in
 	     let e2vals = setOfList (ciStringlst (e2#get_value attr)) in
-	       if not (Strset.is_empty (Strset.diff e1vals (Strset.inter e1vals e2vals))) then		
+	       if (not (Strset.is_empty (Strset.diff e1vals (Strset.inter e1vals e2vals)))) ||
+		 (not (Strset.is_empty (Strset.diff e2vals (Strset.inter e1vals e2vals))))
+	       then		
 		 (`REPLACE, attr, e1#get_value attr) :: mods
 	       else 
 		 mods)

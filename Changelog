@@ -1,4 +1,7 @@
 2.1.2
+	* fixed a bug in diff, when syncing attributes it was not
+	considering values which were not on the master, but were on
+	the replica. This has been fixed.
 	* added a dn parser and pretty printer which conforms to rfc 2253
 	* added an exception Invalid_filter to the filter parser, it will
 	raise this exception whenever there is an error. In addition to a
