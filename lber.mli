@@ -59,6 +59,13 @@ type berval =
 (** return a readbyte function for a string *)
 val readbyte_of_string : string -> (?peek:bool -> unit -> char)
 
+(** return a readbyte implementation which uses another readbyte, but
+    allows setting a read boundry. Useful for constructing views of the
+    octet stream which end at the end of a ber structure. This is
+    essential for reading certian structures because lenght is only
+    encoded in the toplevel in order to save space. *)
+val readbyte_of_readbyte : int -> (?peek:bool -> unit -> char) -> (?peek:bool -> unit -> char)
+
 (** decoding and encoding of the ber header *)
 val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header
 val encode_ber_header : ber_val_header -> string

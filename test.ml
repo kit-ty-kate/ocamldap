@@ -21,28 +21,52 @@
 
 (* $Id$ *)
 
-open Ocamldap
+open Ldap_types
+open Ldap_funclient
+open Arg
+open Printf
+
+let print_entry e =  
+  match e with
+      `Entry {sr_dn=dn;sr_attributes=attrs} ->
+	print_endline dn;
+	List.iter
+	  (fun {attr_type=name;attr_vals=vals} ->
+	     List.iter
+	       (fun aval -> printf "%s: %s\n" name aval)
+	       vals)
+	  attrs
+    | `Referral f -> ()
 
 let _ = 
-  try
-    let ld = init ~port: 2389 "yourhost" in
-    let _ = bind_s ~who:"cn=directory manager,o=csun" ~cred:"yourpas" ld in
-    let add_res = add_s ld "cn=test,o=yourorg" 
-      [ 
-        (`ADD, "objectClass", ["top";"person"]);
-        (`ADD, "cn", ["test"]);
-        (`ADD, "sn", ["constructor"]);
-      ] in
-    let mod_res = modify_s ld "cn=test,o=yourorg"
-      [ 
-        (`REPLACE, "sn", ["modified"]);
-      ] in
-    let modrdn_res = modrdn_s ld "cn=test,o=yourorg" "cn=test1" in
-    let search_res = search_s ~base:"o=yourorg" ~scope:`ONELEVEL ld "(cn=test1)" in
-    let delete_res = delete_s ld "cn=test1,o=yourorg" in
-    match search_res with
-      [] -> print_endline "got no results"
-    | _ -> List.iter print_entry search_res;
-    unbind ld
-  with
-    LDAP_Failure x -> Printf.printf "caught ldap error: %s\n" (err2string x)
+  let usg = "test -H <ldapurl> -D <dn> -w <pass> -b <base> <filter>" in
+  let host = ref "" in
+  let port = ref 389 in
+  let binddn = ref "" in
+  let cred = ref "" in
+  let base = ref "" in
+  let filter = ref "" in
+  let set_host x = host := x in
+  let set_port x = port := x in
+  let set_binddn x = binddn := x in
+  let set_cred x = cred := x in
+  let set_base x = base := x in
+  let set_filter x = filter := x in
+  let spec = [("-H", String(set_host), "host");
+	      ("-D", String(set_binddn), "dn to bind with");
+	      ("-w", String(set_cred), "password to use when binding");
+	      ("-b", String(set_base), "search base")] in
+    if (Array.length Sys.argv) > 9 then
+      (parse spec set_filter usg;
+       let con = init [!host] in
+	 bind_s con ~who:!binddn ~cred:!cred;
+	 let msgid = search con ~base:!base !filter in
+	   try
+	     while true
+	     do
+	       print_entry (get_search_entry con msgid);
+	       print_endline ""
+	     done
+	   with LDAP_Failure (`SUCCESS, _, _) -> print_endline "")
+    else
+      usage spec usg

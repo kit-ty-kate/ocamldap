@@ -27,7 +27,7 @@ exception Encoding_error of string
    the user of the encodeing functions herin will pass a function
    of the type readbyte, or writebyte to us when the encoding function
    is called. We will use that function to get or set raw data *)
-type readbyte = (?peek:bool -> unit -> char)
+type readbyte = ?peek:bool -> unit -> char
 type writebyte = (char -> unit)
 
 (* note on syntax. In this program I use some somewhat little used,
@@ -72,10 +72,33 @@ type berval = Boolean of bool
 	      | Charstring of string
 	      | Time of string
 
+(* return a readbyte implementation which uses another readbyte, but
+   allows setting a read boundry. Useful for constructing views of the
+   octet stream which end at the end of a ber structure. This is
+   essential for reading certian structures because lenght is only
+   encoded in the toplevel in order to save space. *)
+let readbyte_of_readbyte limit (rb:readbyte) = 
+  let peek_counter = ref 1 
+  and byte_counter = ref 0 in
+  let f ?(peek=false) () =
+    if not peek then
+      if !byte_counter < limit then
+	(peek_counter := 1;
+	 byte_counter := !byte_counter + 1;
+	 rb ())
+      else raise Stream.Failure
+    else if !peek_counter < limit then
+      (peek_counter := !peek_counter + 1;
+       rb ~peek:true ())
+    else raise Stream.Failure
+  in
+    f
+
 (* return a readbyte implementation which works using a string *)
 let readbyte_of_string octets =
   let strm = Stream.of_string octets in
   let peek_counter = ref 1 in
+  let limit = ref 0 in
   let f ?(peek=false) () =
     let rec last lst = (* thank god this is almost never used. puke O(n) ness puke *)
       match lst with
@@ -86,7 +109,7 @@ let readbyte_of_string octets =
       if not peek then
 	(peek_counter := 1; (* reset the peek counter when we really read a byte *)
 	 Stream.next strm)
-      else
+      else	
 	let elts = (Stream.npeek !peek_counter strm) in
 	  if List.length elts = !peek_counter then
 	    (peek_counter := !peek_counter + 1;

@@ -223,12 +223,29 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
     in
     let plain_rb_of_fd fd =
       let buf = String.create 1 in
-      let in_ch = in_channel_of_descr fd in (* greatly improves performace *)
+      let in_ch = in_channel_of_descr fd in
+      let peek_buf = String.create 50 in
+      let peek_buf_pos = ref 0 in
+      let peek_buf_len = ref 0 in
       let rec rb ?(peek=false) () = 
-	let result = input in_ch buf 0 1 in
-	  if result = 1 then
-	    buf.[0]
-	  else (close fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
+	if !peek_buf_len = 0 || peek then
+	  let result = input in_ch buf 0 1 in
+	    if result = 1 then
+	      if peek then
+		(peek_buf.[!peek_buf_len] <- buf.[0];
+		 peek_buf_len := !peek_buf_len + 1;	       
+		 buf.[0])
+	      else buf.[0]
+	    else (close fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
+	else if !peek_buf_pos = !peek_buf_len - 1 then (* last char in peek buf *)
+	  let b = peek_buf.[!peek_buf_pos] in
+	    peek_buf_pos := 0;
+	    peek_buf_len := 0;
+	    b
+	else (* reading char in peek buf *)
+	  let b = peek_buf.[!peek_buf_pos] in
+	    peek_buf_pos := !peek_buf_pos + 1;
+	    b
       in
 	rb
     in
