@@ -53,7 +53,21 @@ type backendInfo = {
 (** This abstract type contains the server context. It has the listening,
     socket, all the connected client sockets, and some internal data
     structures. *)
+(* old, just 
 type server_info
+*)
+open Unix
+open Lber
+type msgid = int
+type pending_operations = (unit -> unit) list
+
+type server_info = {
+  si_listening_socket: file_descr;
+  si_client_sockets: (file_descr, connection_id * pending_operations * readbyte) Hashtbl.t;  
+  si_backend: backendInfo;
+  mutable si_current_connection_id: int;
+}
+
 
 (** Initialize the server, create the listening socket and return the server
     context, which you will pass to serv to process connections. *)
