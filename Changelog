@@ -68,6 +68,9 @@
      - Fixed a bug in the "of_entry" method. It did not do a full schema
        check after importing the entry, so after calling of_entry the
        scldapentry was not proven to be valid.
+   * Url Parser
+     - Fixed a bug which could cause the url parser to return the wrong
+       hostname if the hostname specified contained illegal characters.
    * Error Handling
      - moved err2string to a new module Ldap_error, which will contain
        functions for doing various things with LDAP_Failure exceptions.
