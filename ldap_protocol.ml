@@ -83,6 +83,7 @@ let encode_resultcode (code:ldap_resultcode) =
     | `MORE_RESULTS_TO_RETURN -> 80
     | `CLIENT_LOOP -> 80
     | `REFERRAL_LIMIT_EXCEEDED -> 80
+    | `UNKNOWN_ERROR i -> i
 
 let decode_resultcode code =
   match code with
@@ -126,7 +127,7 @@ let decode_resultcode code =
     | 69 -> `NO_OBJECT_CLASS_MODS 
     | 71 -> `AFFECTS_MULTIPLE_DSAS
     | 80 -> `OTHER 
-    | _ ->  `OTHER
+    | i ->  `UNKNOWN_ERROR i
 
 (* encode a standard sequence header *)
 let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =

@@ -91,7 +91,8 @@ type ldap_resultcode = [
   | `NO_RESULTS_RETURNED
   | `MORE_RESULTS_TO_RETURN
   | `CLIENT_LOOP
-  | `REFERRAL_LIMIT_EXCEEDED ]
+  | `REFERRAL_LIMIT_EXCEEDED 
+  | `UNKNOWN_ERROR of int ]
 
 type ldap_result = {
   result_code: ldap_resultcode;
