@@ -20,8 +20,82 @@
 
 open Ldap_filterparser
 open Ldap_filterlexer
+open Str
 
 let of_string f = 
   let lxbuf = Lexing.from_string f in
     filter lexfilter lxbuf
 
+(* todo, deal with escaping
+let to_string f =
+  let rec to_string' buf f =
+    match f with
+	`And lst -> 
+	  Buffer.add_string buf "(&";
+	  List.iter
+	    (fun f_component -> to_string' buf f_component)
+	    lst;
+	  Buffer.add_char buf ')'
+      | `Or lst ->
+	  Buffer.add_string buf "(|";
+	  List.iter
+	    (fun f_component -> to_string' buf f_component)
+	    lst;
+	  Buffer.add_char buf ')'
+      | `Not f_component ->
+	  Buffer.add_string buf "(!";
+	  to_string' buf f_component;
+	  Buffer.add_char buf ')'
+      | `EqualityMatch {attributeDesc=attrname;assertionValue=valu} ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_char buf '=';
+	  Buffer.add_string buf valu;
+	  Buffer.add_char buf ')'
+      | `Substrings {attrtype=attrname;
+		     substrings={substr_initial=initial;
+				 substr_any=any;
+				 substr_final=final}} ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_char buf '=';
+	  Buffer.add_string buf
+	    (global_replace (regexp "\\*\\*") "*"
+	       ((match initial with
+		     Some s -> s ^ "*"
+		   | None -> "") ^
+		(match any with
+		     Some s -> "*" ^ s ^ "*"
+		   | None -> "") ^
+		(match final with
+		     Some s -> "*" ^ s
+		   | None -> "")))
+      | `GreaterOrEqual {attributeDesc=attrname;assertionValue=valu} ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_string buf ">=";
+	  Buffer.add_string buf valu;
+	  Buffer.add_char buf ')'
+      | `LessOrEqual {attributeDesc=attrname;assertionValue=valu} ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_string buf "<=";
+	  Buffer.add_string buf valu;
+	  Buffer.add_char buf ')'
+      | `ApproxMatch {attributeDesc=attrname;assertionValue=valu} ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_char buf '~';
+	  Buffer.add_string buf valu;
+	  Buffer.add_char buf ')'	  
+      | `Present attr ->
+	  Buffer.add_char buf '(';
+	  Buffer.add_string buf attrname;
+	  Buffer.add_string buf "=*";
+	  Buffer.add_char buf ')'
+      | `ExtensibleMatch {matchingRule=rule;ruletype=rtype;matchValue=}
+*)
+
+let f_not filterlist = `Not filterlist
+let f_or filterlist = `Or filterlist
+let f_and filterlist = `And filterlist
