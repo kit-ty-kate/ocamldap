@@ -19,7 +19,7 @@
    USA
 *)
 
-(** a function ldap client interface *)
+(** a functional ldap client interface *)
 
 open Ldap_types
 open Lber
