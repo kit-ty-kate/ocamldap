@@ -983,7 +983,7 @@ let decode_ldapmessage rb = (* unwrap their package *)
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=total_length} ->
 	(* set up our context to be this message *)
-	let rb = readbyte_of_string (read_contents rb total_length) in
+	let rb = readbyte_of_readbyte total_length rb in
 	let messageid = Int32.to_int (decode_ber_int32 rb) in
 	let protocol_op =
 	  match decode_ber_header rb with

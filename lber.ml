@@ -77,22 +77,53 @@ type berval = Boolean of bool
    octet stream which end at the end of a ber structure. This is
    essential for reading certian structures because lenght is only
    encoded in the toplevel in order to save space. *)
-let readbyte_of_readbyte limit (rb:readbyte) = 
+let readbyte_of_ber_element limit (rb:readbyte) = 
   let peek_counter = ref 1 
   and byte_counter = ref 0 in
-  let f ?(peek=false) () =
-    if not peek then
-      if !byte_counter < limit then
-	(peek_counter := 1;
-	 byte_counter := !byte_counter + 1;
-	 rb ())
-      else raise Stream.Failure
-    else if !peek_counter < limit then
-      (peek_counter := !peek_counter + 1;
-       rb ~peek:true ())
-    else raise Stream.Failure
-  in
-    f
+    match limit with
+	Definite limit ->
+	  let f ?(peek=false) () =
+	    if not peek then
+	      if !byte_counter < limit then
+		(peek_counter := 1;
+		 byte_counter := !byte_counter + 1;
+		 rb ())
+	      else raise Stream.Failure
+	    else if !peek_counter < limit then
+	      (peek_counter := !peek_counter + 1;
+	       rb ~peek:true ())
+	    else raise Stream.Failure
+	  in
+	    f
+      | Indefinite -> 
+	  let peek_saw_eoc_octets = ref false
+	  and saw_eoc_octets = ref false
+	  and eoc_buf = String.create 1
+	  and eoc_buf_len = ref 0 in
+	  let f ?(peek=false) () = 
+	    if !eoc_buf_len = 0 then
+	      if peek && !peek_saw_eoc_octets then
+		raise Stream.Failure
+	      else if !saw_eoc_octets then
+		raise Stream.Failure
+	      else
+		let b = rb ~peek:peek () in
+		  if (int_of_char b) = 0b0000_0000 then
+		    let b1 = rb ~peek:peek () in
+		      if (int_of_char b1) = 0b0000_0000 then
+			((if peek then peek_saw_eoc_octets := true
+			  else saw_eoc_octets := true);
+			 raise Stream.Failure)
+		      else
+			(eoc_buf.[0] <- b1;
+			 eoc_buf_len := 1;
+			 b)
+		  else b
+	    else 
+	      (eoc_buf_len := 0;
+	       eoc_buf.[0])
+	  in
+	    f
 
 (* return a readbyte implementation which works using a string *)
 let readbyte_of_string octets =

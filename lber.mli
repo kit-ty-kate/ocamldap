@@ -64,7 +64,7 @@ val readbyte_of_string : string -> (?peek:bool -> unit -> char)
     octet stream which end at the end of a ber structure. This is
     essential for reading certian structures because lenght is only
     encoded in the toplevel in order to save space. *)
-val readbyte_of_readbyte : int -> (?peek:bool -> unit -> char) -> (?peek:bool -> unit -> char)
+val readbyte_of_ber_element : ber_length -> (?peek:bool -> unit -> char) -> (?peek:bool -> unit -> char)
 
 (** decoding and encoding of the ber header *)
 val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header
