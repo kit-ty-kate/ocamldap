@@ -153,20 +153,22 @@ let decode_ldapcontrol rb =
     | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected sequence")
 
 let decode_ldapcontrols rb =
-  let rb = (* set the context to this control *)
-    match decode_ber_header rb with
-	{ber_class=Context_specific;ber_tag=0;ber_length=control_length} ->
-	  readbyte_of_ber_element control_length rb
-      | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected control (controls [0])")
-  in
-  let rec decode_ldapcontrols' ?(controls=[]) rb =
-    try decode_ldapcontrols' ~controls:((decode_ldapcontrol rb) :: controls) rb
-    with Readbyte_error End_of_stream -> 
-      match controls with
-	  [] -> None
-	| controls -> Some (List.rev controls) (* return them in order *)
-  in
-    decode_ldapcontrols' rb
+  try
+    let rb = (* set the context to this control *)
+      match decode_ber_header rb with
+	  {ber_class=Context_specific;ber_tag=0;ber_length=control_length} ->
+	    readbyte_of_ber_element control_length rb
+	| _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected control (controls [0])")
+    in
+    let rec decode_ldapcontrols' ?(controls=[]) rb =
+      try decode_ldapcontrols' ~controls:((decode_ldapcontrol rb) :: controls) rb
+      with Readbyte_error End_of_stream -> 
+	match controls with
+	    [] -> None
+	  | controls -> Some (List.rev controls) (* return them in order *)
+    in
+      decode_ldapcontrols' rb
+  with Readbyte_error End_of_stream -> None
 
 let encode_components_of_ldapresult {result_code=resultcode;
 				     matched_dn=dn;error_message=msg;
