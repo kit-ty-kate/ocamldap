@@ -1,8 +1,14 @@
 2.1.0
    * ocaml-ssl is now required
-   * Decoder optimizations
+   * BER Decoder
      - Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
        decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
+   * BER Encoder
+     - Fixed several bugs in the encoding of two's complement integers
+       where the sign bit was not being handled correctly. This never
+       effected ldap clients, but severly limited the functionality of ldap
+       servers. They would be unable to respond to requests with message id
+       128, which would cause most clients to hang
    * LDIF Parser improvements
      - Improved the performance of write_entry, and to_string in LDIF_oo
      - Fixed a bug in the LDIF parser which could cause it to return
