@@ -302,7 +302,13 @@ let decode_bindresponse rb =
       {bind_result=result;
        bind_serverSaslCredentials=saslcred}
       
-let decode_unbindrequest rb = decode_ber_null rb;Unbind_request
+let decode_unbindrequest rb = 
+  (* some clients do not properly encode the length octets, which will cause decoding
+     of null values to fail. In short, it is never OK to omit completely the length 
+     octets, however some clients (namely openldap) do it anyway *)
+  (try ignore (decode_ber_null rb) 
+   with Stream.Failure -> ());
+  Unbind_request
 
 let encode_unbindrequest () = encode_ber_null ()
 
