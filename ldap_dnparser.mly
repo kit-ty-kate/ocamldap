@@ -79,7 +79,8 @@
     let buf = Buffer.create (String.length s) in
     let rec unescape strm buf = 
       try
-	let (hex1, hex2) = (Stream.next strm, Stream.next strm) in
+	let hex1 = Stream.next strm in
+	let hex2 = Stream.next strm in
 	  Buffer.add_char buf (unescape_hexpair hex1 hex2);
 	  unescape strm buf
       with Stream.Failure -> Buffer.contents buf
