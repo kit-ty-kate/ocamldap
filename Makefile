@@ -12,7 +12,7 @@ PACKS=netstring
 OCAMLNCFLAGS=-inline 1000
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so)
-OCAMLDOCFLAGS=-colorize-code ldap_types.mli
+OCAMLDOCFLAGS=-colorize-code $(wildcard *.mli)
 
 # link to ssl if it is present, otherwise disable it
 ifneq ($(strip $(shell ocamlfind query ssl)),)
