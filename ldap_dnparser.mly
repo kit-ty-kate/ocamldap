@@ -71,8 +71,11 @@
     in
       unescape strm buf
 
+  let unescape_quotestring s = 
+    unescape_stringwithpair (String.sub s 1 ((String.length s) - 2))
+
   let unescape_hexstring s = 
-    let strm = Stream.of_string in
+    let strm = Stream.of_string s in
     let buf = Buffer.create (String.length s) in
     let rec unescape strm buf = 
       try
@@ -89,7 +92,7 @@
 %token Equals Plus Comma End_of_input
 %token <string> AttributeType
 %token <string> Oid
-%token <string> StringChar
+%token <string> String
 %token <string> StringWithPair
 %token <string> HexString
 %token <string> QuoteString
@@ -100,10 +103,10 @@
 attrval:
    AttributeType {$1}
  | Oid {$1}
- | StringChar {$1}
- | StringWithPair {$1} /* unescape the pair */
- | HexString {$1} /* unescape the hex */
- | QuoteString {$1} /* remove the quotes */
+ | String {$1}
+ | StringWithPair {unescape_stringwithpair $1}
+ | HexString {unescape_hexstring $1}
+ | QuoteString {unescape_quotestring $1}
 ;
 
 attrname:
