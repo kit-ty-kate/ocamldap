@@ -199,7 +199,7 @@ let dispatch_request si conn_id op_nr rb fd =
 	  (match attrs with
 	       [] -> ()
 	     | lst -> si.si_log `OPERATIONS
-		 (sprintf "conn=%d op=0 SRCH attr=%s" conn_id 
+		 (sprintf "conn=%d op=%d SRCH attr=%s" conn_id op_nr
 		    (List.fold_left
 		       (fun s attr -> if s = "" then attr else (attr ^ " " ^ s))
 		       "" lst)));
