@@ -58,7 +58,7 @@
 	match Stream.next strm with
 	    '\\' -> 
 	      (match Stream.next strm with
-		   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
+		   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"' | ' ') as c ->
 		     Buffer.add_char buf c;
 		     unescape strm buf
 		 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 -> 

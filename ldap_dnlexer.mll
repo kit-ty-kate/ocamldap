@@ -34,7 +34,7 @@ let quotechar = [^ '\\' '"' ]
 let hexpair = hexchar hexchar
 let hexstring = hexpair *
 let stringchar = [^ '\\' '"' ] # special
-let pair = '\\' (special | '\\' | '"' | hexpair)
+let pair = '\\' (special | ' ' | '\\' | '"' | hexpair)
 (* 
    According to the rfc this is the set of possible values for an attribute value
    We don't implement it directly, instead we split each one into a seperate token
@@ -46,11 +46,11 @@ let pair = '\\' (special | '\\' | '"' | hexpair)
 rule lexdn = parse
     whsp '=' whsp {Equals}
   | whsp '+' whsp {Plus}
-  | whsp ',' whsp {Comma}
+  | whsp (',' | ';') whsp {Comma}
   | oid {Oid (Lexing.lexeme lexbuf)}
   | attributetype {AttributeType (Lexing.lexeme lexbuf)}
-  | stringchar* {String (Lexing.lexeme lexbuf)}
-  | (stringchar | pair)* {StringWithPair (Lexing.lexeme lexbuf)}
+  | stringchar* [^ ' '] {String (Lexing.lexeme lexbuf)}
+  | (stringchar | pair)* (pair | [^ ' ']) {StringWithPair (Lexing.lexeme lexbuf)}
   | '#' hexstring {HexString (Lexing.lexeme lexbuf)}
   | '"' (quotechar | pair)* '"' {QuoteString (Lexing.lexeme lexbuf)}
   | eof {End_of_input}

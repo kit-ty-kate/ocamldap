@@ -20,6 +20,25 @@
 *)
 
 open Ldap_types
+open Ldap_dnparser
 
 let of_string dn_string = 
-  
+  try Ldap_dnparser.dn dn_string
+  with Parsing.Parser_error | Failure _ ->
+    raise (Invalid_dn "parse error")
+
+let escape_value valu = 
+  let strm = Stream.of_string valu in
+  let buf = Buffer.create ((String.length valu) + 10) in
+  let rec escape strm buf = 
+    match Stream.next strm with
+	(',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
+	  Buffer.add_char buf '\\';
+	  Buffer.add_char buf c;
+	  escape strm buf
+      | c -> Buffer.add_char buf c;escape strm buf
+
+let to_string dn = 
+  List.fold_left
+    (fun s {attr_type=attr;attr_vals=vals} ->
+       
