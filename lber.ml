@@ -547,7 +547,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
       encode_negative_int32 value
     else
       encode_positive_int32 value
-  in    
+  in
   let buf1 = Buffer.create 5 in
     Buffer.add_string buf1
       (encode_ber_header
