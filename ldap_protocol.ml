@@ -120,7 +120,7 @@ let decode_ldapcontrol rb =
   let rb = (* set the context to this control *)
     (match decode_ber_header rb with
 	 {ber_class=Context_specific;ber_tag=0;ber_length=control_length} ->
-	   readbyte_of_string (read_contents rb control_length)
+	   readbyte_of_ber_element control_length rb
        | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected control (controls [0])"))
   in
   let controlType = decode_ber_octetstring rb in
@@ -188,7 +188,7 @@ let decode_components_of_ldapresult rb =
       (match decode_ber_header ~peek:true rb with
 	   {ber_class=Context_specific;ber_tag=3;ber_length=referral_length} ->
 	     ignore (decode_ber_header rb);
-	     let rb = readbyte_of_string (read_contents rb referral_length) in
+	     let rb = readbyte_of_ber_element referral_length rb in
 	       (match decode_berval_list decode_ber_octetstring rb with
 		    [] -> None
 		  | lst -> Some lst)
@@ -205,7 +205,7 @@ let decode_ldapresult rb =
   let rb = (* set context to this result only *)
     (match decode_ber_header rb with
 	 {ber_class=Universal;ber_tag=16;ber_length=result_length} ->
-	   readbyte_of_string (read_contents rb result_length)
+	   readbyte_of_ber_element result_length rb
        | _ -> raise (LDAP_Decoder "decode_ldapresult: expected ldapresult (sequence)"))
   in
     decode_components_of_ldapresult rb
@@ -259,8 +259,7 @@ let decode_bindrequest rb =
 	 {ber_class=Context_specific;ber_tag=0;ber_length=cred_length} -> (* simple *)
 	   Simple (decode_ber_octetstring ~contents:(Some (read_contents rb cred_length)) rb)
        | {ber_class=Context_specific;ber_tag=3;ber_length=cred_length} -> (* sasl *)
-	   let contents = read_contents rb cred_length in
-	   let rb = readbyte_of_string contents in
+	   let rb = readbyte_of_ber_element cred_length rb in
 	   let sasl_mech = decode_ber_octetstring rb in
 	   let sasl_cred = (try Some (decode_ber_octetstring rb)
 			    with Stream.Failure -> None) 
@@ -359,7 +358,7 @@ let decode_substringfilter rb =
   let components = 
     (match decode_ber_header rb with
 	 {ber_class=Universal;ber_tag=16;ber_length=len} ->
-	   let rb = readbyte_of_string (read_contents rb len) in
+	   let rb = readbyte_of_ber_element len rb in
 	   let initial = ref None in
 	   let any = ref None in
 	   let final = ref None in
@@ -480,10 +479,10 @@ let rec encode_ldapfilter filter =
 let rec decode_ldapfilter rb =
   match decode_ber_header rb with
       {ber_class=Context_specific;ber_tag=0;ber_length=len} -> (* and *)
-	let rb = readbyte_of_string (read_contents rb len) in
+	let rb = readbyte_of_ber_element len rb in
 	  `And (decode_berval_list decode_ldapfilter rb)
     | {ber_class=Context_specific;ber_tag=1;ber_length=len} -> (* or *)
-	let rb = readbyte_of_string (read_contents rb len) in
+	let rb = readbyte_of_ber_element len rb in
 	  `Or (decode_berval_list decode_ldapfilter rb)
     | {ber_class=Context_specific;ber_tag=2;ber_length=len} -> (* not *)
 	`Not (decode_ldapfilter rb)
@@ -621,7 +620,7 @@ let encode_attribute {attr_type=attrtype;attr_vals=attrvals} =
 let decode_attribute rb =
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=len} ->
-	let rb = (readbyte_of_string (read_contents rb len)) in
+	let rb = readbyte_of_ber_element len rb in
 	let attrtype = decode_ber_octetstring rb in
 	let attrvals = 
 	  match decode_ber_header rb with
@@ -664,7 +663,7 @@ let decode_searchresultentry rb =
   let attributes = 
     match decode_ber_header rb with
 	{ber_class=Universal;ber_tag=16;ber_length=len} ->
-	  let rb = (readbyte_of_string (read_contents rb len)) in
+	  let rb = readbyte_of_ber_element len rb in
 	    decode_berval_list decode_attribute rb
       | _ -> raise (LDAP_Decoder "decode_searchresultentry: expected squenece")
   in
@@ -713,7 +712,7 @@ let encode_modification {mod_op=op;mod_value=attr} =
 let decode_modification rb =
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=len} ->
-	let rb = readbyte_of_string (read_contents rb len) in
+	let rb = readbyte_of_ber_element len rb in
 	let op = (match decode_ber_enum rb with
 		      0l -> `ADD
 		    | 1l -> `DELETE
@@ -983,7 +982,7 @@ let decode_ldapmessage rb = (* unwrap their package *)
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=total_length} ->
 	(* set up our context to be this message *)
-	let rb = readbyte_of_readbyte total_length rb in
+	let rb = readbyte_of_ber_element total_length rb in
 	let messageid = Int32.to_int (decode_ber_int32 rb) in
 	let protocol_op =
 	  match decode_ber_header rb with
