@@ -26,16 +26,25 @@ open Ldap_funclient
 open Arg
 open Printf
 
+let ldif_buffer = Buffer.create 3124
 let print_entry e =  
   match e with
       `Entry {sr_dn=dn;sr_attributes=attrs} ->
-	print_endline dn;
+	Buffer.add_string ldif_buffer dn;
+	Buffer.add_string ldif_buffer "\n";
 	List.iter
 	  (fun {attr_type=name;attr_vals=vals} ->
 	     List.iter
-	       (fun aval -> printf "%s: %s\n" name aval)
+	       (fun aval -> 
+		  Buffer.add_string ldif_buffer name;
+		  Buffer.add_string ldif_buffer ": ";
+		  Buffer.add_string ldif_buffer aval;
+		  Buffer.add_string ldif_buffer "\n")
 	       vals)
-	  attrs
+	  attrs;
+	Buffer.add_string ldif_buffer "\n";
+	Buffer.output_buffer stdout ldif_buffer;
+	Buffer.clear ldif_buffer
     | `Referral f -> ()
 
 let main () = 
@@ -65,7 +74,6 @@ let main () =
 	     while true
 	     do
 	       print_entry (get_search_entry con msgid);
-	       print_endline ""
 	     done
 	   with LDAP_Failure (`SUCCESS, _, _) -> print_endline "")
     else

@@ -251,9 +251,10 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
     in
     let ssl_rb_of_fd fd = 
       IFDEF SSL THEN
-        let buf = String.create 16384 (* the size of an ssl record *) in
-	let pos = ref 0 in
-	let len = ref 0 in
+        let buf = String.create 16384 (* the size of an ssl record *)
+	and pos = ref 0
+	and len = ref 0
+	and peek_pos = ref 0 in
 	let rec rb ?(peek=false) () = 
 	  if !pos = !len then
 	    let result = Ssl.read fd buf 0 16384 in
