@@ -1,3 +1,8 @@
+2.0.3
+   * Handle additional Unix_error exceptions as reconnection events,
+     including EPIPE, ECONNRESET, and ECONNABORTED. Not handling these
+     exceptions caused the library not to autoreconnect when the connection
+     was dropped under certian circumstances.
 2.0.2
    * Fixed a bug in the way delete was encoded which prevented it from working
 2.0.1

@@ -112,11 +112,16 @@ let send_message con msg =
 		       !written (len - !written)) + 
 		    !written)
       done
-    with Unix_error (EBADF, _, _) ->
-      (raise 
-	 (LDAP_Failure 
-	    (`SERVER_DOWN, 
-	     "the connection object is invalid, data cannot be written", ext_res)))
+    with 
+	Unix_error (EBADF, _, _)
+      | Unix_error (EPIPE, _, _)
+      | Unix_error (ECONNRESET, _, _)
+      | Unix_error (ECONNABORTED, _, _) ->
+	  (raise 
+	     (LDAP_Failure 
+		(`SERVER_DOWN, 
+		 "the connection object is invalid, data cannot be written",
+		 ext_res)))
       
 (* recieve an ldapmessage for a particular message id (messages for
    all other ids will be read and queued. They can be retreived later) *)
