@@ -137,6 +137,7 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
 class ldapcon :
+  ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->
   ?version:int ->
   string list ->

@@ -30,6 +30,9 @@
        change, it is an opaque type).
      - Refactored readbyte implementations, moved them to lber.ml, and
        tightened their exception handling.
+   * ldap_ooclient
+     - connect_timeout is now available as an optional argument to
+       ldapcon.
    * ldap_funserver
      - Deal with protocol errors according to rfc2251
      - Use the new readbyte implementations in lber.ml instead of a

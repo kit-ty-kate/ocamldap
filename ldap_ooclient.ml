@@ -225,20 +225,20 @@ let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapent
       apply f v
 
 (* a connection to an ldap server *)
-class ldapcon ?(referral_policy=`RETURN) ?(version = 3) hosts = 
+class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts = 
 object (self)
   val mutable bdn = ""
   val mutable pwd = ""
   val mutable mth = `SIMPLE
   val mutable bound = true
   val mutable reconnect_successful = true
-  val mutable con = init ~version:version hosts
+  val mutable con = init ~connect_timeout:connect_timeout ~version:version hosts
 
   method private reconnect =
     if bound then unbind con;
     bound <- false;
     reconnect_successful <- false;
-    con <- init ~version: version hosts;
+    con <- init ~connect_timeout:connect_timeout ~version:version hosts;
     bound <- true;
     bind_s ~who: bdn ~cred: pwd ~auth_method: mth con;
     reconnect_successful <- true;
@@ -251,7 +251,10 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#update_entry e
 
   method bind ?(cred = "") ?(meth:authmethod = `SIMPLE) dn =
-    if not bound then (con <- init ~version: version hosts;bound <- true);
+    if not bound then begin
+      con <- init ~connect_timeout:connect_timeout ~version: version hosts;
+      bound <- true
+    end;
     bind_s ~who: dn ~cred: cred ~auth_method: meth con;
     reconnect_successful <- true;
     bdn <- dn; pwd <- cred; mth <- meth
