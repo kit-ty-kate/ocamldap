@@ -492,7 +492,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 		  0b1000_0000l		
 		  (Int32.shift_right
 		     (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-			0b11111111_00000000l
+			0b00000000_00000000_11111111_00000000l
 			value)
 		     8)));
 	  Buffer.add_char buf (to_char (Int32.logand 0b11111111l value))) (* byte two *)
@@ -504,7 +504,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
 		  0b1000_0000l		
 		  (Int32.shift_right
 		     (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
-			0b11111111_00000000_00000000l
+			0b00000000_11111111_00000000_00000000l
 			value)
 		     16)));
 	  Buffer.add_char buf (* byte two *)
