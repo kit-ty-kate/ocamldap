@@ -86,9 +86,12 @@ let allocate_messageid con =
     msgid
 
 let free_messageid con msgid =
-  let msgid_s = Hashtbl.find con.pending_messages msgid in
-    msgid_s.msg_inuse <- false;
-    Queue.clear msgid_s.msg_queue
+  try
+    let msgid_s = Hashtbl.find con.pending_messages msgid in
+      msgid_s.msg_inuse <- false;
+      Queue.clear msgid_s.msg_queue
+  with Not_found -> 
+    raise (LDAP_Failure (`LOCAL_ERROR, "message id double free", ext_res))
 
 (* send an ldapmessage *)
 let send_message con msg =
@@ -363,7 +366,7 @@ let get_search_entry con msgid =
 let abandon con msgid =
   let my_msgid = allocate_messageid con in
     try
-      (try free_messageid con msgid with _ -> ());
+      free_messageid con msgid;
       send_message con
 	{messageID=my_msgid;
 	 protocolOp=(Abandon_request msgid);
