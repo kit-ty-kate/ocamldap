@@ -1,0 +1,782 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="next" href="Lber.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_types</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Lber.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Ldap_types.html">Ldap_types</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_types: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_types.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>Common data types used by ocamldap. Most of these types are taken
+  from the ASN.1 specification for LDAP as defined in rfc2251<br>
+<b>See also</b> <a href="http://www.ietf.org/rfc/rfc2251.txt">rfc2251</a><br>
+<hr width="100%">
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONLDAP_Encoder"></a>LDAP_Encoder <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+An encoding error has occurred, the argument contains a
+  description of the error This is likely a bug, so it should be
+  reported<br>
+</div>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONLDAP_Decoder"></a>LDAP_Decoder <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+A decoding error has occurred, the argument contains a description
+  of the error. This MAY be a bug, but it may also be that the server
+  you are talking to is non standard. Please report these right away in
+  any case.<br>
+</div>
+<pre><span class="keyword">type</span> <a name="TYPEldap_resultcode"></a><code class="type"></code>ldap_resultcode = <code class="type">[ `ADMINLIMIT_EXCEEDED<br>       | `AFFECTS_MULTIPLE_DSAS<br>       | `ALIAS_DEREF_PROBLEM<br>       | `ALIAS_PROBLEM<br>       | `ALREADY_EXISTS<br>       | `AUTH_METHOD_NOT_SUPPORTED<br>       | `AUTH_UNKNOWN<br>       | `BUSY<br>       | `CLIENT_LOOP<br>       | `COMPARE_FALSE<br>       | `COMPARE_TRUE<br>       | `CONFIDENTIALITY_REQUIRED<br>       | `CONNECT_ERROR<br>       | `CONSTRAINT_VIOLATION<br>       | `CONTROL_NOT_FOUND<br>       | `DECODING_ERROR<br>       | `ENCODING_ERROR<br>       | `FILTER_ERROR<br>       | `INAPPROPRIATE_AUTH<br>       | `INAPPROPRIATE_MATCHING<br>       | `INSUFFICIENT_ACCESS<br>       | `INVALID_CREDENTIALS<br>       | `INVALID_DN_SYNTAX<br>       | `INVALID_SYNTAX<br>       | `IS_LEAF<br>       | `LOCAL_ERROR<br>       | `LOOP_DETECT<br>       | `MORE_RESULTS_TO_RETURN<br>       | `NAMING_VIOLATION<br>       | `NOT_ALLOWED_ON_NONLEAF<br>       | `NOT_ALLOWED_ON_RDN<br>       | `NOT_SUPPORTED<br>       | `NO_MEMORY<br>       | `NO_OBJECT_CLASS_MODS<br>       | `NO_RESULTS_RETURNED<br>       | `NO_SUCH_ATTRIBUTE<br>       | `NO_SUCH_OBJECT<br>       | `OBJECT_CLASS_VIOLATION<br>       | `OPERATIONS_ERROR<br>       | `OTHER<br>       | `PARAM_ERROR<br>       | `PARTIAL_RESULTS<br>       | `PROTOCOL_ERROR<br>       | `REFERRAL<br>       | `REFERRAL_LIMIT_EXCEEDED<br>       | `RESULTS_TOO_LARGE<br>       | `SASL_BIND_IN_PROGRESS<br>       | `SERVER_DOWN<br>       | `SIZELIMIT_EXCEEDED<br>       | `STRONG_AUTH_NOT_SUPPORTED<br>       | `STRONG_AUTH_REQUIRED<br>       | `SUCCESS<br>       | `TIMELIMIT_EXCEEDED<br>       | `TIMEOUT<br>       | `TYPE_OR_VALUE_EXISTS<br>       | `UNAVAILABLE<br>       | `UNAVAILABLE_CRITICAL_EXTENSION<br>       | `UNDEFINED_TYPE<br>       | `UNWILLING_TO_PERFORM<br>       | `USER_CANCELLED ]</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEldap_result"></a><code class="type"></code>ldap_result = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>result_code&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEldap_resultcode">ldap_resultcode</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>matched_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>error_message&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ldap_referral&nbsp;: <code class="type">string list option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEldap_ext_return"></a><code class="type"></code>ldap_ext_return = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_matched_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_referral&nbsp;: <code class="type">string list option</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+extended information to return with the LDAP_Failure
+  exception. Contains the remaining values which are defined by the
+  protocol ext_matched_dn: the matched dn. Commonly set by
+  `NO_SUCH_OBJECT. ext_referral: a list of ldapurls returned by the
+  server when you attempted to do a write operation. If you use
+  Ldap_ooclient with referrals set to follow you will never see this<br>
+</div>
+
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONLDAP_Failure"></a>LDAP_Failure <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_resultcode">ldap_resultcode</a> * string * <a href="Ldap_types.html#TYPEldap_ext_return">ldap_ext_return</a></code></pre>
+<div class="info">
+The exception raised to indicate all types of failure in the
+  higher level libraries Ldap_funclient, and Ldap_ooclient. example
+  <code class="code"><span class="constructor">LDAP_Failure</span> (<span class="keywordsign">`</span><span class="constructor">NO_SUCH_OBJECT</span>, <span class="string">"no such object"</span>,
+  {ext_matched_dn=<span class="constructor">Some</span> <span class="string">"o=csun"</span>;ext_referral=<span class="constructor">None</span>})</code><br>
+</div>
+<br><code><span class="keyword">type</span> <a name="TYPEsaslCredentials"></a><code class="type"></code>saslCredentials = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>sasl_mechanism&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>sasl_credentials&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEauthentication"></a><code class="type"></code>authentication = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Simple</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Sasl</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEsaslCredentials">saslCredentials</a></code></code></td>
+
+</tr></table>
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEbind_request"></a><code class="type"></code>bind_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bind_version&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bind_name&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bind_authentication&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEauthentication">authentication</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEbind_response"></a><code class="type"></code>bind_response = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bind_result&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bind_serverSaslCredentials&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEattribute"></a><code class="type"></code>attribute = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>attr_type&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>attr_vals&nbsp;: <code class="type">string list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEsearch_result_entry"></a><code class="type"></code>search_result_entry = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>sr_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>sr_attributes&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEattribute">attribute</a> list</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+the type used to encode and decode a search entry. Also the type
+  returned by search_s and search_a in Ldap_funclient<br>
+</div>
+
+<pre><span class="keyword">type</span> <a name="TYPEsearch_scope"></a><code class="type"></code>search_scope = <code class="type">[ `BASE | `ONELEVEL | `SUBTREE ]</code> </pre>
+<div class="info">
+a type defining the scope of a search filter<br>
+</div>
+
+<pre><span class="keyword">type</span> <a name="TYPEalias_deref"></a><code class="type"></code>alias_deref = <code class="type">[ `DEREFALWAYS | `DEREFFINDINGBASE | `DEREFINSEARCHING | `NEVERDEREFALIASES ]</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEattribute_value_assertion"></a><code class="type"></code>attribute_value_assertion = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>attributeDesc&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>assertionValue&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEmatching_rule_assertion"></a><code class="type"></code>matching_rule_assertion = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>matchingRule&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ruletype&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>matchValue&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>dnAttributes&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEsubstring_component"></a><code class="type"></code>substring_component = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>substr_initial&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>substr_any&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>substr_final&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEsubstring_filter"></a><code class="type"></code>substring_filter = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>attrtype&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>substrings&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEsubstring_component">substring_component</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span class="keyword">type</span> <a name="TYPEfilter"></a><code class="type"></code>filter = <code class="type">[ `And of <a href="Ldap_types.html#TYPEfilter">filter</a> list<br>       | `ApproxMatch of <a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a><br>       | `EqualityMatch of <a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a><br>       | `ExtensibleMatch of <a href="Ldap_types.html#TYPEmatching_rule_assertion">matching_rule_assertion</a><br>       | `GreaterOrEqual of <a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a><br>       | `LessOrEqual of <a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a><br>       | `Not of <a href="Ldap_types.html#TYPEfilter">filter</a><br>       | `Or of <a href="Ldap_types.html#TYPEfilter">filter</a> list<br>       | `Present of string<br>       | `Substrings of <a href="Ldap_types.html#TYPEsubstring_filter">substring_filter</a> ]</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEsearch_request"></a><code class="type"></code>search_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>baseObject&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>scope&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEsearch_scope">search_scope</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>derefAliases&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEalias_deref">alias_deref</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>sizeLimit&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>timeLimit&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>typesOnly&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>filter&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEfilter">filter</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>s_attributes&nbsp;: <code class="type">string list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span class="keyword">type</span> <a name="TYPEmodify_optype"></a><code class="type"></code>modify_optype = <code class="type">[ `ADD | `DELETE | `REPLACE ]</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEmodify_op"></a><code class="type"></code>modify_op = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>mod_op&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEmodify_optype">modify_optype</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>mod_value&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEattribute">attribute</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEmodify_request"></a><code class="type"></code>modify_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>mod_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>modification&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEmodify_op">modify_op</a> list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEmodify_dn_request"></a><code class="type"></code>modify_dn_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>modn_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>modn_newrdn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>modn_deleteoldrdn&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>modn_newSuperior&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEcompare_request"></a><code class="type"></code>compare_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>cmp_dn&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>cmp_ava&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEextended_request"></a><code class="type"></code>extended_request = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_requestName&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_requestValue&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEextended_response"></a><code class="type"></code>extended_response = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_result&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_responseName&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ext_response&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEprotocol_op"></a><code class="type"></code>protocol_op = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Bind_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEbind_request">bind_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Bind_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEbind_response">bind_response</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Unbind_request</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Search_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEsearch_request">search_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Search_result_entry</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEsearch_result_entry">search_result_entry</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Search_result_reference</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Search_result_done</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Modify_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEmodify_request">modify_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Modify_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Add_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEsearch_result_entry">search_result_entry</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Add_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Delete_request</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Delete_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Modify_dn_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEmodify_dn_request">modify_dn_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Modify_dn_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Compare_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEcompare_request">compare_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Compare_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEldap_result">ldap_result</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Abandon_request</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Extended_request</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEextended_request">extended_request</a></code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Extended_response</span> <span class="keyword">of</span> <code class="type"><a href="Ldap_types.html#TYPEextended_response">extended_response</a></code></code></td>
+
+</tr></table>
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEldap_control"></a><code class="type"></code>ldap_control = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>controlType&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>criticality&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>controlValue&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span class="keyword">type</span> <a name="TYPEldap_controls"></a><code class="type"></code>ldap_controls = <code class="type"><a href="Ldap_types.html#TYPEldap_control">ldap_control</a> list</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEldap_message"></a><code class="type"></code>ldap_message = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>messageID&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>protocolOp&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEprotocol_op">protocol_op</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>controls&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEldap_controls">ldap_controls</a> option</code>;</code></td>
+
+</tr></table>
+}
+
+
+<pre><span class="keyword">type</span> <a name="TYPEcon_mech"></a><code class="type"></code>con_mech = <code class="type">[ `PLAIN | `SSL ]</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEldap_url"></a><code class="type"></code>ldap_url = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_mech&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEcon_mech">con_mech</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_host&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_port&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_dn&nbsp;: <code class="type">string option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_attributes&nbsp;: <code class="type">string list option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_scope&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEsearch_scope">search_scope</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_filter&nbsp;: <code class="type"><a href="Ldap_types.html#TYPEfilter">filter</a> option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>url_ext&nbsp;: <code class="type">(bool * string * string) list option</code>;</code></td>
+
+</tr></table>
+}
+
+
+</body></html>

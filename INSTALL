@@ -1,0 +1,9 @@
+* To build the ocamldap library (bytecode and native):
+
+    make
+    make opt
+    make htdoc (to build documentation)
+
+* To install the library
+
+    make install

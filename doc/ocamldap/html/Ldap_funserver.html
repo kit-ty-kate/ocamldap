@@ -1,0 +1,156 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Ldif_oo.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_funserver</title>
+</head>
+<body>
+<div class="navbar"><a href="Ldif_oo.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;</div>
+<center><h1>Module <a href="type_Ldap_funserver.html">Ldap_funserver</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_funserver: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_funserver.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>A functional ldap server construction kit<br>
+<hr width="100%">
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONServer_error"></a>Server_error <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+raised whenever an error occurrs in the server<br>
+</div>
+<pre><span class="keyword">type</span> <a name="TYPEconnection_id"></a><code class="type"></code>connection_id = <code class="type">int</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEbackendInfo"></a><code class="type"></code>backendInfo = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_bind&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_unbind&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> unit) option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_search&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> unit -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_compare&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_modify&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_modrdn&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_add&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_delete&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_abandon&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> unit) option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_op_extended&nbsp;: <code class="type">(<a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> -><br>        <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a>)<br>       option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_init&nbsp;: <code class="type">(unit -> unit) option</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>bi_close&nbsp;: <code class="type">(unit -> unit) option</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info">
+This structure is the guts of the ldap server. For each operation that you
+    implement put the function (or closure) of the correct type in this
+    structure. Any functions you set as None will return
+    `UNWILLING_TO_PERFORM, with the error string set to "not implemented".
+    bi_init will be called (if it is provided) before the server is brought
+    up, and bi_close (if it is provided) will be called before the server is
+    brought down. This interface is based loosely on the back-end api in
+    OpenLDAP.<br>
+</div>
+
+<pre><span class="keyword">type</span> <a name="TYPEserver_info"></a><code class="type"></code>server_info </pre>
+<div class="info">
+This abstract type contains the server context. It has the listening,
+    socket, all the connected client sockets, and some internal data
+    structures.<br>
+</div>
+
+<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?port:int -> <a href="Ldap_funserver.html#TYPEbackendInfo">backendInfo</a> -> <a href="Ldap_funserver.html#TYPEserver_info">server_info</a></code></pre><div class="info">
+Initialize the server, create the listening socket and return the server
+    context, which you will pass to serv to process connections.<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALshutdown"></a>shutdown : <code class="type"><a href="Ldap_funserver.html#TYPEserver_info">server_info</a> -> unit</code></pre><div class="info">
+Shutdown the server<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALrun"></a>run : <code class="type"><a href="Ldap_funserver.html#TYPEserver_info">server_info</a> -> unit</code></pre><div class="info">
+Using the supplied server context, begin processing ldap operations. This
+    function should never terminate unless there is an exceptional condition, in
+    which case the exception will be raised. In many cases it is safe to restart
+    the server process when an exception happens.<br>
+</div>
+</body></html>

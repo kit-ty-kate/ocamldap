@@ -1,0 +1,166 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Ldap_filter.html">
+<link rel="next" href="Ldap_ooclient.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_funclient</title>
+</head>
+<body>
+<div class="navbar"><a href="Ldap_filter.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldap_ooclient.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Ldap_funclient.html">Ldap_funclient</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_funclient: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_funclient.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>a function ldap client interface<br>
+<hr width="100%">
+<pre><span class="keyword">type</span> <a name="TYPEmsgid"></a><code class="type"></code>msgid </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEconn"></a><code class="type"></code>conn </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEmodattr"></a><code class="type"></code>modattr = <code class="type"><a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEresult"></a><code class="type"></code>result = <code class="type"><a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> list</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEentry"></a><code class="type"></code>entry = <code class="type"><a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a></code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEauthmethod"></a><code class="type"></code>authmethod = <code class="type">[ `SASL | `SIMPLE ]</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEsearch_result"></a><code class="type"></code>search_result = <code class="type">[ `Entry of <a href="Ldap_funclient.html#TYPEentry">entry</a> | `Referral of string list ]</code> </pre>
+
+<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?version:int -> string list -> <a href="Ldap_funclient.html#TYPEconn">conn</a></code></pre><div class="info">
+Initializes the conn data structure, and opens a connection to the
+  server.  init
+  <code class="code">[<span class="string">"ldap://rrhost.example.com/"</span>;<span class="string">"ldap://backup.example.com:1389"</span>]</code>.
+  init is round robin dns aware, if dns returns multiple mappings it
+  will try each one before finially failing. It also takes a list of
+  hostnames, so you can specify backup servers to try. SSL and TLS are
+  not yet supported.<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> any
+  failure to connect to the server will result in LDAP_Failure with
+  the result_code set to `LOCAL_ERROR.</li>
+<li><code>Failure</code> May raise
+  Failure "int_of_string" if you pass it a malformed url. May also
+  raise various lexer errors under the same conditions.</li>
+</ul>
+</div>
+<br><div class="info"><code class="code">version</code> : the protocol version to use to
+  connect, default is version 3. And actually, version 2 will probably
+  not work correctly without some tweaking.</div>
+<pre><span class="keyword">val</span> <a name="VALunbind"></a>unbind : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -> unit</code></pre><div class="info">
+close the connection to the server. You may not use the conn
+  after you have unbound, if you do you will get an exception.<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALbind_s"></a>bind_s : <code class="type">?who:string -><br>       ?cred:string -> ?auth_method:[> `SIMPLE ] -> <a href="Ldap_funclient.html#TYPEconn">conn</a> -> unit</code></pre><div class="info">
+authenticatite to the server. In this version only simple binds
+  are supported, however the ldap_protocol.ml module DOES implement
+  sasl binds. It would be fairly easy to support them here. We
+  eventually will.<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for bind errors such as `INVALID_CREDENTIALS</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<br><div class="info"><code class="code">who</code> : the dn to bind as</div>
+<div class="info"><code class="code">cred</code> : the credentials to authenticate with. For `SIMPLE binds
+  this is a password, but for `SASL binds it can be nearly
+  anything. Perhaps a hash of the thumb print of your first born is
+  sufficent.</div>
+<div class="info"><code class="code">auth_method</code> : either `SIMPLE (the default) or `SASL</div>
+<pre><span class="keyword">val</span> <a name="VALsearch"></a>search : <code class="type">?base:string -><br>       ?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?aliasderef:<a href="Ldap_types.html#TYPEalias_deref">Ldap_types.alias_deref</a> -><br>       ?sizelimit:int32 -><br>       ?timelimit:int32 -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> <a href="Ldap_funclient.html#TYPEconn">conn</a> -> string -> <a href="Ldap_funclient.html#TYPEmsgid">msgid</a></code></pre><div class="info">
+Search for the given entry with the specified base node and search
+  scope, optionally limiting the returned attributes to those listed in
+  'attrs'. aliasderef sets the server's alias dereferencing policy,
+  sizelimit is the number of entries to return, timelimit is the number
+  of seconds to allow the search to run for, attrsonly tells the server
+  not to return the values. This is the asyncronus version of search
+  (it does not block) you will need to call the get_search_entry
+  function below to actually get any data back. This function will
+  return a msgid which you must use when you call get_search_entry.<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for immediate errors (bad filter, etc)</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<br><div class="info"><code class="code">base</code> : The dn of the object in the tree to use as the base
+  object, the search will only cover children of this object, and will
+  be further governed by scope.</div>
+<div class="info"><code class="code">scope</code> : The depth in the tree to look for the requested
+  object. There are three possible values, `BASE, `ONELEVEL, and
+  `SUBTREE. `BASE means to only search the base object, the search
+  will return exactly 1 or 0 objects. `ONELEVEL means to search one
+  level under the base, only immediate children of the base object
+  will be considered. `SUBTREE means to search the entire tree under
+  the base object.</div>
+<div class="info"><code class="code">aliasderef</code> : Controls when aliases are dereferenced.</div>
+<div class="info"><code class="code">sizelimit</code> : The maximum number of objects to return</div>
+<div class="info"><code class="code">timelimit</code> : The maximum time, in seconds, that the search will
+  be allowed to run before terminateing.</div>
+<div class="info"><code class="code">attrs</code> : The list of attribute types (names) to include <code class="code">[]</code>
+  (the default) means all.</div>
+<div class="info"><code class="code">attrsonly</code> : return only attribute types (names), not any of the
+  values</div>
+<pre><span class="keyword">val</span> <a name="VALget_search_entry"></a>get_search_entry : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -><br>       <a href="Ldap_funclient.html#TYPEmsgid">msgid</a> -><br>       [> `Entry of <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> | `Referral of string list ]</code></pre><div class="info">
+fetch a search entry from the wire using the given msgid. The
+  entry could be a search entry, OR it could be a referral structure.<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS (except referrals)</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<pre><span class="keyword">val</span> <a name="VALsearch_s"></a>search_s : <code class="type">?base:string -><br>       ?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?aliasderef:<a href="Ldap_types.html#TYPEalias_deref">Ldap_types.alias_deref</a> -><br>       ?sizelimit:int32 -><br>       ?timelimit:int32 -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       <a href="Ldap_funclient.html#TYPEconn">conn</a> -><br>       string -><br>       [> `Entry of <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> | `Referral of string list ] list</code></pre><div class="info">
+This is the syncronus version of search. It blocks until the
+  search is complete, and returns a list of objects. It is exactly the
+  same in all other ways.<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALadd_s"></a>add_s : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -> <a href="Ldap_funclient.html#TYPEentry">entry</a> -> unit</code></pre><div class="info">
+add entry to the directory<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<pre><span class="keyword">val</span> <a name="VALdelete_s"></a>delete_s : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -> dn:string -> unit</code></pre><div class="info">
+delete the entry named by dn from the directory<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<pre><span class="keyword">val</span> <a name="VALmodify_s"></a>modify_s : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -><br>       dn:string -><br>       mods:(<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
+apply the list of modifications to the named entry<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<br><div class="info"><code class="code">dn</code> : The dn of the object to modify</div>
+<div class="info"><code class="code">mods</code> : The list of modifications to apply</div>
+<pre><span class="keyword">val</span> <a name="VALmodrdn_s"></a>modrdn_s : <code class="type">?deleteoldrdn:bool -><br>       ?newsup:'a option -> <a href="Ldap_funclient.html#TYPEconn">conn</a> -> dn:string -> newdn:string -> unit</code></pre><div class="info">
+change the rdn, and optionally the superior entry of dn<br>
+<b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS</li>
+<li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
+<li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
+</ul>
+</div>
+<br><div class="info"><code class="code">deleteoldrdn</code> : Delete the old rdn value, (default true)</div>
+<div class="info"><code class="code">newsup</code> : The new superior dn of the object (default None)</div>
+<div class="info"><code class="code">dn</code> : The dn of the object to modify</div>
+</body></html>

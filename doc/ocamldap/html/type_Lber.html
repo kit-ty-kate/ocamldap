@@ -1,0 +1,86 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Lber</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Decoding_error</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">exception</span>&nbsp;<span class="constructor">Encoding_error</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;readbyte&nbsp;=&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;char<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;writebyte&nbsp;=&nbsp;char&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ber_class&nbsp;=&nbsp;<span class="constructor">Universal</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Application</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Context_specific</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Private</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ber_length&nbsp;=&nbsp;<span class="constructor">Definite</span>&nbsp;<span class="keyword">of</span>&nbsp;int&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Indefinite</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ber_val_header&nbsp;=&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ber_class&nbsp;:&nbsp;<span class="constructor">Lber</span>.ber_class;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ber_primitive&nbsp;:&nbsp;bool;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ber_tag&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ber_length&nbsp;:&nbsp;<span class="constructor">Lber</span>.ber_length;<br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;berval&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Boolean</span>&nbsp;<span class="keyword">of</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Int</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Int32</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Bitstring</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Octetstring</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Null</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Oid</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Odt</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Real</span>&nbsp;<span class="keyword">of</span>&nbsp;float<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Enum</span>&nbsp;<span class="keyword">of</span>&nbsp;int32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Utf8string</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">RelativeOid</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Sequence</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Lber</span>.berval&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Set</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Lber</span>.berval&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Charstring</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Time</span>&nbsp;<span class="keyword">of</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;readbyte_of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;char<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_header&nbsp;:&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.ber_val_header<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_header&nbsp;:&nbsp;<span class="constructor">Lber</span>.ber_val_header&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;read_contents&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.ber_length&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_bool&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?contents:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_bool&nbsp;:&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_int32&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?contents:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_int32&nbsp;:&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_enum&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?contents:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_enum&nbsp;:&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int32&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_octetstring&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?contents:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_octetstring&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_ber_null&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?peek:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?contents:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_ber_null&nbsp;:&nbsp;?cls:<span class="constructor">Lber</span>.ber_class&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?tag:int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;encode_berval_list&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?buf:<span class="constructor">Buffer</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="keywordsign">'</span>a&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;decode_berval_list&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?lst:<span class="keywordsign">'</span>a&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Lber</span>.readbyte&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>a&nbsp;list<br>
+<span class="keyword">end</span></code></body></html>

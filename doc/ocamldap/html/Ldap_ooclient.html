@@ -1,0 +1,196 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Ldap_funclient.html">
+<link rel="next" href="Ldif_oo.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_ooclient</title>
+</head>
+<body>
+<div class="navbar"><a href="Ldap_funclient.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldif_oo.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Ldap_ooclient.html">Ldap_ooclient</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_ooclient: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>an object oriented ldap client interface<br>
+<hr width="100%">
+<pre><span class="keyword">type</span> <a name="TYPEop"></a><code class="type"></code>op = <code class="type">string * string list</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEop_lst"></a><code class="type"></code>op_lst = <code class="type"><a href="Ldap_ooclient.html#TYPEop">op</a> list</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEreferral_policy"></a><code class="type"></code>referral_policy = <code class="type">[ `FOLLOW | `RETURN ]</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEchangetype"></a><code class="type"></code>changetype = <code class="type">[ `ADD | `DELETE | `MODDN | `MODIFY | `MODRDN ]</code> </pre>
+
+<pre><span class="keyword">class type</span> <a name="TYPEldapentry_t"></a><a href="Ldap_ooclient.ldapentry_t.html">ldapentry_t</a> = <code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry_t.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">class</span> <a name="TYPEldapentry"></a><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> : <code class="type"></code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+this object represents a remote object within local memory.
+</div>
+<pre><span class="keyword">val</span> <a name="VALto_entry"></a>to_entry : <code class="type">[< `Entry of <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> | `Referral of string list ] -><br>       <a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
+given a search_result_entry as returned by ldap_funclient, produce an
+    ldapentry containing either the entry, or the referral object<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALof_entry"></a>of_entry : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a></code></pre><div class="info">
+given an ldapentry as returned by ldapcon, or constructed manually,
+    produce a search_result_entry suitable for ldap_funclient, or
+    ldap_funserver.<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALiter"></a>iter : <code class="type">(<a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit) -><br>       (unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a>) -> unit</code></pre><div class="info">
+given a source of ldapentry objects (unit -&gt; ldapentry), such as
+    the return value of ldapcon#search_a apply f (first arg) to each entry
+    See List.iter<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALrev_map"></a>rev_map : <code class="type">(<a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> 'a) -><br>       (unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a>) -> 'a list</code></pre><div class="info">
+given a source of ldapentry objects (unit -&gt; ldapentry), such as
+  the return value of ldapcon#search_a apply f (first arg) to each
+  entry in reverse, and return a list containing the result of each
+  application. See List.map<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALmap"></a>map : <code class="type">(<a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> 'a) -><br>       (unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a>) -> 'a list</code></pre><div class="info">
+same as rev_map, but does it in order<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALfold"></a>fold : <code class="type">('a -> 'b -> 'b) -> 'b -> (unit -> 'a) -> 'b</code></pre><div class="info">
+given a source of ldapentry objects (unit -&gt; ldapentry), such as
+  the return value of ldapcon#search_a compute (f eN ... (f e2 (f e1
+  intial))) see List.fold_right.<br>
+</div>
+<pre><span class="keyword">class</span> <a name="TYPEldapcon"></a><a href="Ldap_ooclient.ldapcon.html">ldapcon</a> : <code class="type">?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">module</span> <a href="Ldap_ooclient.OrdStr.html">OrdStr</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.OrdStr.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">module</span> <a href="Ldap_ooclient.Setstr.html">Setstr</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.Setstr.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br><code><span class="keyword">type</span> <a name="TYPEscflavor"></a><code class="type"></code>scflavor = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Optimistic</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Pessimistic</span></code></td>
+
+</tr></table>
+
+
+<pre><span class="keyword">val</span> <a name="VALattrToOid"></a>attrToOid : <code class="type">Ldap_schemaparser.schema -><br>       Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t</code></pre><div class="info">
+given a name of an attribute, return its oid<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALoidToAttr"></a>oidToAttr : <code class="type">Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string</code></pre><div class="info">
+given the oid of an attribute, return its canonical name<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALocToOid"></a>ocToOid : <code class="type">Ldap_schemaparser.schema -><br>       Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t</code></pre><div class="info">
+given a name of an objectclass, return its oid<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALoidToOc"></a>oidToOc : <code class="type">Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string</code></pre><div class="info">
+given the oid of an objectclass, return its canonical name<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALgetOc"></a>getOc : <code class="type">Ldap_schemaparser.schema -><br>       Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.objectclass</code></pre><div class="info">
+get an objectclass structure by one of its names<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALgetAttr"></a>getAttr : <code class="type">Ldap_schemaparser.schema -><br>       Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.attribute</code></pre><div class="info">
+get an attr structure by one of its names<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALequateAttrs"></a>equateAttrs : <code class="type">Ldap_schemaparser.schema -><br>       Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Lcstring.t -> bool</code></pre><div class="info">
+equate attributes by oid. This allows aliases to be handled
+  correctly, for example "uid" and "userID" are actually the same
+  attribute.<br>
+</div>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONInvalid_objectclass"></a>Invalid_objectclass <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONInvalid_attribute"></a>Invalid_attribute <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONSingle_value"></a>Single_value <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">class</span> <a name="TYPEscldapentry"></a><a href="Ldap_ooclient.scldapentry.html">scldapentry</a> : <code class="type">Ldap_schemaparser.schema -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.scldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br><code><span class="keyword">type</span> <a name="TYPEgenerator"></a><code class="type"></code>generator = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>gen_name&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>required&nbsp;: <code class="type">string list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>genfun&nbsp;: <code class="type"><a href="Ldap_ooclient.ldapentry_t.html">ldapentry_t</a> -> string list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEservice"></a><code class="type"></code>service = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>svc_name&nbsp;: <code class="type">string</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>static_attrs&nbsp;: <code class="type">(string * string list) list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>generate_attrs&nbsp;: <code class="type">string list</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>depends&nbsp;: <code class="type">string list</code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEgeneration_error"></a><code class="type"></code>generation_error = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Missing_required</span> <span class="keyword">of</span> <code class="type">string list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Generator_error</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONNo_generator"></a>No_generator <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONGeneration_failed"></a>Generation_failed <span class="keyword">of</span> <code class="type"><a href="Ldap_ooclient.html#TYPEgeneration_error">generation_error</a></code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONNo_service"></a>No_service <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONService_dep_unsatisfiable"></a>Service_dep_unsatisfiable <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONGenerator_dep_unsatisfiable"></a>Generator_dep_unsatisfiable <span class="keyword">of</span> <code class="type">string * string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONCannot_sort_dependancies"></a>Cannot_sort_dependancies <span class="keyword">of</span> <code class="type">string list</code></pre>
+<pre><span class="keyword">class</span> <a name="TYPEldapaccount"></a><a href="Ldap_ooclient.ldapaccount.html">ldapaccount</a> : <code class="type">Ldap_schemaparser.schema -> (string, <a href="Ldap_ooclient.html#TYPEgenerator">generator</a>) Hashtbl.t -> (string, <a href="Ldap_ooclient.html#TYPEservice">service</a>) Hashtbl.t -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapaccount.html">..</a> <code class="code"><span class="keyword">end</span></code></pre></body></html>

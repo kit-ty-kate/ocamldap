@@ -1,0 +1,4 @@
+requires="str netstring"
+version="2.0"
+archive(byte)="ocamldap.cma"
+archive(native)="ocamldap.cmxa"

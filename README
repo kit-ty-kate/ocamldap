@@ -1,0 +1,59 @@
+Highly out of date (2004-Nov-1)
+
+---------------------------------------------------------------------------
+Synopsis
+---------------------------------------------------------------------------
+
+Ocamldap is an ocaml-ldap toolkit.  It can be used by ocaml programs
+to communicate with ldap servers.
+
+---------------------------------------------------------------------------
+Contents
+---------------------------------------------------------------------------
+Changes              - History of code changes.
+INSTALL              - Short notes on compiling and installing the library
+LICENSE              - A copy of the BSD license.
+Makefile             - Top Makefile
+README               - this file
+
+---------------------------------------------------------------------------
+Prerequisites
+---------------------------------------------------------------------------
+
+1) Openldap or a compatible ldap client library and headers.
+2) findlib (more info avaliable from the ocaml link database)
+
+---------------------------------------------------------------------------
+Features
+---------------------------------------------------------------------------
+* Ocamldap supports the core ldap-client functions, including search, add,
+  modify, and delete.  
+* object oriented interface with additional features.
+  Such as, nice data structures for local ldap entries which
+  record local modifications and can sync them with the server, fewer
+  arguments needed to perform simple tasks, and transparent reconnection
+  of dropped connections. see ooldap.mli
+* Ocamldap includes an ldif parser, which allows you to read ldif files into
+  entry objects. (ldif content files only). see ooldif.mli
+* Ocamldap has a method call to grab the schema of an ldapv3 server
+
+---------------------------------------------------------------------------
+Known Bugs/Missing Features
+---------------------------------------------------------------------------
+* see Changelog for 1.6.0 issues
+* The schema call does not yet work with Microsoft's Active Directory, due to 
+  it's non-standard nature.
+
+---------------------------------------------------------------------------
+Obtaining ocamldap
+---------------------------------------------------------------------------
+Up-to-date information (newest release of distribution) can be
+found in the ocaml link database.
+
+http://www.npc.de/ocaml/linkdb/
+
+---------------------------------------------------------------------------
+Contact
+---------------------------------------------------------------------------
+Please send questions or comments to eric.stokes@csun.edu.
+I hope you find ocamldap useful!

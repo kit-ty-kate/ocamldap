@@ -1,0 +1,42 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Lber.html">
+<link rel="next" href="Ldap_url.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_protocol</title>
+</head>
+<body>
+<div class="navbar"><a href="Lber.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldap_url.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Ldap_protocol.html">Ldap_protocol</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_protocol: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_protocol.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>an implementation of the ldap wire protocol<br>
+<hr width="100%">
+<pre><span class="keyword">val</span> <a name="VALencode_ldapmessage"></a>encode_ldapmessage : <code class="type"><a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a> -> string</code></pre><div class="info">
+encode a value of type ldap_message using lber and return
+  a string which is ready to be put on the wire<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALdecode_ldapmessage"></a>decode_ldapmessage : <code class="type"><a href="Lber.html#TYPEreadbyte">Lber.readbyte</a> -> <a href="Ldap_types.html#TYPEldap_message">Ldap_types.ldap_message</a></code></pre><div class="info">
+decode an ldap_message from the wire, and build/return a
+  structure of type ldap_message<br>
+</div>
+</body></html>

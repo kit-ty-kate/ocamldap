@@ -1,0 +1,298 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Ldap_types.html">
+<link rel="next" href="Ldap_protocol.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Lber</title>
+</head>
+<body>
+<div class="navbar"><a href="Ldap_types.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldap_protocol.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Lber.html">Lber</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Lber: <code class="code"><span class="keyword">sig</span></code> <a href="Lber.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>This library implements the subset of ber<br>
+<hr width="100%">
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONDecoding_error"></a>Decoding_error <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONEncoding_error"></a>Encoding_error <span class="keyword">of</span> <code class="type">string</code></pre>
+<pre><span class="keyword">type</span> <a name="TYPEreadbyte"></a><code class="type"></code>readbyte = <code class="type">?peek:bool -> unit -> char</code> </pre>
+
+<pre><span class="keyword">type</span> <a name="TYPEwritebyte"></a><code class="type"></code>writebyte = <code class="type">char -> unit</code> </pre>
+
+<br><code><span class="keyword">type</span> <a name="TYPEber_class"></a><code class="type"></code>ber_class = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Universal</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Application</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Context_specific</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Private</span></code></td>
+
+</tr></table>
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEber_length"></a><code class="type"></code>ber_length = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Definite</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Indefinite</span></code></td>
+
+</tr></table>
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEber_val_header"></a><code class="type"></code>ber_val_header = {</code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ber_class&nbsp;: <code class="type"><a href="Lber.html#TYPEber_class">ber_class</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ber_primitive&nbsp;: <code class="type">bool</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ber_tag&nbsp;: <code class="type">int</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code>ber_length&nbsp;: <code class="type"><a href="Lber.html#TYPEber_length">ber_length</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+<br><code><span class="keyword">type</span> <a name="TYPEberval"></a><code class="type"></code>berval = </code><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Boolean</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Int</span> <span class="keyword">of</span> <code class="type">Int32.t</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Bitstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Octetstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Null</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Oid</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Odt</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Real</span> <span class="keyword">of</span> <code class="type">float</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Enum</span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Utf8string</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">RelativeOid</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Sequence</span> <span class="keyword">of</span> <code class="type"><a href="Lber.html#TYPEberval">berval</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Set</span> <span class="keyword">of</span> <code class="type"><a href="Lber.html#TYPEberval">berval</a> list</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Charstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Time</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr></table>
+
+
+<pre><span class="keyword">val</span> <a name="VALreadbyte_of_string"></a>readbyte_of_string : <code class="type">string -> ?peek:bool -> unit -> char</code></pre><div class="info">
+return a readbyte function for a string<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALdecode_ber_header"></a>decode_ber_header : <code class="type">?peek:bool -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> <a href="Lber.html#TYPEber_val_header">ber_val_header</a></code></pre><div class="info">
+decoding and encoding of the ber header<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_header"></a>encode_ber_header : <code class="type"><a href="Lber.html#TYPEber_val_header">ber_val_header</a> -> string</code></pre><pre><span class="keyword">val</span> <a name="VALread_contents"></a>read_contents : <code class="type">?peek:bool -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> <a href="Lber.html#TYPEber_length">ber_length</a> -> string</code></pre><div class="info">
+reads the contents octets<br>
+</div>
+<br>
+ENCODING and DECODING Functions
+<p>
+
+  Explanation of optional arguments: 
+  The optional arguments are there to deal with a number of
+  situations, cls, and tag are for context specific or application
+  situations where it is expected that the value will not be marked
+  with the class and tag defined in X.680. Contents is there for
+  akward situations which arise because of the choice
+  structure. Normally the decode functions will always read the header
+  for you, however with the choice structure this is impossible. In
+  this case you should read the header manually, determine which
+  decode function to call, unpack the contents with read_contents, and
+  send them in the contents optional. If contents is not None, then
+  readbyte will never be called, and no attempt will be made to read
+  the header or length.<br>
+<pre><span class="keyword">val</span> <a name="VALdecode_ber_bool"></a>decode_ber_bool : <code class="type">?peek:bool -><br>       ?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -><br>       ?tag:int -> ?contents:string option -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> bool</code></pre><div class="info">
+Encoding/Decoding of the boolean primative ASN.1 type. Encode
+  function encodes a valid ber type, including the header and length
+  octets.<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_bool"></a>encode_ber_bool : <code class="type">?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -> ?tag:int -> bool -> string</code></pre><pre><span class="keyword">val</span> <a name="VALdecode_ber_int32"></a>decode_ber_int32 : <code class="type">?peek:bool -><br>       ?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -><br>       ?tag:int -> ?contents:string option -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> int32</code></pre><div class="info">
+Encoding/Decoding of the integer primative ASN.1 type.  Note, in
+  this library, integers are represented as 32 bit values. In ASN.1
+  there is no practical limit to the size of an integer, later on,
+  this library may provide an encoder/decoder to Int64, and Bigints,
+  however for now, this will have to do. Encode function encodes a
+  valid ber type, including the header and length octets<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_int32"></a>encode_ber_int32 : <code class="type">?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -> ?tag:int -> int32 -> string</code></pre><pre><span class="keyword">val</span> <a name="VALdecode_ber_enum"></a>decode_ber_enum : <code class="type">?peek:bool -><br>       ?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -><br>       ?tag:int -> ?contents:string option -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> int32</code></pre><div class="info">
+Encoding/Decoding of enum primative ASN.1 type. Enums are simply
+  integers, the same drawbacks apply as for decode_ber_int32. Encode
+  function encodes a valid ber type, including the header and length
+  octets<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_enum"></a>encode_ber_enum : <code class="type">?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -> ?tag:int -> int32 -> string</code></pre><pre><span class="keyword">val</span> <a name="VALdecode_ber_octetstring"></a>decode_ber_octetstring : <code class="type">?peek:bool -><br>       ?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -><br>       ?tag:int -> ?contents:string option -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> string</code></pre><div class="info">
+Encoding/Decoding of octetstring ASN.1 types. The Nested or
+  "segmented" version of the octetstring encoding described in X.690
+  is not yet supported. Encode function encodes a valid ber type,
+  including the header and length octets<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_octetstring"></a>encode_ber_octetstring : <code class="type">?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -> ?tag:int -> string -> string</code></pre><pre><span class="keyword">val</span> <a name="VALdecode_ber_null"></a>decode_ber_null : <code class="type">?peek:bool -><br>       ?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -><br>       ?tag:int -> ?contents:string option -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> unit</code></pre><div class="info">
+Encoding/Decoding of Null ASN.1 type.  Almost useful as an
+  assertion-type operation<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALencode_ber_null"></a>encode_ber_null : <code class="type">?cls:<a href="Lber.html#TYPEber_class">ber_class</a> -> ?tag:int -> unit -> string</code></pre><pre><span class="keyword">val</span> <a name="VALencode_berval_list"></a>encode_berval_list : <code class="type">?buf:Buffer.t -> ('a -> string) -> 'a list -> string</code></pre><div class="info">
+this function is for encoding lists of bervals, a common case.
+  you pass it a list of things to encode, and an encoding function, and it
+  will apply the encoding function to each element in the list, storing the
+  resulting encoding in a buffer (which you may either pass in or not)<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALdecode_berval_list"></a>decode_berval_list : <code class="type">?lst:'a list -> (<a href="Lber.html#TYPEreadbyte">readbyte</a> -> 'a) -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> 'a list</code></pre><div class="info">
+this is the reverse of the above, it takes a readbyte structure, and
+  returns a list of decoded elements, processed according to the decoder 
+  function you pass in. Note, that you MUST pass a readbyte structure built
+  with readbyte_of_string, OR, your reabyte function must raise Stream.Failure
+  when you reach the end of input. Otherwise this function will explode. That said,
+  it is usually not practical to pass anything but a readbyte created by 
+  readbyte_of_string so this should not be a huge problem.<br>
+</div>
+</body></html>
