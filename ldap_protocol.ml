@@ -49,6 +49,7 @@ let encode_resultcode (code:ldap_resultcode) =
     | `NO_SUCH_OBJECT -> 32
     | `ALIAS_PROBLEM -> 33
     | `INVALID_DN_SYNTAX -> 34
+    | `IS_LEAF -> 35
     | `ALIAS_DEREF_PROBLEM -> 36
     | `INAPPROPRIATE_AUTH -> 48
     | `INVALID_CREDENTIALS -> 49
@@ -63,8 +64,25 @@ let encode_resultcode (code:ldap_resultcode) =
     | `NOT_ALLOWED_ON_RDN -> 67
     | `ALREADY_EXISTS -> 68
     | `NO_OBJECT_CLASS_MODS -> 69
+    | `AFFECTS_MULTIPLE_DSAS -> 71
     | `OTHER -> 80
-    | _ -> raise (LDAP_Decoder "decode_resultcode: invalid error code")
+    | `SERVER_DOWN -> 80
+    | `LOCAL_ERROR -> 80
+    | `ENCODING_ERROR -> 80
+    | `DECODING_ERROR -> 80
+    | `TIMEOUT -> 80
+    | `AUTH_UNKNOWN -> 80
+    | `FILTER_ERROR -> 80
+    | `USER_CANCELLED -> 80
+    | `PARAM_ERROR -> 80
+    | `NO_MEMORY -> 80
+    | `CONNECT_ERROR -> 80
+    | `NOT_SUPPORTED -> 80
+    | `CONTROL_NOT_FOUND -> 80
+    | `NO_RESULTS_RETURNED -> 80
+    | `MORE_RESULTS_TO_RETURN -> 80
+    | `CLIENT_LOOP -> 80
+    | `REFERRAL_LIMIT_EXCEEDED -> 80
 
 let decode_resultcode code =
   match code with
@@ -91,6 +109,7 @@ let decode_resultcode code =
     | 32 -> `NO_SUCH_OBJECT 
     | 33 -> `ALIAS_PROBLEM 
     | 34 -> `INVALID_DN_SYNTAX 
+    | 35 -> `IS_LEAF
     | 36 -> `ALIAS_DEREF_PROBLEM 
     | 48 -> `INAPPROPRIATE_AUTH 
     | 49 -> `INVALID_CREDENTIALS 
@@ -105,8 +124,9 @@ let decode_resultcode code =
     | 67 -> `NOT_ALLOWED_ON_RDN 
     | 68 -> `ALREADY_EXISTS 
     | 69 -> `NO_OBJECT_CLASS_MODS 
+    | 71 -> `AFFECTS_MULTIPLE_DSAS
     | 80 -> `OTHER 
-    | _ -> raise (LDAP_Decoder "decode_resultcode: invalid error code")
+    | _ ->  `OTHER
 
 (* encode a standard sequence header *)
 let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =
