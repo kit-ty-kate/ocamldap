@@ -8,24 +8,15 @@ ldap_funclient.ml ldap_schemalexer.mll ldap_schemaparser.mli		\
 ldap_schemaparser.ml ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml	\
 ldif_oo.ml ldif_oo.mli ldap_funserver.mli ldap_funserver.ml
 RESULT=ocamldap
-PACKS=netstring str
-#OCAMLNCFLAGS=-inline 1000
+PACKS=netstring str ssl
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so)
 OCAMLDOCFLAGS=-colorize-code
 
-# link to ssl if it is present, otherwise disable it
-ifneq ($(strip $(shell ocamlfind query ssl)),)
-	PPFLAGS+=-DSSL
-	PACKS+=ssl
-endif
-
-all: debug-code-library clean-doc htdoc meta
-opt: native-code-library meta
+all: debug-code-library
+opt: native-code-library
 reallyall: byte-code-library native-code-library
 install: libinstall
 uninstall: libuninstall
-meta:
-	@cat META.in | sed -e "s/@PACKS@/$(PACKS)/" >META
 
 -include OCamlMakefile

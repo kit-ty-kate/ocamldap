@@ -23,6 +23,11 @@
 exception Decoding_error of string
 exception Encoding_error of string
 
+type readbyte_error = End_of_stream
+		      | Transport_error
+		      | Not_implemented
+exception Readbyte_error of readbyte_error
+
 (* our sole interface with the data is to read and write a byte.
    the user of the encodeing functions herin will pass a function
    of the type readbyte, or writebyte to us when the encoding function
@@ -35,7 +40,7 @@ type writebyte = (char -> unit)
    eg. 0b11000000, the 0b indicates a binary number, everything after
    it is the number.  eg. 0b1100_0000, the _ has no meaning, it is
    just a seperator, however, seperating the nibbles in this way makes
-   binary numbers much more readable *)
+   binary numbers very readable *)
     
 (* X.690 sec. 8.1.1 structure of an encoding *)
 type ber_class = Universal
@@ -44,7 +49,7 @@ type ber_class = Universal
 		 | Private
 
 type ber_length = Definite of int
-		  | Indefinite
+		| Indefinite
 
 (* all the meta info about a ber value *)
 type ber_val_header = {ber_class: ber_class;
@@ -72,11 +77,22 @@ type berval = Boolean of bool
 	      | Charstring of string
 	      | Time of string
 
+(* readbyte implementations. A readbyte is a higher order function
+   which creates functions which provide a uniform way for decoding
+   functions to read data without having to know anything about where
+   it comes from. To OO people it can essentially be viewed as a
+   functional version of a class, it exposes "methods", and hides data
+   and code. the Lber module includes several readbyte
+   implementations, which allow the decoding functions to read data
+   from sockets, SSL sockets, other readbyte classes (with imposed
+   read barriers), and from simple strings. *)
+
 (* return a readbyte implementation which uses another readbyte, but
    allows setting a read boundry. Useful for constructing views of the
    octet stream which end at the end of a ber structure. This is
-   essential for reading certian structures because lenght is only
-   encoded in the toplevel in order to save space. *)
+   essential for reading certian structures because length is only
+   encoded in the toplevel in order to save space. This function is the
+   secret of Ocamldap's performance. *)
 let readbyte_of_ber_element limit (rb:readbyte) = 
   let peek_counter = ref 1 
   and byte_counter = ref 0 in
@@ -88,11 +104,11 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 		(peek_counter := 1;
 		 byte_counter := !byte_counter + 1;
 		 rb ())
-	      else raise Stream.Failure
+	      else raise (Readbyte_error End_of_stream)
 	    else if !peek_counter < limit && !byte_counter < limit then
 	      (peek_counter := !peek_counter + 1;
 	       rb ~peek:true ())
-	    else raise Stream.Failure
+	    else raise (Readbyte_error End_of_stream)
 	  in
 	    f
       | Indefinite -> 
@@ -103,9 +119,9 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 	  let f ?(peek=false) () = 
 	    if !eoc_buf_len = 0 then
 	      if peek && !peek_saw_eoc_octets then
-		raise Stream.Failure
+		raise (Readbyte_error End_of_stream)
 	      else if !saw_eoc_octets then
-		raise Stream.Failure
+		raise (Readbyte_error End_of_stream)
 	      else
 		let b = rb ~peek:peek () in
 		  if (int_of_char b) = 0b0000_0000 then
@@ -113,7 +129,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 		      if (int_of_char b1) = 0b0000_0000 then
 			((if peek then peek_saw_eoc_octets := true
 			  else saw_eoc_octets := true);
-			 raise Stream.Failure)
+			 raise (Readbyte_error End_of_stream))
 		      else
 			(eoc_buf.[0] <- b1;
 			 eoc_buf_len := 1;
@@ -139,15 +155,79 @@ let readbyte_of_string octets =
     in
       if not peek then
 	(peek_counter := 1; (* reset the peek counter when we really read a byte *)
-	 Stream.next strm)
+	 try Stream.next strm
+	 with Stream.Failure -> raise (Readbyte_error End_of_stream))
       else	
 	let elts = (Stream.npeek !peek_counter strm) in
 	  if List.length elts = !peek_counter then
 	    (peek_counter := !peek_counter + 1;
 	     last elts)
-	  else raise Stream.Failure (* if there are not enough elements in the stream, fail *)
+	  else raise (Readbyte_error End_of_stream)
+	    (* if there are not enough elements in the stream, fail *)
   in
     f
+
+(* a readbyte implementation which reads from an FD. It implements a
+   peek buffer, so it can garentee that it will work with
+   readbyte_of_ber_element, even with blocking fds. *)
+let readbyte_of_fd fd =
+  let buf = String.create 1 in
+  let in_ch = Unix.in_channel_of_descr fd in
+  let peek_buf = String.create 50 in
+  let peek_buf_pos = ref 0 in
+  let peek_buf_len = ref 0 in
+  let rb ?(peek=false) () = 
+    if !peek_buf_len = 0 || peek then
+      let result = input in_ch buf 0 1 in
+	if result = 1 then
+	  if peek then
+	    (peek_buf.[!peek_buf_len] <- buf.[0];
+	     peek_buf_len := !peek_buf_len + 1;	       
+	     buf.[0])
+	  else buf.[0]
+	else (Unix.close fd;raise (Readbyte_error Transport_error))
+    else if !peek_buf_pos = !peek_buf_len - 1 then (* last char in peek buf *)
+      let b = peek_buf.[!peek_buf_pos] in
+	peek_buf_pos := 0;
+	peek_buf_len := 0;
+	b
+    else (* reading char in peek buf *)
+      let b = peek_buf.[!peek_buf_pos] in
+	peek_buf_pos := !peek_buf_pos + 1;
+	b
+  in
+    rb
+
+(* a readbyte implementation which reads from an SSL socket. It is
+   otherwise the same as rb_of_fd *)
+let readbyte_of_ssl fd = 
+  let buf = String.create 16384 (* the size of an ssl record *)
+  and pos = ref 0
+  and len = ref 0
+  and peek_pos = ref 0 in
+  let rec rb ?(peek=false) () = 
+    if !pos = !len || (peek && !peek_pos = !len) then
+      let result = 
+	try Ssl.read fd buf 0 16384 
+	with Ssl.Read_error _ -> raise (Readbyte_error Transport_error)
+      in
+	if result >= 1 then
+	  (len := result;
+	   (if peek then peek_pos := 1 else pos := 1);	    
+	   buf.[0])
+	else (Ssl.shutdown fd;raise (Readbyte_error Transport_error))
+    else
+      if peek then
+	let c = buf.[!peek_pos] in
+	  peek_pos := !peek_pos + 1;
+	  c
+      else
+	let c = buf.[!pos] in
+	  pos := !pos + 1;
+	  peek_pos := !pos;
+	  c	    
+  in
+    rb
 
 let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the definite length form *)
   let octet = int_of_char (readbyte ~peek:peek ()) in
@@ -449,5 +529,5 @@ let rec encode_berval_list ?(buf=Buffer.create 50) efun lst =
 
 let rec decode_berval_list ?(lst=[]) dfun (readbyte:readbyte) =
   try decode_berval_list ~lst:((dfun readbyte) :: lst) dfun readbyte
-  with Stream.Failure -> lst
+  with Readbyte_error End_of_stream -> lst
 

@@ -181,7 +181,7 @@ let dispatch_request bi conn_id rb fd =
 			  raise Finished))
       | _ -> raise (Server_error "invalid operation")
 
-let run si = 
+(* old rb_of_fd
   let rb_of_fd fd =
     let buf = String.create 1 in
     let in_ch = in_channel_of_descr fd in (* greatly improves performace *)
@@ -193,6 +193,9 @@ let run si =
     in
       rb
   in    
+*)
+
+let run si = 
   let pending_writes si = (* do we have data to write? *)
     Hashtbl.fold 
       (fun k (_, ops_pending, _) pending -> 
@@ -220,7 +223,7 @@ let run si =
 	      try
 		Hashtbl.replace si.si_client_sockets fd
 		  (conn_id, (dispatch_request si.si_backend conn_id rb fd) :: pending_ops, rb)
-	      with Server_error "socket error" ->
+	      with Readbyte_error Transport_error ->
 		(match si.si_backend.bi_op_unbind with
 		     Some f -> f conn_id {messageID=0;protocolOp=Unbind_request;controls=None}
 		   | None -> ());
@@ -234,7 +237,7 @@ let run si =
 		excond := List.filter ((<>) fd) !excond
 	  else (* a new connection has come in, accept it *)
 	    let (newfd, sockaddr) = accept fd in
-	    let rb = rb_of_fd newfd in
+	    let rb = readbyte_of_fd newfd in
 	      Hashtbl.add si.si_client_sockets newfd (allocate_connection_id si, [], rb)
 	in
 	  (* service connections which are ready to be read *)

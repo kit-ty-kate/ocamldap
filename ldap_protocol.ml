@@ -125,12 +125,12 @@ let decode_ldapcontrol rb =
   in
   let controlType = decode_ber_octetstring rb in
   let criticality = decode_ber_bool rb in
-  let controlValue = try Some (decode_ber_octetstring rb) with Stream.Failure -> None in
+  let controlValue = try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None in
     {controlType=controlType;criticality=criticality;controlValue=controlValue}
 
 let rec decode_ldapcontrols ?(controls=[]) rb =
   try decode_ldapcontrols ~controls:((decode_ldapcontrol rb) :: controls) rb
-  with Stream.Failure -> 
+  with Readbyte_error End_of_stream -> 
     match controls with
 	[] -> None
       | controls -> Some (List.rev controls) (* return them in order *)
@@ -194,7 +194,7 @@ let decode_components_of_ldapresult rb =
 		  | lst -> Some lst)
 	 | _ -> None)
     with 
-	Stream.Failure -> None
+	Readbyte_error End_of_stream -> None
   in    
     {result_code=(decode_resultcode (Int32.to_int resultCodeval));
      matched_dn=matched_dn;
@@ -262,7 +262,7 @@ let decode_bindrequest rb =
 	   let rb = readbyte_of_ber_element cred_length rb in
 	   let sasl_mech = decode_ber_octetstring rb in
 	   let sasl_cred = (try Some (decode_ber_octetstring rb)
-			    with Stream.Failure -> None) 
+			    with Readbyte_error End_of_stream -> None) 
 	   in
 	     Sasl {sasl_mechanism=sasl_mech;sasl_credentials=sasl_cred}
        | _ -> raise (LDAP_Decoder "decode_bindrequest: unknown authentication method"))
@@ -296,7 +296,7 @@ let encode_bindresponse {bind_result=result;bind_serverSaslCredentials=saslcred}
     
 let decode_bindresponse rb =
   let result = decode_components_of_ldapresult rb in
-  let saslcred = try Some (decode_ber_octetstring rb) with Stream.Failure -> None in
+  let saslcred = try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None in
     Bind_response
       {bind_result=result;
        bind_serverSaslCredentials=saslcred}
@@ -306,7 +306,7 @@ let decode_unbindrequest rb =
      of null values to fail. In short, it is never OK to omit completely the length 
      octets, however some clients (namely openldap) do it anyway *)
   (try ignore (decode_ber_null rb) 
-   with Stream.Failure -> ());
+   with Readbyte_error End_of_stream -> ());
   Unbind_request
 
 let encode_unbindrequest () = encode_ber_null ()
@@ -430,7 +430,7 @@ let decode_matchingruleassertion rb =
        | _ -> None)
   in
   let matchvalue = decode_ber_octetstring rb in
-  let dnattributes = try decode_ber_bool rb with Stream.Failure -> false in
+  let dnattributes = try decode_ber_bool rb with Readbyte_error End_of_stream -> false in
     {matchingRule=matchingrule;
      ruletype=ruletype;
      matchValue=matchvalue;
@@ -818,7 +818,7 @@ let decode_modifydnrequest rb =
   let newrdn = decode_ber_octetstring rb in
   let deleteoldrdn = decode_ber_bool rb in
   let newsup = (try Some (decode_ber_octetstring rb)
-		with Stream.Failure -> None)
+		with Readbyte_error End_of_stream -> None)
   in
     Modify_dn_request
       {modn_dn=dn;modn_newrdn=newrdn;
@@ -897,7 +897,7 @@ let encode_extendedrequest {ext_requestName=reqname;ext_requestValue=reqval} =
 
 let decode_extendedrequest rb =
   let reqname = decode_ber_octetstring rb in
-  let reqval = (try Some (decode_ber_octetstring rb) with Stream.Failure -> None) in
+  let reqval = (try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None) in
     Extended_request
       {ext_requestName=reqname;ext_requestValue=reqval}
 
@@ -940,7 +940,7 @@ let decode_extendedresponse rb =
     (try 
        responsename := Some (decode_ber_octetstring ~cls:Context_specific ~tag:10 rb);
        response := Some (decode_ber_octetstring ~cls:Context_specific ~tag:11 rb)
-     with Stream.Failure -> ());
+     with Readbyte_error End_of_stream -> ());
     Extended_response
       {ext_result=result;
        ext_responseName=(!responsename);

@@ -26,6 +26,11 @@
 exception Decoding_error of string
 exception Encoding_error of string
 
+type readbyte_error = End_of_stream
+		    | Transport_error
+		    | Not_implemented
+exception Readbyte_error of readbyte_error
+
 type readbyte = ?peek:bool -> unit -> char
 type writebyte = char -> unit
 type ber_class = Universal | Application | Context_specific | Private
@@ -57,14 +62,29 @@ type berval =
   | Time of string
 
 (** return a readbyte function for a string *)
-val readbyte_of_string : string -> (?peek:bool -> unit -> char)
+val readbyte_of_string : string -> readbyte
 
 (** return a readbyte implementation which uses another readbyte, but
     allows setting a read boundry. Useful for constructing views of the
     octet stream which end at the end of a ber structure. This is
     essential for reading certian structures because lenght is only
-    encoded in the toplevel in order to save space. *)
-val readbyte_of_ber_element : ber_length -> (?peek:bool -> unit -> char) -> (?peek:bool -> unit -> char)
+    encoded in the toplevel in order to save space. 
+
+    @raises Readbyte_error *)
+val readbyte_of_ber_element : ber_length -> readbyte -> readbyte
+
+(** a readbyte implementation which reads from an FD. It implements a
+    peek buffer, so it can garentee that it will work with
+    rb_of_ber_element, even with blocking fds. 
+
+    @raises Readbyte_error *)
+val readbyte_of_fd: Unix.file_descr -> readbyte
+
+(** a readbyte implementation which reads from an SSL socket. It is
+    otherwise the same as readbyte_of_fd.
+
+    @raises Readbyte_error *)
+val readbyte_of_ssl: Ssl.socket -> readbyte
 
 (** decoding and encoding of the ber header *)
 val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header

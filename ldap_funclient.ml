@@ -1,5 +1,3 @@
-(*pp camlp4o pa_macro.cmo *)
-
 (* A functional client interface to ldap
 
    Copyright (C) 2004 Eric Stokes, and The California State University
@@ -33,12 +31,8 @@ type msgqueue = {
 
 type msgid = int
 
-IFDEF SSL THEN
 type ld_socket = Ssl of Ssl.socket
 		 | Plain of file_descr
-ELSE
-type ld_socket = Plain of file_descr
-END;;
 
 type conn = {
   mutable rb: readbyte;
@@ -59,9 +53,7 @@ type search_result = [ `Entry of entry
 let ext_res = {ext_matched_dn="";
 	       ext_referral=None}
 
-IFDEF SSL THEN
 let _ = Ssl.init ()
-END;;
 
 exception Free of int
 let find_free_msgid con = 
@@ -96,16 +88,11 @@ let free_messageid con msgid =
 (* send an ldapmessage *)
 let send_message con msg =
   let write ld_socket buf off len = 
-    IFDEF SSL THEN
-      match ld_socket with
-	  Ssl s -> 
-	    (try Ssl.write s buf off len
-	     with Ssl.Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
-	| Plain s -> Unix.write s buf off len
-    ELSE
-      match ld_socket with
-	  Plain s -> Unix.write s buf off len
-    END
+    match ld_socket with
+	Ssl s -> 
+	  (try Ssl.write s buf off len
+	   with Ssl.Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
+      | Plain s -> Unix.write s buf off len
   in
   let e_msg = encode_ldapmessage msg in
   let len = String.length e_msg in
@@ -149,7 +136,12 @@ let receive_message con msgid =
       if Queue.is_empty q then
 	read_message con msgid
       else Queue.take q
-    with Sys_error e -> raise (LDAP_Failure (`SERVER_DOWN, e, ext_res))
+    with 
+	Sys_error _ 
+      | Readbyte_error Transport_error -> 
+	  raise (LDAP_Failure (`SERVER_DOWN, "read error", ext_res))
+      | Readbyte_error End_of_stream ->
+	  raise (LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
 
 (* test all functionality, especially dns awareness 
    - implement connect timeouts. 
@@ -199,31 +191,24 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 			 Plain s
 		       with exn -> close s;raise exn
 		   else
-	      	     IFDEF SSL THEN 
-		       previous_signal := 
-		         signal sigalrm 
-			   (Signal_handle (fun _ -> failwith "timeout"));
-		       ignore (alarm connect_timeout);
-		       let ssl = Ssl (Ssl.open_connection 
-					Ssl.SSLv23 
-					(ADDR_INET (addr, port))) 
-		       in
-			 ignore (alarm 0);
-			 set_signal sigalrm !previous_signal;
-			 ssl
-		     ELSE 
-		       raise (LDAP_Failure 
-				(`LOCAL_ERROR, 
-				 "ssl support is not enabled", 
-				 ext_res)) 
-		     END
+		     (previous_signal := 
+			signal sigalrm 
+			  (Signal_handle (fun _ -> failwith "timeout"));
+		      ignore (alarm connect_timeout);
+		      let ssl = Ssl (Ssl.open_connection 
+				       Ssl.SSLv23 
+				       (ADDR_INET (addr, port))) 
+		      in
+			ignore (alarm 0);
+			set_signal sigalrm !previous_signal;
+			ssl)
 		 with
 		     Unix_error (ECONNREFUSED, _, _) 
 		   | Unix_error (EHOSTDOWN, _, _)
 		   | Unix_error (EHOSTUNREACH, _, _) 
 		   | Unix_error (ECONNRESET, _, _)
 		   | Unix_error (ECONNABORTED, _, _)
-		   | IFDEF SSL THEN Ssl.Connection_error _ ELSE Failure "" END
+		   | Ssl.Connection_error _
 		   | Failure "timeout" ->
 		       ignore (alarm 0);
 		       set_signal sigalrm !previous_signal;
@@ -232,75 +217,9 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
       in
 	open_con addrs
     in
-    let plain_rb_of_fd fd =
-      let buf = String.create 1 in
-      let in_ch = in_channel_of_descr fd in
-      let peek_buf = String.create 50 in
-      let peek_buf_pos = ref 0 in
-      let peek_buf_len = ref 0 in
-      let rb ?(peek=false) () = 
-	if !peek_buf_len = 0 || peek then
-	  let result = input in_ch buf 0 1 in
-	    if result = 1 then
-	      if peek then
-		(peek_buf.[!peek_buf_len] <- buf.[0];
-		 peek_buf_len := !peek_buf_len + 1;	       
-		 buf.[0])
-	      else buf.[0]
-	    else (close fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
-	else if !peek_buf_pos = !peek_buf_len - 1 then (* last char in peek buf *)
-	  let b = peek_buf.[!peek_buf_pos] in
-	    peek_buf_pos := 0;
-	    peek_buf_len := 0;
-	    b
-	else (* reading char in peek buf *)
-	  let b = peek_buf.[!peek_buf_pos] in
-	    peek_buf_pos := !peek_buf_pos + 1;
-	    b
-      in
-	rb
-    in
-    let ssl_rb_of_fd fd = 
-      IFDEF SSL THEN
-        let buf = String.create 16384 (* the size of an ssl record *)
-	and pos = ref 0
-	and len = ref 0
-	and peek_pos = ref 0 in
-	let rec rb ?(peek=false) () = 
-	  if !pos = !len || (peek && !peek_pos = !len) then
-	    let result = 
-	      try Ssl.read fd buf 0 16384 
-	      with Ssl.Read_error _ -> raise (Sys_error "")
-	    in
-	      if result >= 1 then
-		(len := result;
-		 (if peek then peek_pos := 1 else pos := 1);	    
-		 buf.[0])
-	      else (Ssl.shutdown fd;raise (LDAP_Failure (`SERVER_DOWN, "", ext_res)))
-	  else
-	    if peek then
-	      let c = buf.[!peek_pos] in
-		peek_pos := !peek_pos + 1;
-		c
-	    else
-	      let c = buf.[!pos] in
-		pos := !pos + 1;
-		peek_pos := !pos;
-		c	    
-	in
-	  rb
-      ELSE
-        raise (LDAP_Failure (`LOCAL_ERROR, "ssl support is not enabled", ext_res))
-      END
-    in
-      {rb=(IFDEF SSL THEN
-	     match fd with
-		 Ssl s -> ssl_rb_of_fd s
-	       | Plain s -> plain_rb_of_fd s
-           ELSE
-	     match fd with
-		 Plain s -> plain_rb_of_fd s 
-	   END);
+      {rb=(match fd with
+	       Ssl s -> Lber.readbyte_of_ssl s
+	     | Plain s -> Lber.readbyte_of_fd s);
        socket=fd;
        current_msgid=1;
        pending_messages=(Hashtbl.create 3);
@@ -431,14 +350,9 @@ let delete_s con ~dn =
 
 let unbind con = 
   try 
-    (IFDEF SSL THEN
-       match con.socket with
-	   Ssl s -> Ssl.shutdown s
-	 | Plain s -> close s
-     ELSE
-       match con.socket with
-	   Plain s -> close s
-     END)
+    (match con.socket with
+	 Ssl s -> Ssl.shutdown s
+       | Plain s -> close s)
   with _ -> ()
 
 let modify_s con ~dn ~mods =

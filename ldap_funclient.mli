@@ -21,6 +21,7 @@
 
 (** a functional ldap client interface *)
 
+open Unix
 open Ldap_types
 open Lber
 
