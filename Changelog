@@ -1,4 +1,5 @@
 2.1.0
+   * ocaml-ssl is now required
    * Decoder optimizations
      - Improved decoding performance, 2x speedup. Beats OpenLDAP 2.2's
        decoder by about 5% (tested on PPC Mac OS X, and Intel Linux)
