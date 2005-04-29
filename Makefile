@@ -7,14 +7,14 @@ ldap_filterlexer.mll ldap_filter.mli ldap_filter.ml ldap_funclient.mli	\
 ldap_funclient.ml ldap_schemalexer.mll ldap_schemaparser.mli		\
 ldap_schemaparser.ml ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml	\
 ldif_oo.ml ldif_oo.mli ldap_funserver.mli ldap_funserver.ml		\
-ldap_dnparser.mly ldap_dnlexer.mll ldap_dn.mli ldap_dn.ml
+ldap_dnparser.mly ldap_dnlexer.mll ldap_dn.mli ldap_dn.ml ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code
 
-all: debug-code-library ldap_toplevel.cmo
+all: debug-code-library
 opt: native-code-library
 reallyall: byte-code-library native-code-library
 install: libinstall

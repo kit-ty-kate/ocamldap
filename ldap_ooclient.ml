@@ -54,6 +54,12 @@ object
   method print : unit
 end;;
 
+let format_entry e = 
+  Format.open_box 0;
+  Format.print_string ("<ldapentry " ^ e#dn ^ ">");
+  Format.close_box ()
+;;
+
 module CaseInsensitiveString =
   (struct
      type t = string * string

@@ -29,13 +29,7 @@ let eval s =
   assert(Toploop.execute_phrase false Format.err_formatter ph)
 ;;
 
-let format_entry (e:ldapentry) = 
-  Format.open_box 0;
-  Format.print_string ("<ldapentry " ^ e#dn ^ ">");
-  Format.close_box ()
-;;
-
-eval "#install_printer Ldap_toplevel.format_entry;;";;
+eval "#install_printer Ldap_ooclient.format_entry;;";;
 
 let print_entries es = 
   let ldif = new ldif () in

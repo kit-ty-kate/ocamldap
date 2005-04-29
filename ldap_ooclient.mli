@@ -48,6 +48,8 @@ class type ldapentry_t =
     method set_dn : string -> unit
   end
 
+val format_entry : < dn : string; .. > -> unit
+
 (** this object represents a remote object within local memory. It
   records all local changes made to it (if it's changetype is set to
   `MODIFY), and can commit them to the server at a later time. This
