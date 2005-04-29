@@ -14,8 +14,7 @@ PACKS=netstring str ssl
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code
 
-all: debug-code-library
-	ocamlfind ocamlc -c -package "$(PACKS)" ocamldap.cma ldap_toplevel.ml
+all: debug-code-library ldap_toplevel.cmo
 opt: native-code-library
 reallyall: byte-code-library native-code-library
 install: libinstall
