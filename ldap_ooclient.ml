@@ -529,26 +529,26 @@ object (self)
   val schemaAttrs = Hashtbl.create 50
   val schema = schema
   val mutable consistent = false
-  (* the set of all attibutes actually present *)
+    (* the set of all attibutes actually present *)
   val mutable present       = Setstr.empty
-  (* the set of all musts from all objectclasses on the entry *)
+    (* the set of all musts from all objectclasses on the entry *)
   val mutable must          = Setstr.empty
-  (* the set of all mays from all objectclasses on the entry *)
+    (* the set of all mays from all objectclasses on the entry *)
   val mutable may           = Setstr.empty
-  (* the set of required objectclasses *)
+    (* the set of required objectclasses *)
   val mutable requiredOcs   = Setstr.empty
-  (* present objectclasses *)
+    (* present objectclasses *)
   val mutable presentOcs    = Setstr.empty
 
   (* must + may *)
   val mutable all_allowed   = Setstr.empty
-  (* must - (present * must) *)
+    (* must - (present * must) *)
   val mutable missingAttrs  = Setstr.empty
-  (* requiredOcs - (presentOcs * requiredOcs) *)
+    (* requiredOcs - (presentOcs * requiredOcs) *)
   val mutable missingOcs    = Setstr.empty
-  (* any objectclass which depends on a missing objectclass *)
+    (* any objectclass which depends on a missing objectclass *)
   val mutable illegalOcs    = Setstr.empty
-  (* present - (present * all_allowed) *)
+    (* present - (present * all_allowed) *)
   val mutable illegalAttrs  = Setstr.empty
 
   (* schema checking is best expressed as set manipulations.
@@ -560,10 +560,10 @@ object (self)
       match ocs with
 	  oc :: tail -> 
 	    let musts = setOfList 
-			  (List.rev_map 
-			     (fun attr -> attrToOid schema attr)
-			     (if must then (getOc schema oc).oc_must
-			      else (getOc schema oc).oc_may))
+	      (List.rev_map 
+		 (fun attr -> attrToOid schema attr)
+		 (if must then (getOc schema oc).oc_must
+		  else (getOc schema oc).oc_may))
 	    in
 	      generate_mustmay tail schema (Setstr.union musts set) must
 	| [] -> set
@@ -585,7 +585,7 @@ object (self)
 	  List.exists
 	    (fun mis ->
 	       List.exists ((=) mis)
-	       supchain)
+		 supchain)
 	    missing
       in
 	List.filter (is_illegal_oc missing schema) ocs
@@ -653,9 +653,9 @@ object (self)
     let find_in_oc oc attr = (List.exists
 				((=) (Lcstring.of_string attr)) 
 				oc.oc_must) || 
-			     (List.exists
-				((=) (Lcstring.of_string attr))
-				oc.oc_may) in
+      (List.exists
+	 ((=) (Lcstring.of_string attr))
+	 oc.oc_may) in
     let find_oc schema attr = 
       let oc = ref (Lcstring.of_string "") in
 	Hashtbl.iter 
@@ -665,32 +665,32 @@ object (self)
 	if !oc = (Lcstring.of_string "") then raise Not_found;
 	!oc
     in
-	match flavor with 
-	    Optimistic ->
-	      if not (Setstr.is_empty illegalAttrs) then
-		((List.iter (* add necessary objectclasses *)
-		   (fun oc -> super#add [("objectclass",[(Lcstring.to_string oc)])])
-		   (List.rev_map
-		      (fun attr -> 
-			 try find_oc schema attr 
-			 with Not_found -> raise (Invalid_attribute attr))
-		      (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs))));
-		 self#drive_updatecon);
-	      (* add any objectclasses the ones we just added are dependant on *)
-	      if not (Setstr.is_empty missingOcs) then
-		((List.iter
-		    (fun oc -> super#add [("objectclass", [oc])])
-		    (List.rev_map (oidToOc schema) (Setstr.elements missingOcs)));
-		 self#drive_updatecon);
-	  | Pessimistic ->
-	      (List.iter
-		 (fun oc -> super#delete [("objectclass",[oc])])
-		 (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs)));
-	      self#drive_updatecon;
-	      (List.iter (* remove disallowed attributes *)
-		 (fun attr -> super#delete [(attr, [])])
-		 (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs)));
-	      self#drive_updatecon
+      match flavor with 
+	  Optimistic ->
+	    if not (Setstr.is_empty illegalAttrs) then
+	      ((List.iter (* add necessary objectclasses *)
+		  (fun oc -> super#add [("objectclass",[(Lcstring.to_string oc)])])
+		  (List.rev_map
+		     (fun attr -> 
+			try find_oc schema attr 
+			with Not_found -> raise (Invalid_attribute attr))
+		     (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs))));
+	       self#drive_updatecon);
+	    (* add any objectclasses the ones we just added are dependant on *)
+	    if not (Setstr.is_empty missingOcs) then
+	      ((List.iter
+		  (fun oc -> super#add [("objectclass", [oc])])
+		  (List.rev_map (oidToOc schema) (Setstr.elements missingOcs)));
+	       self#drive_updatecon);
+	| Pessimistic ->
+	    (List.iter
+	       (fun oc -> super#delete [("objectclass",[oc])])
+	       (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs)));
+	    self#drive_updatecon;
+	    (List.iter (* remove disallowed attributes *)
+	       (fun attr -> super#delete [(attr, [])])
+	       (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs)));
+	    self#drive_updatecon
 
   method private drive_reconsile flavor =
     try self#reconsile_illegal flavor
@@ -706,26 +706,26 @@ object (self)
       printLst (List.rev_map (oidToAttr schema) (Setstr.elements may));
       print_endline "PRESENT";
       printLst (List.rev_map (oidToAttr schema) (Setstr.elements present));
-(*      printLst (Setstr.elements present);*)
+      (*      printLst (Setstr.elements present);*)
       print_endline "MUST";
       printLst (List.rev_map (oidToAttr schema) (Setstr.elements must));
-(*      printLst (Setstr.elements must);*)
+      (*      printLst (Setstr.elements must);*)
       print_endline "MISSING";
       printLst (List.rev_map (oidToAttr schema) (Setstr.elements missingAttrs));
-(*      printLst (Setstr.elements missingAttrs);*)
+      (*      printLst (Setstr.elements missingAttrs);*)
       print_endline "ILLEGAL";
       printLst (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs));
       print_endline "REQUIREDOCS";
-(*      printLst (List.rev_map (oidToOc schema) (Setstr.elements requiredOcs));*)
+      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements requiredOcs));*)
       printLst (List.rev_map Oid.to_string (Setstr.elements requiredOcs));
       print_endline "PRESENTOCS";
-(*      printLst (List.rev_map (oidToOc schema) (Setstr.elements presentOcs));*)
+      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements presentOcs));*)
       printLst (List.rev_map Oid.to_string (Setstr.elements presentOcs));
       print_endline "MISSINGOCS";
-(*      printLst (List.rev_map (oidToOc schema) (Setstr.elements missingOcs));*)
+      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements missingOcs));*)
       printLst (List.rev_map Oid.to_string (Setstr.elements missingOcs));
       print_endline "ILLEGALOCS";
-(*      printLst (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs))*)
+      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs))*)
       printLst (List.rev_map Oid.to_string (Setstr.elements illegalOcs));
 
   (* for debugging *)

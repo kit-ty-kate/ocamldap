@@ -21,6 +21,21 @@
 open Ldap_ooclient;;
 open Ldap_types;;
 open Ldif_oo;;
+open Ldap_schemaparser;;
+
+let eval s =
+  let l = Lexing.from_string s in
+  let ph = !Toploop.parse_toplevel_phrase l in
+  assert(Toploop.execute_phrase false Format.err_formatter ph)
+;;
+
+let format_entry (e:ldapentry) = 
+  Format.open_box 0;
+  Format.print_string ("<ldapentry " ^ e#dn ^ ">");
+  Format.close_box ()
+;;
+
+eval "#install_printer Ldap_toplevel.format_entry;;";;
 
 let print_entries es = 
   let ldif = new ldif () in
