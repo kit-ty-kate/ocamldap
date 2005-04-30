@@ -30,6 +30,9 @@ let eval s =
 ;;
 
 eval "#install_printer Ldap_ooclient.format_entry;;";;
+eval "#install_printer Ldap_schemaparser.format_oid;;";;
+eval "#install_printer Ldap_schemaparser.format_lcstring;;";;
+eval "#install_printer Ldap_schemaparser.format_schema;;";;
 
 let print_entries es = 
   let ldif = new ldif () in

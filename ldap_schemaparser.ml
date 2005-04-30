@@ -37,6 +37,11 @@ module Oid =
      val compare: t -> t -> int
    end);;
 
+let format_oid id = 
+  Format.open_box 0;
+  Format.print_string ("<oid " ^ Oid.to_string id ^ ">");
+  Format.close_box ()
+
 module Lcstring =
   (struct
      type t = string
@@ -51,6 +56,11 @@ module Lcstring =
      val to_string: t -> string
      val compare: t -> t -> int
    end);;
+
+let format_lcstring id = 
+  Format.open_box 0;
+  Format.print_string ("<lcstring " ^ Lcstring.to_string id ^ ">");
+  Format.close_box ()
 
 type octype = Abstract | Structural | Auxiliary;;
 type objectclass = {oc_name: string list;
@@ -82,6 +92,40 @@ type schema = {objectclasses:(Lcstring.t, objectclass) Hashtbl.t;
 	       objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
 	       attributes:(Lcstring.t, attribute) Hashtbl.t;
 	       attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
+
+let schema_print_depth = ref 10
+
+let format_schema s =
+  let indent = 3 in
+  let printtbl tbl = 
+    let i = ref 0 in
+      try
+	Hashtbl.iter
+	  (fun aname aval -> 
+	     if !i < !schema_print_depth then begin
+	       Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
+	       Format.print_break 1 indent;
+	       i := !i + 1
+	     end 
+	     else failwith "depth")
+	  tbl
+      with Failure "depth" -> Format.print_string "..."
+  in
+    Format.open_box 0;
+    Format.print_string "{objectclasses = <HASHTBL ";
+    Format.print_break 0 indent;  
+    printtbl s.objectclasses;
+    Format.print_string ">;";
+    Format.print_break 0 1;
+    Format.print_string "objectclasses_byoid = <HASHTBL ...>;";
+    Format.print_break 0 1;
+    Format.print_string "attributes = <HASHTBL ";
+    Format.print_break 0 indent;
+    printtbl s.attributes;
+    Format.print_string ">;";
+    Format.print_break 0 1;
+    Format.print_string "attributes_byoid = <HASHTBL ...>}";
+    Format.close_box ()
 
 exception Parse_error_oc of Lexing.lexbuf * objectclass * string;;
 exception Parse_error_at of Lexing.lexbuf * attribute * string;;

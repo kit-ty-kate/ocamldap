@@ -9,6 +9,8 @@ module Oid :
     val compare : t -> t -> int
   end
 
+val format_oid : Oid.t -> unit
+
 module Lcstring :
   sig
     type t
@@ -16,6 +18,8 @@ module Lcstring :
     val to_string : t -> string
     val compare : t -> t -> int
   end
+
+val format_lcstring : Lcstring.t -> unit
 
 type octype = Abstract | Structural | Auxiliary
 
@@ -66,12 +70,23 @@ type schema = {
   attributes : (Lcstring.t, attribute) Hashtbl.t;
   attributes_byoid : (Oid.t, attribute) Hashtbl.t;
 }
+
+(** This reference controls the dept of printing for the schema in the
+    toplevel. The default is 10 keys from each table will be printed. OID
+    tables are not currently printed. *)
+val schema_print_depth : int ref
+
+(** A formatter for the schema, prints the structure, and expands the
+    hashtbls to show the keys. The number of keys printed is controled by
+    schema_print_depth. *)
+val format_schema : schema -> unit
+
 exception Parse_error_oc of Lexing.lexbuf * objectclass * string
 exception Parse_error_at of Lexing.lexbuf * attribute * string
 exception Syntax_error_oc of Lexing.lexbuf * objectclass * string
 exception Syntax_error_at of Lexing.lexbuf * attribute * string
 
 (** readSchema attribute_list objectclass_list, parse the schema into
-  a schema type given a list of attribute definition lines, and
-  objectclass definition lines. *)
+    a schema type given a list of attribute definition lines, and
+    objectclass definition lines. *)
 val readSchema : string list -> string list -> schema

@@ -56,7 +56,7 @@ end;;
 
 let format_entry e = 
   Format.open_box 0;
-  Format.print_string ("<ldapentry " ^ e#dn ^ ">");
+  Format.print_string ("<ldapentry_t " ^ e#dn ^ ">");
   Format.close_box ()
 ;;
 
