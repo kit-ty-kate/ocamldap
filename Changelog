@@ -1,6 +1,9 @@
 2.1.3
 	* added toplevel pretty printers for Oid.t, Lcstring.t, 
 	and ldapentry_t
+	* in readbyte_of_fd, Unix.in_channel_of_fd may fail. I was
+	not aware of this previously. We now catch the resulting
+	Sys_error, and change it to a Transport_error.
 2.1.2
 	* fixed a bug in the encoding of substring filters, the 
 	length was not being computed correctly.

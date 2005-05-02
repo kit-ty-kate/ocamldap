@@ -93,8 +93,46 @@ type schema = {objectclasses:(Lcstring.t, objectclass) Hashtbl.t;
 	       attributes:(Lcstring.t, attribute) Hashtbl.t;
 	       attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
 
-let schema_print_depth = ref 10
+type schema_error = Undefined_attr_reference of string
+		    | Cross_linked_oid of string list
 
+let typecheck_schema schema = 
+  let attribute_exists_p schema attr = 
+    if Hashtbl.mem schema.attributes attr then true
+    else
+      Hashtbl.fold
+	(fun _ {at_name=names} b -> 
+	   if b then b
+	   else
+	     List.exists
+	       (fun name -> (Lcstring.of_string name) = attr)
+	       names)
+	schema.attributes
+	false
+  in
+    (* check that all musts, and all mays are attributes which exist
+    exist. It would be an error to specify a must or a may which does
+    not exist. *)
+  let errors = 
+    Hashtbl.fold
+      (fun oc {oc_must=musts;oc_may=mays} errors -> 
+	 let check_error errors attr = 
+	   if not (attribute_exists_p schema attr) then
+	     (Lcstring.to_string oc, 
+	      Undefined_attr_reference (Lcstring.to_string attr)) :: errors
+	   else errors
+	 in
+	   (List.rev_append
+	      errors
+	      (List.rev_append
+		 (List.fold_left check_error [] musts)
+		 (List.fold_left check_error [] mays))))
+      schema.objectclasses
+      []
+  in
+    errors
+	 
+let schema_print_depth = ref 10
 let format_schema s =
   let indent = 3 in
   let printtbl tbl = 

@@ -172,7 +172,10 @@ let readbyte_of_string octets =
    readbyte_of_ber_element, even with blocking fds. *)
 let readbyte_of_fd fd =
   let buf = String.create 1 in
-  let in_ch = Unix.in_channel_of_descr fd in
+  let in_ch = (* This can fail, because it calls lseek *)
+    try Unix.in_channel_of_descr fd
+    with exn -> raise (Readbyte_error Transport_error) 
+  in
   let peek_buf = String.create 50 in
   let peek_buf_pos = ref 0 in
   let peek_buf_len = ref 0 in
