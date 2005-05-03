@@ -30,6 +30,14 @@ val iter : ('a -> unit) -> < read_entry : 'a; .. > -> unit
     object fold computes f (... (f (f value e1) e2) ...) en *)
 val fold : ('a -> 'b -> 'a) -> < read_entry : 'b; .. > -> 'a -> 'a
 
+(** if you need a fast, low level interface to to_string, this
+    function will write ldif directly into a buffer. Setting ext to
+    true (defaul false) will write extended ldif. Extended ldif should
+    be parsed using the Ldif_changerec_oo module. *)
+val entry2ldif : ?ext:bool -> Buffer.t ->
+  < attributes : string list; dn : string; get_value : string -> 
+  string list; .. > -> Buffer.t
+   
 class ldif: 
   ?in_ch:Pervasives.in_channel -> 
   ?out_ch:Pervasives.out_channel -> 

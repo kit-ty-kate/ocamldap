@@ -39,9 +39,40 @@ let rec fold f cr a =
   try fold f cr (f a cr#read_changerec)
   with End_of_changerecs -> a
 
+let insert_change buf cr = 
+  match cr with
+      `Modification (dn, mod_op) ->
+	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+	Buffer.add_string buf "changetype: modify\n";
+	List.iter
+	  (fun (op, attr, vals) ->
+	     (match op with
+		  `ADD -> Buffer.add_string buf ("add: " ^ attr ^ "\n")
+		| `DELETE -> Buffer.add_string buf ("delete: " ^ attr ^ "\n")
+		| `REPLACE -> Buffer.add_string buf ("replace:" ^ attr ^ "\n"));
+	     List.iter
+	       (fun valu -> Buffer.add_string buf (attr ^ ": " ^ valu ^ "\n"))
+	       vals;
+	     Buffer.add_string buf "-\n")
+	  mod_op;
+	Buffer.add_string buf "\n";
+	buf
+    | `Addition e -> Ldif_oo.entry2ldif ~ext:true buf e;
+    | `Delete dn ->
+	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+	Buffer.add_string buf "changetype: delete\n";
+	buf
+    | `Modrdn (dn, deleteoldrdn, newrdn) ->
+	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+	Buffer.add_string buf "changetype: modrdn\n";
+	Buffer.add_string buf ("deleteoldrdn: " ^ (string_of_int deleteoldrdn) ^ "\n");
+	Buffer.add_string buf ("newrdn: " ^ newrdn ^ "\n");
+	buf
+
 class change ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
   val lxbuf = Lexing.from_channel in_ch
+  val buf = Buffer.create 1
   method read_changerec =       
     try changerec lexcr lxbuf
     with
@@ -53,6 +84,11 @@ object (self)
       with
 	  Failure "end" -> raise End_of_changerecs
 	| Failure s -> raise (Invalid_changerec s)
-  method to_string (e:changerec) = failwith "not implemented";""
-  method write_changerec (e:changerec) = failwith "not implemented";()
+  method to_string (e:changerec) =
+    let res = Buffer.contents (insert_change buf e) in
+      Buffer.clear buf;res
+  method write_changerec (e:changerec) =
+    ignore (insert_change buf e);
+    Buffer.output_buffer out_ch buf;
+    Buffer.clear buf
 end
