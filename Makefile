@@ -8,8 +8,8 @@ ldap_funclient.ml ldap_schemalexer.mll ldap_schemaparser.mli		\
 ldap_schemaparser.ml ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml	\
 ldif_oo.ml ldif_oo.mli ldap_funserver.mli ldap_funserver.ml		\
 ldap_dnparser.mly ldap_dnlexer.mll ldap_dn.mli ldap_dn.ml		\
-ldif_changerec_oo.mli ldif_changerec_oo.ml ldif_changerec_parser.mly	\
-ldif_changerec_lexer.mll ldap_toplevel.ml
+ldif_changerec_parser.mly ldif_changerec_lexer.mll			\
+ldif_changerec_oo.mli ldif_changerec_oo.ml ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
 
