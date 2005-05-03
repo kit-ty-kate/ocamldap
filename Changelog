@@ -1,9 +1,16 @@
 2.1.3
-	* added toplevel pretty printers for Oid.t, Lcstring.t, 
+	* Added toplevel pretty printers for Oid.t, Lcstring.t, 
 	and ldapentry_t
-	* in readbyte_of_fd, Unix.in_channel_of_fd may fail. I was
-	not aware of this previously. We now catch the resulting
-	Sys_error, and change it to a Transport_error.
+	* fixed in readbyte_of_fd, upon reading the C code for this
+	function I realized that under some conditions
+	Unix.in_channel_of_fd may fail. I was not aware of this
+	previously. We now catch the resulting Sys_error, and change
+	it to a Transport_error. It is very unlikely that this would
+	ever happen.
+	* Added a parser and pretty printer for extended ldif as used
+	by openldap. ldif change records can now be read and written 
+	from and to nice data structures. I implemented this because
+	I needed to read replogs from slurpd.
 2.1.2
 	* fixed a bug in the encoding of substring filters, the 
 	length was not being computed correctly.
