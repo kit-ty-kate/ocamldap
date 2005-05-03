@@ -1,4 +1,4 @@
-/* a parser for rfc2254 ldap filters
+/* a parser for extended ldif
 
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
@@ -20,37 +20,34 @@
 
 %{
   open Ldap_ooclient
-  open Ldif_changerec_oo
+
   let check_attrs attr attrs =
     List.rev_map
       (fun (declared_attr, valu) ->
 	 if declared_attr = attr then
 	   valu
 	 else 
-	   raise 
-	     (Invalid_changerec
-		("declared attribute " ^
-		   "modifies the wrong" ^
-		   "attribute, " ^ 
-		   "attribute: " ^ attr ^
-		   "declared: " ^ 
-		   declared_attr)))
+	   failwith
+	     ("declared attribute " ^
+		"modifies the wrong" ^
+		"attribute, " ^ 
+		"attribute: " ^ attr ^
+		"declared: " ^ 
+		declared_attr))
       attrs
 
   let check_empty op attr =
     match op with
 	`DELETE -> (op, attr, [])
-      | `ADD -> raise 
-	  (Invalid_changerec "non sensical empty add")
-      | `REPLACE -> raise
-	  (Invalid_changerec "non sensical empty replace")
+      | `ADD -> failwith "non sensical empty add"
+      | `REPLACE -> failwith "non sensical empty replace"
 %}
 
 %token End_of_input Change_type_add Change_type_modrdn
 %token Change_type_modify Change_type_delete Dash Newline
 %token <string> AttributeType Dn Add Delete Replace
 %token <string * string> Attr
-%type <Ldif_changerec_oo.changerec> changerec
+%type <Ldap_ooclient.changerec> changerec
 %start changerec
 %%
 
@@ -88,5 +85,5 @@ changerec:
 			      e#set_dn $1;e#add $3;`Addition e}
 | Dn Change_type_delete {`Delete $1}
 | Dn Change_type_modrdn Attr Attr {`Modrdn ($1, int_of_string (snd $3), snd $4)}
-| End_of_input {raise End_of_changerecs}
+| End_of_input {failwith "end"}
 ;

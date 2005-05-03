@@ -28,13 +28,6 @@ exception Invalid_changerec of string
 (** raised at the end of the change records *)
 exception End_of_changerecs
 
-(** The type of a change record, extended ldif *)
-type changerec = 
-    [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
-    | `Addition of Ldap_ooclient.ldapentry
-    | `Delete of string
-    | `Modrdn of string * int * string]
-
 (*
 (** Ldif_oo.iter f ldif, iterate accross all ldif entries in the
     specified ldif object, applying f to each one *)
@@ -50,8 +43,8 @@ class change:
   ?out_ch:Pervasives.out_channel -> 
   unit ->
 object
-  method read_changerec: changerec
-  method of_string: string -> changerec
-  method to_string: changerec -> string
-  method write_changerec: changerec -> unit
+  method read_changerec: Ldap_ooclient.changerec
+  method of_string: string -> Ldap_ooclient.changerec
+  method to_string: Ldap_ooclient.changerec -> string
+  method write_changerec: Ldap_ooclient.changerec -> unit
 end

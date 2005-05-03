@@ -113,6 +113,12 @@ class ldapentry :
     method set_dn : string -> unit
   end
 
+type changerec = 
+    [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
+    | `Addition of ldapentry
+    | `Delete of string
+    | `Modrdn of string * int * string]
+
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
 val to_entry : 

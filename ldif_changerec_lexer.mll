@@ -1,4 +1,4 @@
-(* lexer for rfc2252 format schemas
+(* lexer for extended ldif
 
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge

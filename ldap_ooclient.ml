@@ -239,6 +239,12 @@ object (self)
 
 end
 
+type changerec = 
+    [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
+    | `Addition of ldapentry
+    | `Delete of string
+    | `Modrdn of string * int * string]
+
 (********************************************************************************)
 (********************************************************************************)
 (********************************************************************************)
