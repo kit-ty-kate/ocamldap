@@ -25,7 +25,19 @@ open Ldif_changerec_parser
 open Ldif_changerec_lexer
 
 exception Invalid_changerec of string
-exception End_of_changerecs
+exception End_of_changerecs  
+
+let iter f cr = 
+  try
+    while true
+    do
+      f cr#read_changerec
+    done
+  with End_of_changerecs -> ()
+
+let rec fold f cr a =
+  try fold f cr (f a cr#read_changerec)
+  with End_of_changerecs -> a
 
 class change ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)

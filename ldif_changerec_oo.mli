@@ -28,15 +28,13 @@ exception Invalid_changerec of string
 (** raised at the end of the change records *)
 exception End_of_changerecs
 
-(*
-(** Ldif_oo.iter f ldif, iterate accross all ldif entries in the
-    specified ldif object, applying f to each one *)
-val iter : ('a -> unit) -> < read_entry : 'a; .. > -> unit
+(** Ldif_changerec.iter f change, iterate accross all change entries
+    in the specified change object, applying f to each one *)
+val iter : ('a -> unit) -> < read_changerec : 'a; .. > -> unit
 
-(** Ldif_oo.fold f ldif value, for each ldif entry en in the ldif
-    object fold computes f (... (f (f value e1) e2) ...) en *)
-val fold : ('a -> 'b -> 'a) -> < read_entry : 'b; .. > -> 'a -> 'a
-*)
+(** Ldif_changerec.fold f change value, for each change entry en in
+    the change object fold computes f (... (f (f value e1) e2) ...) en *)
+val fold : ('a -> 'b -> 'a) -> < read_changerec : 'b; .. > -> 'a -> 'a
 
 class change: 
   ?in_ch:Pervasives.in_channel -> 
