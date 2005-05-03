@@ -20,6 +20,9 @@
    USA
 *)
 
+open Ldif_changerec_parser
+open Ldif_changerec_lexer
+
 type changerec = 
     [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
     | `Addition of Ldap_ooclient.ldapentry
@@ -31,8 +34,11 @@ exception End_of_changerecs
 
 class change ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
-  method read_changerec = (`Modification ("bob", [(`ADD, "bob", ["bob"])]): changerec)
-  method of_string (s:string) = (`Modification ("bob", [(`ADD, "bob", ["bob"])]): changerec)
-  method to_string (e:changerec) = ""
-  method write_changerec (e:changerec) = ()
+  val lxbuf = Lexing.from_channel in_ch
+  method read_changerec = changerec lexcr lxbuf
+  method of_string (s:string) =
+    let lx = Lexing.from_string s in
+      changerec lexcr lxbuf
+  method to_string (e:changerec) = failwith "not implemented";""
+  method write_changerec (e:changerec) = failwith "not implemented";()
 end
