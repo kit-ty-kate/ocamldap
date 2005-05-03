@@ -25,7 +25,7 @@ open Str;;
 open Netencoding;;
 open Ldap_ooclient;;
 open Ldif_parser;;
-
+		     
 let safe_string_regex = 
   Str.regexp "[^ :<\x0d\x0a\x00]\\([^\x0d\x0a\x00]*[^ \x0d\x0a\x00]\\)?$"
 
