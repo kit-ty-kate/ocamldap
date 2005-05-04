@@ -21,5 +21,12 @@
 
 (** a library for parsing a subset of the ldapurl syntax *)
 
+(** will be raised in the event of a parse or type error. The integer
+    is the location of the error, measured in charachters from the
+    left, and the string is a description of the error. The current
+    lexer does not correctly set the charachter location, however
+    future lexers will. *)
+exception Invalid_ldap_url of int * string
+
 (** internalize the url contained in the string argument *)
 val of_string : string -> Ldap_types.ldap_url

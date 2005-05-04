@@ -11,6 +11,9 @@
 	by openldap. ldif change records can now be read and written 
 	from and to nice data structures. I implemented this because
 	I needed to read replogs from slurpd.
+	* Fixed the ldap_url module, it will now raise Invalid_ldap_url
+	when it fails to parse the url, instead of raising a generic
+	exception such as Failure.
 2.1.2
 	* fixed a bug in the encoding of substring filters, the 
 	length was not being computed correctly.

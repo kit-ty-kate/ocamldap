@@ -21,4 +21,13 @@
 
 open Ldap_urllexer
 
-let of_string s = lexurl (Lexing.from_string s)
+exception Invalid_ldap_url of int * string
+
+let of_string s = 
+  let lx = Lexing.from_string s in
+    try lexurl lx
+    with 
+	Failure "lexing: empty token" -> 
+	  raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, "syntax error"))
+      | exn ->
+	  raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, Printexc.to_string exn))
