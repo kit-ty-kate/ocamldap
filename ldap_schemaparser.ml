@@ -135,11 +135,11 @@ let typecheck_schema schema =
     let oids = Hashtbl.create 100 in
     let seen = Hashtbl.create 100 in
       Hashtbl.iter
-	(fun at {at_oid=oid} -> Hashtbl.add oids oid (Lcstring.to_string at))
-	schema.attributes;
+	(fun oid {at_name=n} -> Hashtbl.add oids oid (List.hd n))
+	schema.attributes_byoid;
       Hashtbl.iter
-	(fun oc {oc_oid=oid} -> Hashtbl.add oids oid (Lcstring.to_string oc))
-	schema.objectclasses;
+	(fun oid {oc_name=n} -> Hashtbl.add oids oid (List.hd n))
+	schema.objectclasses_byoid;
       Hashtbl.fold
 	(fun oid name errors ->
 	   if List.length (Hashtbl.find_all oids oid) > 1 then
