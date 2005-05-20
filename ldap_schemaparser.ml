@@ -72,6 +72,7 @@ type objectclass = {oc_name: string list;
 		    oc_may:Lcstring.t list;
 		    oc_type:octype;
 		    oc_xattr:string list}
+
 type attribute = {at_name:string list;
 		  at_desc:string;
 		  at_oid:Oid.t;
@@ -88,12 +89,13 @@ type attribute = {at_name:string list;
 		  at_sup:Lcstring.t list;
 		  at_xattr:string list};;
 		  
-type schema = {objectclasses:(Lcstring.t, objectclass) Hashtbl.t;
+type schema = {objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
 	       objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
-	       attributes:(Lcstring.t, attribute) Hashtbl.t;
+	       attributes: (Lcstring.t, attribute) Hashtbl.t;
 	       attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
 
 type schema_error = Undefined_attr_reference of string
+		    | Undefined_oc_reference of string
 		    | Cross_linked_oid of string list
 
 let typecheck_schema schema = 
@@ -155,8 +157,26 @@ let typecheck_schema schema =
 	oids
 	errors
   in
+    (* make sure all superior ocs are defined *)
+  let errors =
+    Hashtbl.fold
+      (fun oc {oc_sup=sups} errors ->
+	  List.rev_append
+	    errors
+	    (List.rev_map
+	       (fun missing -> (missing, Undefined_oc_reference missing))
+	       (List.filter
+		  (fun oc -> 
+		     not 
+		       (Hashtbl.mem
+			  schema.objectclasses
+			  (Lcstring.of_string oc)))
+		  (List.rev_map Lcstring.to_string sups))))
+      schema.objectclasses
+      errors
+  in
     errors
-	 
+
 let schema_print_depth = ref 10
 let format_schema s =
   let indent = 3 in
