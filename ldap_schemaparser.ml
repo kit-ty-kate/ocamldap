@@ -110,9 +110,9 @@ let typecheck_schema schema =
 	schema.attributes
 	false
   in
-    (* check that all musts, and all mays are attributes which exist
-    exist. It would be an error to specify a must or a may which does
-    not exist. *)
+    (* check that all musts, and all mays are attributes which
+       exist. It would be an error to specify a must or a may which does
+       not exist. *)
   let errors = 
     Hashtbl.fold
       (fun oc {oc_must=musts;oc_may=mays} errors -> 
@@ -129,6 +129,31 @@ let typecheck_schema schema =
 		 (List.fold_left check_error [] mays))))
       schema.objectclasses
       []
+  in
+    (* check for cross linked oids *)
+  let errors =
+    let oids = Hashtbl.create 100 in
+    let seen = Hashtbl.create 100 in
+      Hashtbl.iter
+	(fun at {at_oid=oid} -> Hashtbl.add oids oid (Lcstring.to_string at))
+	schema.attributes;
+      Hashtbl.iter
+	(fun oc {oc_oid=oid} -> Hashtbl.add oids oid (Lcstring.to_string oc))
+	schema.objectclasses;
+      Hashtbl.fold
+	(fun oid name errors ->
+	   if List.length (Hashtbl.find_all oids oid) > 1 then
+	     if Hashtbl.mem seen oid then
+	       errors
+	     else (
+	       Hashtbl.add seen oid ();
+	       (name, Cross_linked_oid (Hashtbl.find_all oids oid)) :: errors
+	     )
+	   else 
+	     errors
+	)
+	oids
+	errors
   in
     errors
 	 
