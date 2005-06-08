@@ -34,10 +34,21 @@ eval "#install_printer Ldap_schemaparser.format_oid;;";;
 eval "#install_printer Ldap_schemaparser.format_lcstring;;";;
 eval "#install_printer Ldap_schemaparser.format_schema;;";;
 
-let print_entries es = 
+let print_entries ?(attrs=[]) es = 
   let ldif = new ldif () in
     List.iter
-      (fun e -> ldif#write_entry e)
+      (fun e ->
+	 match attrs with
+	     [] -> ldif#write_entry e
+	   | attrs -> 
+	       let ne = new ldapentry in
+		 ne#set_dn e#dn;
+		 List.iter
+		   (fun attr -> 
+		      try ne#replace [(attr, e#get_value attr)]
+		      with Not_found -> ())
+		   attrs;
+		 ldif#write_entry ne)
       es
 ;;
 

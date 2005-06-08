@@ -27,7 +27,7 @@ open Ldap_ooclient;;
 open Ldif_parser;;
 		     
 let safe_string_regex = 
-  Str.regexp "[^ :<\x0d\x0a\x00]\\([^\x0d\x0a\x00]*[^ \x0d\x0a\x00]\\)?$"
+  Str.regexp "^[\x01-\x09\x0b-\x0c\x0e-\x7f]+$"
 
 let password_regex =
   Str.regexp_case_fold ".*p\\(ass\\)?w\\(or\\)?d$"
