@@ -126,7 +126,6 @@ object (self)
   val mutable changes = []
   val mutable changetype = `ADD
 
-
   method private push_change (t:modify_optype) lst = 
     match changetype with
 	`MODIFY -> (match lst with

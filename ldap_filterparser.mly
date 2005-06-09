@@ -63,31 +63,31 @@ filter:
 | ATTR EQUAL extvalue {`EqualityMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR EQUAL STAR extvalue {`Substrings 
 			      {attrtype=$1;
-			       substrings={substr_initial=None;
-					   substr_any=None;
-					   substr_final=(Some (unescape $4))}}}
+			       substrings={substr_initial=[];
+					   substr_any=[];
+					   substr_final=[unescape $4]}}}
 | ATTR EQUAL extvalue STAR {`Substrings 
 			      {attrtype=$1;
-			       substrings={substr_initial=(Some (unescape $3));
-					   substr_any=None;
-					   substr_final=None}}}
+			       substrings={substr_initial=[unescape $3];
+					   substr_any=[];
+					   substr_final=[]}}}
 | ATTR EQUAL STAR extvalue STAR {`Substrings
 				   {attrtype=$1;
-				    substrings={substr_initial=None;
-						substr_any=(Some (unescape $4));
-						substr_final=None}}}
+				    substrings={substr_initial=[];
+						substr_any=[unescape $4];
+						substr_final=[]}}}
 | ATTR EQUAL extvalue STAR extvalue STAR extvalue {`Substrings
 						     {attrtype=$1;
 						      substrings=
-							{substr_initial=(Some (unescape $3));
-							 substr_any=(Some (unescape $5));
-							 substr_final=(Some (unescape $7))}}}
+							 {substr_initial=[unescape $3];
+							 substr_any=[unescape $5];
+							 substr_final=[unescape $7]}}}
 | ATTR EQUAL extvalue STAR extvalue {`Substrings
 				       {attrtype=$1;
 					substrings=
-					   {substr_initial=(Some (unescape $3));
-					    substr_any=None;
-					    substr_final=(Some (unescape $5))}}}
+					   {substr_initial=[unescape $3];
+					    substr_any=[];
+					    substr_final=[unescape $5]}}}
 | EXTENDEDMATCHATTR EQUAL extvalue {`ExtensibleMatch 
 				      {matchingRule=(Some (unescape (snd $1)));
 				       ruletype=(Some (unescape (fst $1)));

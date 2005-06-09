@@ -84,14 +84,26 @@ let to_string (f:filter) =
 	  Buffer.add_string buf
 	    (global_replace double_star_rex "*"
 	       ((match initial with
-		     Some s -> (escape_filterstring s) ^ "*"
-		   | None -> "") ^
+		     [s] -> (escape_filterstring s) ^ "*"
+		   | [] -> ""
+		   | _ -> 
+		       raise 
+			 (Invalid_filter 
+			    (0, "multiple substring components cannot be represented"))) ^
 		  (match any with
-		       Some s -> "*" ^ (escape_filterstring s) ^ "*"
-		     | None -> "") ^
+		       [s] -> "*" ^ (escape_filterstring s) ^ "*"
+		     | [] -> ""
+		     | _ -> 
+			 raise 
+			   (Invalid_filter 
+			      (0, "multiple substring components cannot be represented"))) ^
 		     (match final with
-			  Some s -> "*" ^ (escape_filterstring s)
-			| None -> "")));
+			  [s] -> "*" ^ (escape_filterstring s)
+			| [] -> ""
+			| _ -> 
+			    raise 
+			      (Invalid_filter 
+				 (0, "multiple substring components cannot be represented")))));
 	  Buffer.add_char buf ')';
       | `GreaterOrEqual {attributeDesc=attrname;assertionValue=valu} ->
 	  Buffer.add_char buf '(';

@@ -14,6 +14,8 @@
 	* Fixed the ldap_url module, it will now raise Invalid_ldap_url
 	when it fails to parse the url, instead of raising a generic
 	exception such as Failure.
+	* Fixed the regular expression for safe-string to actually detect
+	non safe strings, which will be base64 encoded.
 2.1.2
 	* fixed a bug in the encoding of substring filters, the 
 	length was not being computed correctly.

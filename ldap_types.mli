@@ -174,9 +174,9 @@ type matching_rule_assertion = {
 }
 
 type substring_component = { (* at least one must be specified *)
-  substr_initial: string option;
-  substr_any: string option;
-  substr_final: string option;
+  substr_initial: string list;
+  substr_any: string list;
+  substr_final: string list;
 }
 
 type substring_filter = {

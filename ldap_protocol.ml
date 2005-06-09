@@ -357,67 +357,94 @@ let decode_attributevalueassertion rb =
 let encode_substringfilter {attrtype=attr;
 			    substrings={substr_initial=initial;
 					substr_any=any;substr_final=final}} =
-  let olen s = match s with Some s -> String.length s | None -> 0 in
-  let oadd buf encoded =
-    (match encoded with
-	 Some e -> Buffer.add_string buf e
-       | None -> ())
-  in
-  let oencode tag valu =
-        match valu with 
-	Some s -> Some (encode_ber_octetstring ~cls:Context_specific ~tag:tag s) 
-      | None -> None 
+  let encode_component ctype vals =     
+    match vals with
+	[] -> ""
+      | vals ->
+	  let tag =
+	    match ctype with 
+		`INITIAL -> 0
+	      | `ANY -> 1
+	      | `FINAL -> 2
+	  in
+	  let buf = 
+	    Buffer.create 
+	      (List.fold_left 
+		 (fun s v -> s + (String.length v) + 3) 
+		 0 vals) 
+	  in
+	    List.iter
+	      (fun v -> 
+		 Buffer.add_string buf 
+		   (encode_ber_octetstring ~cls:Context_specific ~tag v))
+	      vals;
+	    Buffer.contents buf
   in
   let e_attr = encode_ber_octetstring attr in
-  let e_initial = oencode 0 initial in
-  let e_any = oencode 1 any in
-  let e_final = oencode 2 final in
-  let component_len = (olen e_initial) + (olen e_any) + (olen e_final) in
+  let e_initial = encode_component `INITIAL initial in
+  let e_any = encode_component `ANY any in
+  let e_final = encode_component `FINAL final in
+  let component_len = (String.length e_initial) + (String.length e_any) + (String.length e_final) in
   let component_buf = Buffer.create (component_len + 3) in
     Buffer.add_string component_buf 
       (encode_ber_header 
 	 {ber_class=Universal;ber_tag=16;ber_primitive=false;
 	  ber_length=(Definite component_len)});
-    oadd component_buf e_initial;
-    oadd component_buf e_any;
-    oadd component_buf e_final;
+    Buffer.add_string component_buf e_initial;
+    Buffer.add_string component_buf e_any;
+    Buffer.add_string component_buf e_final;
     let len = ((Buffer.length component_buf) + (String.length e_attr)) in
     let buf = Buffer.create (len + 3) in
-    Buffer.add_string buf 
-      (encode_ber_header
-	 {ber_class=Context_specific;ber_tag=4;ber_primitive=false;
-	  ber_length=(Definite len)});
-    Buffer.add_string buf e_attr;
-    Buffer.add_buffer buf component_buf;
-    Buffer.contents buf
-
+      Buffer.add_string buf 
+	(encode_ber_header
+	   {ber_class=Context_specific;ber_tag=4;ber_primitive=false;
+	    ber_length=(Definite len)});
+      Buffer.add_string buf e_attr;
+      Buffer.add_buffer buf component_buf;
+      Buffer.contents buf
+	
 let decode_substringfilter rb =
-  let attrtype = decode_ber_octetstring rb in
-  let components = 
+  let rec decode_substring_components skel rb =
+    try
+      match decode_ber_header ~peek:true rb with
+	  {ber_class=Context_specific;ber_tag=0} ->
+	    decode_substring_components
+	      {skel with 
+		 substr_initial=((decode_ber_octetstring 
+				    ~cls:Context_specific 
+				    ~tag:0 rb) :: 
+				   skel.substr_initial)}
+	      rb
+	| {ber_class=Context_specific;ber_tag=1} ->
+	    decode_substring_components
+	      {skel with
+		 substr_any=((decode_ber_octetstring 
+				~cls:Context_specific 
+				~tag:1 rb) :: 
+			       skel.substr_any)}
+	      rb
+	| {ber_class=Context_specific;ber_tag=2} ->
+	    decode_substring_components
+	      {skel with
+		 substr_final=((decode_ber_octetstring 
+				  ~cls:Context_specific 
+				  ~tag:2 rb) ::
+				 skel.substr_final)}
+	      rb
+	| _ -> raise (LDAP_Decoder "decode_substringfilter: invalid substring component")
+    with Readbyte_error End_of_stream -> skel
+  in
+  let attrtype =  decode_ber_octetstring rb in
+  let components =    
     (match decode_ber_header rb with
 	 {ber_class=Universal;ber_tag=16;ber_length=len} ->
 	   let rb = readbyte_of_ber_element len rb in
-	   let initial = ref None in
-	   let any = ref None in
-	   let final = ref None in
-	   let decode_component rb =
-	     match decode_ber_header ~peek:true rb with
-		 {ber_class=Context_specific;ber_tag=0} ->
-		   initial := Some (decode_ber_octetstring ~cls:Context_specific ~tag:0 rb)
-	       | {ber_class=Context_specific;ber_tag=1} ->
-		   any := Some (decode_ber_octetstring ~cls:Context_specific ~tag:1 rb)
-	       | {ber_class=Context_specific;ber_tag=2} ->
-		   final := Some (decode_ber_octetstring ~cls:Context_specific ~tag:2 rb)
-	       | _ -> raise (LDAP_Decoder "decode_substringfilter: invalid substring component")
-	   in
-	     (try decode_component rb with _ -> ()); (* beatlejuice! *)
-	     (try decode_component rb with _ -> ()); (* beatlejuice! *)
-	     (try decode_component rb with _ -> ()); (* beatlejuice! *)
-	     (if (!initial, !any, !final) = (None, None, None) then
-		raise (LDAP_Decoder "decode_substringfilter: invalid substring match"));
-	     {substr_initial=(!initial);
-	      substr_any=(!any);
-	      substr_final=(!final)}
+	   let skel = {substr_initial=[];substr_any=[];substr_final=[]} in
+	   let result = decode_substring_components skel rb in
+	     if result = skel then
+	       raise (LDAP_Decoder "decode_substringfilter: invalid substring filter")
+	     else
+	       result
        | _ -> raise (LDAP_Decoder "decode_substringfilter: expected sequence of choice"))
   in
     {attrtype=attrtype;
