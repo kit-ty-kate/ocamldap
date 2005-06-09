@@ -1,6 +1,6 @@
 -include Makefile.conf
 
-SOURCES=lber.mli lber.ml ldap_types.mli ldap_error.mli	\
+SOURCES=lber.mli lber.ml ldap_types.mli ldap_types.ml ldap_error.mli	\
 ldap_error.ml ldap_protocol.mli ldap_protocol.ml ulist.ml		\
 ldap_urllexer.mll ldap_url.mli ldap_url.ml ldap_filterparser.mly	\
 ldap_filterlexer.mll ldap_filter.mli ldap_filter.ml ldap_funclient.mli	\

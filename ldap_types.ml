@@ -19,7 +19,19 @@
    USA
 *)
 
+(** Common data types used by ocamldap. Most of these types are taken
+  from the ASN.1 specification for LDAP as defined in rfc2251 @see
+  <http://www.ietf.org/rfc/rfc2251.txt> rfc2251*)
+
+(** An encoding error has occurred, the argument contains a
+  description of the error This is likely a bug, so it should be
+  reported *)
 exception LDAP_Encoder of string
+
+(** A decoding error has occurred, the argument contains a description
+  of the error. This MAY be a bug, but it may also be that the server
+  you are talking to is non standard. Please report these right away in
+  any case.*)
 exception LDAP_Decoder of string
 
 type ldap_resultcode = [
@@ -89,12 +101,21 @@ type ldap_result = {
   ldap_referral: (string list) option;
 }
 
-(* extended information to return with the exception *)
+(** extended information to return with the LDAP_Failure
+  exception. Contains the remaining values which are defined by the
+  protocol ext_matched_dn: the matched dn. Commonly set by
+  `NO_SUCH_OBJECT. ext_referral: a list of ldapurls returned by the
+  server when you attempted to do a write operation. If you use
+  Ldap_ooclient with referrals set to follow you will never see this*)
 type ldap_ext_return = {
   ext_matched_dn: string;
   ext_referral: string list option;
 }
 
+(** The exception raised to indicate all types of failure in the
+  higher level libraries Ldap_funclient, and Ldap_ooclient. example
+  [LDAP_Failure (`NO_SUCH_OBJECT, "no such object",
+  {ext_matched_dn=Some "o=csun";ext_referral=None})] *)
 exception LDAP_Failure of ldap_resultcode * string * ldap_ext_return
 
 type saslCredentials = {
@@ -123,14 +144,17 @@ type attribute = {
 
 type dn = attribute list
 
+(** the type used to encode and decode a search entry. Also the type
+  returned by search_s and search_a in Ldap_funclient *)
 type search_result_entry = {
   sr_dn: string;
   sr_attributes: attribute list;
 }
 
-type search_scope = [ `BASE
-		    | `ONELEVEL
-		    | `SUBTREE ]
+(** a type defining the scope of a search filter *)
+type search_scope = [ `BASE (** search only at the base *)
+		    | `ONELEVEL (** search one level below the base *)
+		    | `SUBTREE (** search the entire tree under the base *)] 
 
 type alias_deref = [ `NEVERDEREFALIASES
 		   | `DEREFINSEARCHING
@@ -150,9 +174,9 @@ type matching_rule_assertion = {
 }
 
 type substring_component = { (* at least one must be specified *)
-  substr_initial: string option;
-  substr_any: string option;
-  substr_final: string option;
+  substr_initial: string list;
+  substr_any: string list;
+  substr_final: string list;
 }
 
 type substring_filter = {

@@ -14,6 +14,7 @@ type token =
   | ATTR of (string)
   | EXTENDEDMATCHATTR of (string * string)
   | EXTENDEDDNATTR of (string * string option)
+  | SUBSTRINGS of (Ldap_types.substring_component)
   | VALUE of (string)
 
 val filter_and_eof :

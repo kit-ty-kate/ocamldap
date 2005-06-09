@@ -33,14 +33,14 @@
        (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
 	  (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
 	     (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
-		(Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))  
-
+		(Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
 %}
 
 %token WHSP LPAREN RPAREN AND OR NOT EQUAL APPROX GTE LTE STAR EOF
 %token <string> ATTR
 %token <string * string> EXTENDEDMATCHATTR
 %token <string * string option> EXTENDEDDNATTR
+%token <Ldap_types.substring_component> SUBSTRINGS
 %token <string> VALUE
 %start filter_and_eof
 %type <Ldap_types.filter> filter_and_eof
@@ -55,54 +55,31 @@ extvalue:
   ATTR {$1}
 | VALUE {$1}
 ;
+
 filter:
   LPAREN AND filterlist RPAREN {`And $3}
 | LPAREN OR filterlist RPAREN {`Or $3}
 | LPAREN NOT filter RPAREN {`Not $3}
 | LPAREN filter RPAREN {$2}
+| ATTR EQUAL SUBSTRINGS {`Substrings {attrtype=$1;substrings=$3}}
 | ATTR EQUAL extvalue {`EqualityMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
-| ATTR EQUAL STAR extvalue {`Substrings 
-			      {attrtype=$1;
-			       substrings={substr_initial=[];
-					   substr_any=[];
-					   substr_final=[unescape $4]}}}
-| ATTR EQUAL extvalue STAR {`Substrings 
-			      {attrtype=$1;
-			       substrings={substr_initial=[unescape $3];
-					   substr_any=[];
-					   substr_final=[]}}}
-| ATTR EQUAL STAR extvalue STAR {`Substrings
-				   {attrtype=$1;
-				    substrings={substr_initial=[];
-						substr_any=[unescape $4];
-						substr_final=[]}}}
-| ATTR EQUAL extvalue STAR extvalue STAR extvalue {`Substrings
-						     {attrtype=$1;
-						      substrings=
-							 {substr_initial=[unescape $3];
-							 substr_any=[unescape $5];
-							 substr_final=[unescape $7]}}}
-| ATTR EQUAL extvalue STAR extvalue {`Substrings
-				       {attrtype=$1;
-					substrings=
-					   {substr_initial=[unescape $3];
-					    substr_any=[];
-					    substr_final=[unescape $5]}}}
 | EXTENDEDMATCHATTR EQUAL extvalue {`ExtensibleMatch 
 				      {matchingRule=(Some (unescape (snd $1)));
 				       ruletype=(Some (unescape (fst $1)));
 				       matchValue=(unescape $3);
 				       dnAttributes=false}}
-| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch {matchingRule=(match (snd $1) with
-								     Some s -> Some (unescape s)
-								   | None -> None);
-						   ruletype=(Some (unescape (fst $1)));
-						   matchValue=(unescape $3);
-						   dnAttributes=true}}
+| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch 
+				   {matchingRule=(match (snd $1) with
+						      Some s -> Some (unescape s)
+						    | None -> None);
+				    ruletype=(Some (unescape (fst $1)));
+				    matchValue=(unescape $3);
+				    dnAttributes=true}}
 | ATTR APPROX extvalue {`ApproxMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR GTE extvalue {`GreaterOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR LTE extvalue {`LessOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
 | ATTR EQUAL STAR {`Present $1}
+;
 
 /* used to enforce EOF at the end of the filter */
 filter_and_eof:
