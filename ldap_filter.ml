@@ -91,12 +91,11 @@ let to_string (f:filter) =
 			 (Invalid_filter 
 			    (0, "multiple substring components cannot be represented"))) ^
 		  (match any with
-		       [s] -> "*" ^ (escape_filterstring s) ^ "*"
-		     | [] -> ""
-		     | _ -> 
-			 raise 
-			   (Invalid_filter 
-			      (0, "multiple substring components cannot be represented"))) ^
+		       [] -> ""
+		     | lst -> 
+			 List.fold_left 
+			   (fun f s -> f ^ "*" ^ (escape_filterstring s) ^ "*")
+			   "" lst) ^
 		     (match final with
 			  [s] -> "*" ^ (escape_filterstring s)
 			| [] -> ""

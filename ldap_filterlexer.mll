@@ -48,7 +48,7 @@ let dn = colon "dn" ( colon ) ?
 let matchingrule = colon oid
 let extendedmatchattr = (attr as attrname) matchingrule
 let extendeddnattr = (attr as attrname) dn (oid)?
-let substrany = star (value star) +
+let substrany = star (valuelst star) +
 let substr = 
     substrany
   | valuelst substrany 
@@ -74,7 +74,7 @@ rule lexfilter = parse
 		  {substr_initial=[];
 		   substr_final=[(List.hd (List.rev substrs))];
 		   substr_any=(try List.rev (List.tl (List.rev substrs)) with _ -> [])}
-	    else
+	    else 
 	      if v.[(String.length v) - 1] = '*' then
 		{substr_initial=(try [List.hd substrs] with _ -> []);
 		 substr_any=(try List.tl substrs with _ -> []);
