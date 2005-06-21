@@ -61,29 +61,41 @@ attrlst:
   Attr attrlst {$1 :: $2}
 | Attr {[$1]}
 
+newline:
+  Newline {}
+| End_of_input {}
+
 modificationterminator:
-  Dash Newline {}
-| Newline {}
+  Dash newline {}
+| newline {}
 ;
 
 modifications:
   operation attrlst Dash modifications {let (op, attr) = $1 in
-					  (op, attr, check_attrs attr $2) :: $4}
-| operation Dash modifications {let (op, attr) = $1 in (check_empty op attr) :: $3}
-| operation attrlst modificationterminator {let (op, attr) = $1 in [(op, attr,
-								     check_attrs attr $2)]}
-| operation modificationterminator {let (op, attr) = $1 in [(check_empty op attr)]}
+					  (op, 
+					   attr, 
+					   check_attrs attr $2) :: $4}
+| operation Dash modifications {let (op, attr) = $1 in 
+				  (check_empty op attr) :: $3}
+| operation attrlst modificationterminator {let (op, attr) = $1 in 
+					      [(op, attr,
+						check_attrs attr $2)]}
+| operation modificationterminator {let (op, attr) = $1 in 
+				      [(check_empty op attr)]}
 ;
 
 entry:
   Attr entry {let (a, v) = $1 in (a, [v]) :: $2}
-| Attr Newline {let (a, v) = $1 in [(a, [v])]}
+| Attr newline {let (a, v) = $1 in [(a, [v])]}
 
 changerec:
   Dn Change_type_modify modifications {`Modification ($1, List.rev $3)}
 | Dn Change_type_add entry {let e = new ldapentry in
 			      e#set_dn $1;e#add $3;`Addition e}
-| Dn Change_type_delete {`Delete $1}
-| Dn Change_type_modrdn Attr Attr {`Modrdn ($1, int_of_string (snd $3), snd $4)}
+| Dn Change_type_delete newline {`Delete $1}
+| Dn Change_type_modrdn Attr Attr newline {`Modrdn 
+					     ($1, 
+					      int_of_string (snd $3), 
+					      snd $4)}
 | End_of_input {failwith "end"}
 ;

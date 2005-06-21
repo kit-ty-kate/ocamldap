@@ -34,7 +34,7 @@ let attrval = (anyprintablechar | '\n' ' ') +
 rule lexcr = parse
   | "dn:" mustsp ([' ' - '~']+ as dn) nl {Dn dn}
   | "changetype:" mustsp "modify" nl {Change_type_modify}
-  | "changetyep:" mustsp "delete" nl {Change_type_delete}
+  | "changetype:" mustsp "delete" nl {Change_type_delete}
   | "changetype:" mustsp "modrdn" nl {Change_type_modrdn}
   | "changetype:" mustsp "add" nl {Change_type_add}
   | "add:" mustsp (attrname as name) nl {Add name}
