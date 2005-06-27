@@ -41,14 +41,14 @@ object (self)
 	  while true
 	  do
 	    try 
-	      ldap_write#modify 
+	      ldap#modify 
 		(List.hd obj)#dn [(`ADD, "mutexlocked", ["locked"])];
 	      failwith "locked"
 	    with (* the mutex is locked already *)
 		LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
 	      | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) -> ()
 	  done
-	else failwith ("multiple mutexes with name: " ^ mutex)
+	else failwith ("huge error, multiple objects with the same dn")
     with
 	Failure "locked" -> ()
       | (Ldap_mutex _) as exn -> raise exn
