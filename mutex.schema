@@ -1,0 +1,26 @@
+# symas:10 attributes
+# symas:11 objectclasses
+
+attributetype ( 1.3.6.1.4.1.4754.10.37
+	NAME 'mutexLocked'
+	EQUALITY caseIgnoreMatch
+	ORDERING caseIgnoreOrderingMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}
+	SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.4754.10.38
+	NAME 'mutexName'
+	EQUALITY caseIgnoreMatch
+	ORDERING caseIgnoreOrderingMatch
+	SUBSTR caseIgnoreSubstringsMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512}
+	SINGLE-VALUE )
+
+objectclass (1.3.6.1.4.1.4754.11.4
+        NAME 'mutex'
+        SUP top
+	STRUCTURAL
+        MAY ( mutexName $
+                description $
+	        mutexLocked ) )
