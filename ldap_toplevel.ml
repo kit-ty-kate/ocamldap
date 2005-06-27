@@ -1,4 +1,6 @@
-(* 
+(* Functions which resemble the command line tools, useful in the
+   interactive environment
+
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
@@ -18,10 +20,10 @@
    USA
 *)
 
-open Ldap_ooclient;;
-open Ldap_types;;
-open Ldif_oo;;
-open Ldap_schemaparser;;
+open Ldap_ooclient
+open Ldap_types
+open Ldif_oo
+open Ldap_schemaparser
 
 let eval s =
   let l = Lexing.from_string s in
@@ -33,24 +35,6 @@ eval "#install_printer Ldap_ooclient.format_entry;;";;
 eval "#install_printer Ldap_schemaparser.format_oid;;";;
 eval "#install_printer Ldap_schemaparser.format_lcstring;;";;
 eval "#install_printer Ldap_schemaparser.format_schema;;";;
-
-let print_entries ?(attrs=[]) es = 
-  let ldif = new ldif () in
-    List.iter
-      (fun e ->
-	 match attrs with
-	     [] -> ldif#write_entry e
-	   | attrs -> 
-	       let ne = new ldapentry in
-		 ne#set_dn e#dn;
-		 List.iter
-		   (fun attr -> 
-		      try ne#replace [(attr, e#get_value attr)]
-		      with Not_found -> ())
-		   attrs;
-		 ldif#write_entry ne)
-      es
-;;
 
 let ldap_cmd_harness ~h ~d ~w f = 
   let ldap = new ldapcon [h] in
@@ -70,13 +54,12 @@ let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
 	 ~attrs:a filter)
 ;;
 
-let ldapsearch_p ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
-  print_entries (ldapsearch ~s ~a ~b ~h ~d ~w filter)
-;;
-
-let ldapmodify ~h ~d ~w dn mods = 
+let ldapmodify ~h ~d ~w mods = 
   ldap_cmd_harness ~h ~d ~w 
-    (fun ldap -> ldap#modify dn mods)
+    (fun ldap -> 
+       List.iter
+	 (fun (dn, ldmod) -> ldap#modify dn ldmod)
+	 mods)
 ;;
 
 let ldapadd ~h ~d ~w entries = 
