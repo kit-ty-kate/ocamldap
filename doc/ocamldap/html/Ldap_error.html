@@ -1,0 +1,49 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Ldap_types.html">
+<link rel="next" href="Ldap_protocol.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_error</title>
+</head>
+<body>
+<div class="navbar"><a href="Ldap_types.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldap_protocol.html">Next</a>
+</div>
+<center><h1>Module <a href="type_Ldap_error.html">Ldap_error</a></h1></center>
+<br>
+<pre><span class="keyword">module</span> Ldap_error: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_error.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>given an ldap error code return a string describing it<br>
+<hr width="100%">
+<pre><span class="keyword">val</span> <a name="VALerr2string"></a>err2string : <code class="type">[> `ADMINLIMIT_EXCEEDED<br>        | `ALIAS_DEREF_PROBLEM<br>        | `ALIAS_PROBLEM<br>        | `ALREADY_EXISTS<br>        | `AUTH_METHOD_NOT_SUPPORTED<br>        | `BUSY<br>        | `COMPARE_FALSE<br>        | `COMPARE_TRUE<br>        | `CONFIDENTIALITY_REQUIRED<br>        | `CONSTRAINT_VIOLATION<br>        | `INAPPROPRIATE_AUTH<br>        | `INAPPROPRIATE_MATCHING<br>        | `INSUFFICIENT_ACCESS<br>        | `INVALID_CREDENTIALS<br>        | `INVALID_DN_SYNTAX<br>        | `INVALID_SYNTAX<br>        | `LOCAL_ERROR<br>        | `LOOP_DETECT<br>        | `NAMING_VIOLATION<br>        | `NOT_ALLOWED_ON_NONLEAF<br>        | `NOT_ALLOWED_ON_RDN<br>        | `NO_OBJECT_CLASS_MODS<br>        | `NO_SUCH_ATTRIBUTE<br>        | `NO_SUCH_OBJECT<br>        | `OBJECT_CLASS_VIOLATION<br>        | `OPERATIONS_ERROR<br>        | `OTHER<br>        | `PROTOCOL_ERROR<br>        | `REFERRAL<br>        | `SASL_BIND_IN_PROGRESS<br>        | `SERVER_DOWN<br>        | `SIZELIMIT_EXCEEDED<br>        | `STRONG_AUTH_REQUIRED<br>        | `SUCCESS<br>        | `TIMELIMIT_EXCEEDED<br>        | `TYPE_OR_VALUE_EXISTS<br>        | `UNAVAILABLE<br>        | `UNAVAILABLE_CRITICAL_EXTENSION<br>        | `UNDEFINED_TYPE<br>        | `UNWILLING_TO_PERFORM ] -><br>       string</code></pre><div class="info">
+given an ldap error code return a string describing it<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALldap_strerror"></a>ldap_strerror : <code class="type">string -> exn -> string</code></pre><div class="info">
+return a string with a human readable description of an LDAP_Failure exception<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALldap_perror"></a>ldap_perror : <code class="type">string -> exn -> unit</code></pre><div class="info">
+print to stderr a string with a human readable description of an LDAP_Failure exception<br>
+</div>
+</body></html>

@@ -9,20 +9,31 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Index of values</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Index of values</title>
 </head>
 <body>
 <center><h1>Index of values</h1></center>
 <table>
 <tr><td align="left"><br>A</td></tr>
+<tr><td><a href="Ldap_funclient.html#VALabandon">abandon</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
+<td><div class="info">
+abandon the async request attached to msgid.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALadd">add</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_funclient.html#VALadd_s">add_s</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
@@ -46,9 +57,13 @@ authenticatite to the server.
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALchoose">choose</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_schemaparser.Lcstring.html#VALcompare">compare</a> [<a href="Ldap_schemaparser.Lcstring.html">Ldap_schemaparser.Lcstring</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.Oid.html#VALcompare">compare</a> [<a href="Ldap_schemaparser.Oid.html">Ldap_schemaparser.Oid</a>]</td>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALcompare">compare</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
-<tr><td><a href="Ldap_ooclient.OrdStr.html#VALcompare">compare</a> [<a href="Ldap_ooclient.OrdStr.html">Ldap_ooclient.OrdStr</a>]</td>
+<tr><td><a href="Ldap_ooclient.OrdOid.html#VALcompare">compare</a> [<a href="Ldap_ooclient.OrdOid.html">Ldap_ooclient.OrdOid</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Lber.html#VALdecode_ber_bool">decode_ber_bool</a> [<a href="Lber.html">Lber</a>]</td>
@@ -94,6 +109,14 @@ decode an ldap_message from the wire, and build/return a
   structure of type ldap_message
 </div>
 </td></tr>
+<tr><td><a href="Ldap_protocol.html#VALdecode_resultcode">decode_resultcode</a> [<a href="Ldap_protocol.html">Ldap_protocol</a>]</td>
+<td><div class="info">
+return the result code for the specified int, error codes which do
+    not map to a code defined within the standard (or any of our own
+    internal ones) will be represented as (`UNKNOWN_ERROR of int), where
+    int is the unknown error code.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_funclient.html#VALdelete_s">delete_s</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
 <td><div class="info">
 delete the entry named by dn from the directory
@@ -126,7 +149,18 @@ this function is for encoding lists of bervals, a common case.
 <tr><td><a href="Ldap_protocol.html#VALencode_ldapmessage">encode_ldapmessage</a> [<a href="Ldap_protocol.html">Ldap_protocol</a>]</td>
 <td><div class="info">
 encode a value of type ldap_message using lber and return
-  a string which is ready to be put on the wire
+    a string which is ready to be put on the wire
+</div>
+</td></tr>
+<tr><td><a href="Ldap_protocol.html#VALencode_resultcode">encode_resultcode</a> [<a href="Ldap_protocol.html">Ldap_protocol</a>]</td>
+<td><div class="info">
+return the int asociated with the specified result code
+</div>
+</td></tr>
+<tr><td><a href="Ldif_oo.html#VALentry2ldif">entry2ldif</a> [<a href="Ldif_oo.html">Ldif_oo</a>]</td>
+<td><div class="info">
+if you need a fast, low level interface to to_string, this
+    function will write ldif directly into a buffer.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALequal">equal</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
@@ -136,11 +170,40 @@ encode a value of type ldap_message using lber and return
 equate attributes by oid.
 </div>
 </td></tr>
+<tr><td><a href="Ldap_error.html#VALerr2string">err2string</a> [<a href="Ldap_error.html">Ldap_error</a>]</td>
+<td><div class="info">
+given an ldap error code return a string describing it
+</div>
+</td></tr>
+<tr><td><a href="Ldap_filter.html#VALescape_filterstring">escape_filterstring</a> [<a href="Ldap_filter.html">Ldap_filter</a>]</td>
+<td><div class="info">
+escape a string which is intended to be the VALUE of an attribute
+    assertion in a filter.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_dn.html#VALescape_value">escape_value</a> [<a href="Ldap_dn.html">Ldap_dn</a>]</td>
+<td><div class="info">
+Escape a string which you intend to be part of a VALUE in the
+    dn.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALexists">exists</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>F</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALfilter">filter</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldif_changerec_oo.html#VALfold">fold</a> [<a href="Ldif_changerec_oo.html">Ldif_changerec_oo</a>]</td>
+<td><div class="info">
+Ldif_changerec.fold f change value, for each change entry en in
+    the change object fold computes f (...
+</div>
+</td></tr>
+<tr><td><a href="Ldif_oo.html#VALfold">fold</a> [<a href="Ldif_oo.html">Ldif_oo</a>]</td>
+<td><div class="info">
+Ldif_oo.fold f ldif value, for each ldif entry en in the ldif
+    object fold computes f (...
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALfold">fold</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALfold">fold</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
@@ -151,6 +214,18 @@ given a source of ldapentry objects (unit -&gt; ldapentry), such as
 </td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALfor_all">for_all</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_ooclient.html#VALformat_entry">format_entry</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.html#VALformat_lcstring">format_lcstring</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.html#VALformat_oid">format_oid</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.html#VALformat_schema">format_schema</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+A formatter for the schema, prints the structure, and expands the
+    hashtbls to show the keys.
+</div>
+</td></tr>
 <tr><td align="left"><br>G</td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALgetAttr">getAttr</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
@@ -170,8 +245,9 @@ fetch a search entry from the wire using the given msgid.
 <tr><td align="left"><br>I</td></tr>
 <tr><td><a href="Ldap_funserver.html#VALinit">init</a> [<a href="Ldap_funserver.html">Ldap_funserver</a>]</td>
 <td><div class="info">
-Initialize the server, create the listening socket and return the server
-    context, which you will pass to serv to process connections.
+Initialize the server, create the listening socket and return the
+    server context, which you will pass to serv to process
+    connections.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_funclient.html#VALinit">init</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
@@ -184,6 +260,18 @@ Initializes the conn data structure, and opens a connection to the
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALis_empty">is_empty</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldif_changerec_oo.html#VALiter">iter</a> [<a href="Ldif_changerec_oo.html">Ldif_changerec_oo</a>]</td>
+<td><div class="info">
+Ldif_changerec.iter f change, iterate accross all change entries
+    in the specified change object, applying f to each one
+</div>
+</td></tr>
+<tr><td><a href="Ldif_oo.html#VALiter">iter</a> [<a href="Ldif_oo.html">Ldif_oo</a>]</td>
+<td><div class="info">
+Ldif_oo.iter f ldif, iterate accross all ldif entries in the
+    specified ldif object, applying f to each one
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALiter">iter</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALiter">iter</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
@@ -191,6 +279,32 @@ Initializes the conn data structure, and opens a connection to the
 given a source of ldapentry objects (unit -&gt; ldapentry), such as
     the return value of ldapcon#search_a apply f (first arg) to each entry
     See List.iter
+</div>
+</td></tr>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="Ldap_error.html#VALldap_perror">ldap_perror</a> [<a href="Ldap_error.html">Ldap_error</a>]</td>
+<td><div class="info">
+print to stderr a string with a human readable description of an LDAP_Failure exception
+</div>
+</td></tr>
+<tr><td><a href="Ldap_error.html#VALldap_strerror">ldap_strerror</a> [<a href="Ldap_error.html">Ldap_error</a>]</td>
+<td><div class="info">
+return a string with a human readable description of an LDAP_Failure exception
+</div>
+</td></tr>
+<tr><td><a href="Ldap_toplevel.html#VALldapadd">ldapadd</a> [<a href="Ldap_toplevel.html">Ldap_toplevel</a>]</td>
+<td><div class="info">
+connect to the specified host and add the specified objects.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_toplevel.html#VALldapmodify">ldapmodify</a> [<a href="Ldap_toplevel.html">Ldap_toplevel</a>]</td>
+<td><div class="info">
+connect to the specified host and perform one or more modifications.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_toplevel.html#VALldapsearch">ldapsearch</a> [<a href="Ldap_toplevel.html">Ldap_toplevel</a>]</td>
+<td><div class="info">
+connect to the specified host and perform a search.
 </div>
 </td></tr>
 <tr><td align="left"><br>M</td></tr>
@@ -228,10 +342,20 @@ given an ldapentry as returned by ldapcon, or constructed manually,
     ldap_funserver.
 </div>
 </td></tr>
+<tr><td><a href="Ldap_schemaparser.Lcstring.html#VALof_string">of_string</a> [<a href="Ldap_schemaparser.Lcstring.html">Ldap_schemaparser.Lcstring</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.Oid.html#VALof_string">of_string</a> [<a href="Ldap_schemaparser.Oid.html">Ldap_schemaparser.Oid</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_dn.html#VALof_string">of_string</a> [<a href="Ldap_dn.html">Ldap_dn</a>]</td>
+<td><div class="info">
+Given a string representation of a dn, return a structured
+    representation.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_filter.html#VALof_string">of_string</a> [<a href="Ldap_filter.html">Ldap_filter</a>]</td>
 <td><div class="info">
 turn the string representation into the internal representation
-  defined in ldap_types.ml.
+    defined in ldap_types.ml.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_url.html#VALof_string">of_string</a> [<a href="Ldap_url.html">Ldap_url</a>]</td>
@@ -253,9 +377,32 @@ given the oid of an objectclass, return its canonical name
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALpartition">partition</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>R</td></tr>
+<tr><td><a href="Ldap_schemaparser.html#VALreadSchema">readSchema</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+readSchema attribute_list objectclass_list, parse the schema into
+    a schema type given a list of attribute definition lines, and
+    objectclass definition lines.
+</div>
+</td></tr>
 <tr><td><a href="Lber.html#VALread_contents">read_contents</a> [<a href="Lber.html">Lber</a>]</td>
 <td><div class="info">
 reads the contents octets
+</div>
+</td></tr>
+<tr><td><a href="Lber.html#VALreadbyte_of_ber_element">readbyte_of_ber_element</a> [<a href="Lber.html">Lber</a>]</td>
+<td><div class="info">
+return a readbyte implementation which uses another readbyte, but
+    allows setting a read boundry.
+</div>
+</td></tr>
+<tr><td><a href="Lber.html#VALreadbyte_of_fd">readbyte_of_fd</a> [<a href="Lber.html">Lber</a>]</td>
+<td><div class="info">
+a readbyte implementation which reads from an FD.
+</div>
+</td></tr>
+<tr><td><a href="Lber.html#VALreadbyte_of_ssl">readbyte_of_ssl</a> [<a href="Lber.html">Lber</a>]</td>
+<td><div class="info">
+a readbyte implementation which reads from an SSL socket.
 </div>
 </td></tr>
 <tr><td><a href="Lber.html#VALreadbyte_of_string">readbyte_of_string</a> [<a href="Lber.html">Lber</a>]</td>
@@ -279,6 +426,12 @@ Using the supplied server context, begin processing ldap operations.
 </div>
 </td></tr>
 <tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Ldap_schemaparser.html#VALschema_print_depth">schema_print_depth</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+This reference controls the dept of printing for the schema in the
+    toplevel.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_funclient.html#VALsearch">search</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
 <td><div class="info">
 Search for the given entry with the specified base node and search
@@ -307,6 +460,22 @@ Shutdown the server
 <td><div class="info">
 given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object
+</div>
+</td></tr>
+<tr><td><a href="Ldap_schemaparser.Lcstring.html#VALto_string">to_string</a> [<a href="Ldap_schemaparser.Lcstring.html">Ldap_schemaparser.Lcstring</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.Oid.html#VALto_string">to_string</a> [<a href="Ldap_schemaparser.Oid.html">Ldap_schemaparser.Oid</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_dn.html#VALto_string">to_string</a> [<a href="Ldap_dn.html">Ldap_dn</a>]</td>
+<td><div class="info">
+Given a structural representation of a dn, return a string
+    representation.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_filter.html#VALto_string">to_string</a> [<a href="Ldap_filter.html">Ldap_filter</a>]</td>
+<td><div class="info">
+turn an internal representaion of a filter into a string
+    representaion compliant with rfc2254
 </div>
 </td></tr>
 <tr><td align="left"><br>U</td></tr>

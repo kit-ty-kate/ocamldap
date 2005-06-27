@@ -8,15 +8,21 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_types</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_types</title>
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
@@ -64,15 +70,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">OPERATIONS_ERROR</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">OTHER</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">PARAM_ERROR</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">PARTIAL_RESULTS</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">PROTOCOL_ERROR</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">REFERRAL</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">REFERRAL_LIMIT_EXCEEDED</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">RESULTS_TOO_LARGE</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">SASL_BIND_IN_PROGRESS</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">SERVER_DOWN</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">SIZELIMIT_EXCEEDED</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">STRONG_AUTH_NOT_SUPPORTED</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">STRONG_AUTH_REQUIRED</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">SUCCESS</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">TIMELIMIT_EXCEEDED</span><br>
@@ -81,6 +84,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UNAVAILABLE</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UNAVAILABLE_CRITICAL_EXTENSION</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UNDEFINED_TYPE</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UNKNOWN_ERROR</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">UNWILLING_TO_PERFORM</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="keywordsign">`</span><span class="constructor">USER_CANCELLED</span>&nbsp;]<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ldap_result&nbsp;=&nbsp;{<br>
@@ -110,6 +114,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;bind_serverSaslCredentials&nbsp;:&nbsp;string&nbsp;option;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;attribute&nbsp;=&nbsp;{&nbsp;attr_type&nbsp;:&nbsp;string;&nbsp;attr_vals&nbsp;:&nbsp;string&nbsp;list;&nbsp;}<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;dn&nbsp;=&nbsp;<span class="constructor">Ldap_types</span>.attribute&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;search_result_entry&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;sr_dn&nbsp;:&nbsp;string;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;sr_attributes&nbsp;:&nbsp;<span class="constructor">Ldap_types</span>.attribute&nbsp;list;<br>
@@ -131,9 +136,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;dnAttributes&nbsp;:&nbsp;bool;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;substring_component&nbsp;=&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;substr_initial&nbsp;:&nbsp;string&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;substr_any&nbsp;:&nbsp;string&nbsp;option;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;substr_final&nbsp;:&nbsp;string&nbsp;option;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;substr_initial&nbsp;:&nbsp;string&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;substr_any&nbsp;:&nbsp;string&nbsp;list;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;substr_final&nbsp;:&nbsp;string&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;substring_filter&nbsp;=&nbsp;{<br>
 &nbsp;&nbsp;&nbsp;&nbsp;attrtype&nbsp;:&nbsp;string;<br>
@@ -206,7 +211,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Modify_dn_response</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ldap_types</span>.ldap_result<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Compare_request</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ldap_types</span>.compare_request<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Compare_response</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ldap_types</span>.ldap_result<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Abandon_request</span>&nbsp;<span class="keyword">of</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Abandon_request</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Int32</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Extended_request</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ldap_types</span>.extended_request<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Extended_response</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Ldap_types</span>.extended_response<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ldap_control&nbsp;=&nbsp;{<br>
@@ -216,7 +221,7 @@
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ldap_controls&nbsp;=&nbsp;<span class="constructor">Ldap_types</span>.ldap_control&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;ldap_message&nbsp;=&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;messageID&nbsp;:&nbsp;int;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;messageID&nbsp;:&nbsp;<span class="constructor">Int32</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;protocolOp&nbsp;:&nbsp;<span class="constructor">Ldap_types</span>.protocol_op;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;controls&nbsp;:&nbsp;<span class="constructor">Ldap_types</span>.ldap_controls&nbsp;option;<br>
 &nbsp;&nbsp;}<br>

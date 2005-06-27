@@ -9,15 +9,21 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Index of types</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Index of types</title>
 </head>
 <body>
 <center><h1>Index of types</h1></center>
@@ -25,6 +31,11 @@
 <tr><td align="left"><br>A</td></tr>
 <tr><td><a href="Ldap_types.html#TYPEalias_deref">alias_deref</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_schemaparser.html#TYPEattribute">attribute</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+The type representing an attribute definition
+</div>
+</td></tr>
 <tr><td><a href="Ldap_types.html#TYPEattribute">attribute</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEattribute_value_assertion">attribute_value_assertion</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
@@ -52,6 +63,8 @@ This structure is the guts of the ldap server.
 <tr><td><a href="Ldap_types.html#TYPEbind_response">bind_response</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Ldap_ooclient.html#TYPEchangerec">changerec</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEchangetype">changetype</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEcompare_request">compare_request</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
@@ -61,6 +74,9 @@ This structure is the guts of the ldap server.
 <tr><td><a href="Ldap_funclient.html#TYPEconn">conn</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_funserver.html#TYPEconnection_id">connection_id</a> [<a href="Ldap_funserver.html">Ldap_funserver</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>D</td></tr>
+<tr><td><a href="Ldap_types.html#TYPEdn">dn</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>E</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#TYPEelt">elt</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
@@ -98,6 +114,8 @@ extended information to return with the LDAP_Failure
 <td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEldap_url">ldap_url</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_funserver.html#TYPElog_level">log_level</a> [<a href="Ldap_funserver.html">Ldap_funserver</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>M</td></tr>
 <tr><td><a href="Ldap_types.html#TYPEmatching_rule_assertion">matching_rule_assertion</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
@@ -114,6 +132,13 @@ extended information to return with the LDAP_Failure
 <tr><td><a href="Ldap_funclient.html#TYPEmsgid">msgid</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>O</td></tr>
+<tr><td><a href="Ldap_schemaparser.html#TYPEobjectclass">objectclass</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+The type representing an objectclass definition
+</div>
+</td></tr>
+<tr><td><a href="Ldap_schemaparser.html#TYPEoctype">octype</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEop">op</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEop_lst">op_lst</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
@@ -124,6 +149,8 @@ extended information to return with the LDAP_Failure
 <tr><td align="left"><br>R</td></tr>
 <tr><td><a href="Lber.html#TYPEreadbyte">readbyte</a> [<a href="Lber.html">Lber</a>]</td>
 <td></td></tr>
+<tr><td><a href="Lber.html#TYPEreadbyte_error">readbyte_error</a> [<a href="Lber.html">Lber</a>]</td>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEreferral_policy">referral_policy</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_funclient.html#TYPEresult">result</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
@@ -133,6 +160,11 @@ extended information to return with the LDAP_Failure
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEscflavor">scflavor</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_schemaparser.html#TYPEschema">schema</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td><div class="info">
+The type representing the whole schema.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_types.html#TYPEsearch_request">search_request</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_funclient.html#TYPEsearch_result">search_result</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
@@ -148,10 +180,7 @@ a type defining the scope of a search filter
 </div>
 </td></tr>
 <tr><td><a href="Ldap_funserver.html#TYPEserver_info">server_info</a> [<a href="Ldap_funserver.html">Ldap_funserver</a>]</td>
-<td><div class="info">
-This abstract type contains the server context.
-</div>
-</td></tr>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#TYPEservice">service</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEsubstring_component">substring_component</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
@@ -159,9 +188,13 @@ This abstract type contains the server context.
 <tr><td><a href="Ldap_types.html#TYPEsubstring_filter">substring_filter</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Ldap_schemaparser.Lcstring.html#TYPEt">t</a> [<a href="Ldap_schemaparser.Lcstring.html">Ldap_schemaparser.Lcstring</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_schemaparser.Oid.html#TYPEt">t</a> [<a href="Ldap_schemaparser.Oid.html">Ldap_schemaparser.Oid</a>]</td>
+<td></td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#TYPEt">t</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
-<tr><td><a href="Ldap_ooclient.OrdStr.html#TYPEt">t</a> [<a href="Ldap_ooclient.OrdStr.html">Ldap_ooclient.OrdStr</a>]</td>
+<tr><td><a href="Ldap_ooclient.OrdOid.html#TYPEt">t</a> [<a href="Ldap_ooclient.OrdOid.html">Ldap_ooclient.OrdOid</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>W</td></tr>
 <tr><td><a href="Lber.html#TYPEwritebyte">writebyte</a> [<a href="Lber.html">Lber</a>]</td>

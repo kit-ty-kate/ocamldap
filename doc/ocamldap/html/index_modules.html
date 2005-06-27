@@ -9,15 +9,21 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Index of modules</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Index of modules</title>
 </head>
 <body>
 <center><h1>Index of modules</h1></center>
@@ -28,6 +34,18 @@
 This library implements the subset of ber
 </div>
 </td></tr>
+<tr><td><a href="Ldap_schemaparser.Lcstring.html">Lcstring</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_dn.html">Ldap_dn</a> </td>
+<td><div class="info">
+operations on ldap dns
+</div>
+</td></tr>
+<tr><td><a href="Ldap_error.html">Ldap_error</a> </td>
+<td><div class="info">
+given an ldap error code return a string describing it
+</div>
+</td></tr>
 <tr><td><a href="Ldap_filter.html">Ldap_filter</a> </td>
 <td><div class="info">
 operations on ldap search filters
@@ -35,12 +53,18 @@ operations on ldap search filters
 </td></tr>
 <tr><td><a href="Ldap_funclient.html">Ldap_funclient</a> </td>
 <td><div class="info">
-a function ldap client interface
+a functional ldap client interface
 </div>
 </td></tr>
 <tr><td><a href="Ldap_funserver.html">Ldap_funserver</a> </td>
 <td><div class="info">
 A functional ldap server construction kit
+</div>
+</td></tr>
+<tr><td><a href="Ldap_mutex.html">Ldap_mutex</a> </td>
+<td><div class="info">
+A library for implementing mutexes on top of LDAP's built in test
+    and set mechanism
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.html">Ldap_ooclient</a> </td>
@@ -53,6 +77,18 @@ an object oriented ldap client interface
 an implementation of the ldap wire protocol
 </div>
 </td></tr>
+<tr><td><a href="Ldap_schemaparser.html">Ldap_schemaparser</a> </td>
+<td><div class="info">
+A library for parsing rfc2252 schemas as returned by directory
+  servers
+</div>
+</td></tr>
+<tr><td><a href="Ldap_toplevel.html">Ldap_toplevel</a> </td>
+<td><div class="info">
+Functions which resemble the command line tools which many users
+    are familar with, useful in the interactive environment
+</div>
+</td></tr>
 <tr><td><a href="Ldap_types.html">Ldap_types</a> </td>
 <td><div class="info">
 Common data types used by ocamldap.
@@ -63,13 +99,20 @@ Common data types used by ocamldap.
 a library for parsing a subset of the ldapurl syntax
 </div>
 </td></tr>
+<tr><td><a href="Ldif_changerec_oo.html">Ldif_changerec_oo</a> </td>
+<td><div class="info">
+an object oriented interface to the ldif parser
+</div>
+</td></tr>
 <tr><td><a href="Ldif_oo.html">Ldif_oo</a> </td>
 <td><div class="info">
 an object oriented interface to the ldif parser
 </div>
 </td></tr>
 <tr><td align="left"><br>O</td></tr>
-<tr><td><a href="Ldap_ooclient.OrdStr.html">OrdStr</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<tr><td><a href="Ldap_schemaparser.Oid.html">Oid</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ldap_ooclient.OrdOid.html">OrdOid</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>S</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html">Setstr</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>

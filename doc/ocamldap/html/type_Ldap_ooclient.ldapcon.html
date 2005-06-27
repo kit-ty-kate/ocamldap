@@ -8,18 +8,25 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_ooclient.ldapcon</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_ooclient.ldapcon</title>
 </head>
 <body>
-<code class="code">?referral_policy:[&gt;&nbsp;<span class="keywordsign">`</span><span class="constructor">RETURN</span>&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span><br>
+<code class="code">?connect_timeout:int&nbsp;<span class="keywordsign">-&gt;</span><br>
+?referral_policy:[&gt;&nbsp;<span class="keywordsign">`</span><span class="constructor">RETURN</span>&nbsp;]&nbsp;<span class="keywordsign">-&gt;</span><br>
 ?version:int&nbsp;<span class="keywordsign">-&gt;</span><br>
 string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 <span class="keyword">object</span><br>
@@ -40,7 +47,8 @@ string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?scope:<span class="constructor">Ldap_types</span>.search_scope&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?attrs:string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?attrsonly:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;?base:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?base:string&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?abandon:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;unbind&nbsp;:&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;update_entry&nbsp;:&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

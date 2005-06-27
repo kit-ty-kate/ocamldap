@@ -2,7 +2,7 @@
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Ldap_filter.html">
+<link rel="previous" href="Ldap_dn.html">
 <link rel="next" href="Ldap_ooclient.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -12,24 +12,30 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_funclient</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_funclient</title>
 </head>
 <body>
-<div class="navbar"><a href="Ldap_filter.html">Previous</a>
+<div class="navbar"><a href="Ldap_dn.html">Previous</a>
 &nbsp;<a href="index.html">Up</a>
 &nbsp;<a href="Ldap_ooclient.html">Next</a>
 </div>
 <center><h1>Module <a href="type_Ldap_funclient.html">Ldap_funclient</a></h1></center>
 <br>
-<pre><span class="keyword">module</span> Ldap_funclient: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_funclient.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>a function ldap client interface<br>
+<pre><span class="keyword">module</span> Ldap_funclient: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_funclient.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>a functional ldap client interface<br>
 <hr width="100%">
 <pre><span class="keyword">type</span> <a name="TYPEmsgid"></a><code class="type"></code>msgid </pre>
 
@@ -45,14 +51,14 @@
 
 <pre><span class="keyword">type</span> <a name="TYPEsearch_result"></a><code class="type"></code>search_result = <code class="type">[ `Entry of <a href="Ldap_funclient.html#TYPEentry">entry</a> | `Referral of string list ]</code> </pre>
 
-<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?version:int -> string list -> <a href="Ldap_funclient.html#TYPEconn">conn</a></code></pre><div class="info">
+<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?connect_timeout:int -> ?version:int -> string list -> <a href="Ldap_funclient.html#TYPEconn">conn</a></code></pre><div class="info">
 Initializes the conn data structure, and opens a connection to the
   server.  init
   <code class="code">[<span class="string">"ldap://rrhost.example.com/"</span>;<span class="string">"ldap://backup.example.com:1389"</span>]</code>.
   init is round robin dns aware, if dns returns multiple mappings it
   will try each one before finially failing. It also takes a list of
   hostnames, so you can specify backup servers to try. SSL and TLS are
-  not yet supported.<br>
+  supported if selected at compile time.<br>
 <b>Raises</b><ul><li><code>LDAP_Failure</code> any
   failure to connect to the server will result in LDAP_Failure with
   the result_code set to `LOCAL_ERROR.</li>
@@ -124,6 +130,10 @@ fetch a search entry from the wire using the given msgid. The
 <li><code>Decoding_error</code> for decoder errors (unlikely, probably a bug)</li>
 <li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
 </ul>
+</div>
+<pre><span class="keyword">val</span> <a name="VALabandon"></a>abandon : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -> <a href="Ldap_funclient.html#TYPEmsgid">msgid</a> -> unit</code></pre><div class="info">
+abandon the async request attached to msgid.<br>
+<b>Raises</b> <code>Encoding_error</code> for encoder errors (unlikely, probably a bug)<br>
 </div>
 <pre><span class="keyword">val</span> <a name="VALsearch_s"></a>search_s : <code class="type">?base:string -><br>       ?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?aliasderef:<a href="Ldap_types.html#TYPEalias_deref">Ldap_types.alias_deref</a> -><br>       ?sizelimit:int32 -><br>       ?timelimit:int32 -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       <a href="Ldap_funclient.html#TYPEconn">conn</a> -><br>       string -><br>       [> `Entry of <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> | `Referral of string list ] list</code></pre><div class="info">
 This is the syncronus version of search. It blocks until the

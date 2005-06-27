@@ -12,15 +12,21 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_url</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_url</title>
 </head>
 <body>
 <div class="navbar"><a href="Ldap_protocol.html">Previous</a>
@@ -31,6 +37,14 @@
 <br>
 <pre><span class="keyword">module</span> Ldap_url: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_url.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>a library for parsing a subset of the ldapurl syntax<br>
 <hr width="100%">
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONInvalid_ldap_url"></a>Invalid_ldap_url <span class="keyword">of</span> <code class="type">int * string</code></pre>
+<div class="info">
+will be raised in the event of a parse or type error. The integer
+    is the location of the error, measured in charachters from the
+    left, and the string is a description of the error. The current
+    lexer does not correctly set the charachter location, however
+    future lexers will.<br>
+</div>
 <pre><span class="keyword">val</span> <a name="VALof_string"></a>of_string : <code class="type">string -> <a href="Ldap_types.html#TYPEldap_url">Ldap_types.ldap_url</a></code></pre><div class="info">
 internalize the url contained in the string argument<br>
 </div>

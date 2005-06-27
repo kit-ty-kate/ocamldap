@@ -2,7 +2,8 @@
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Ldif_oo.html">
+<link rel="previous" href="Ldap_schemaparser.html">
+<link rel="next" href="Ldif_oo.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -11,20 +12,27 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_funserver</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_funserver</title>
 </head>
 <body>
-<div class="navbar"><a href="Ldif_oo.html">Previous</a>
+<div class="navbar"><a href="Ldap_schemaparser.html">Previous</a>
 &nbsp;<a href="index.html">Up</a>
-&nbsp;</div>
+&nbsp;<a href="Ldif_oo.html">Next</a>
+</div>
 <center><h1>Module <a href="type_Ldap_funserver.html">Ldap_funserver</a></h1></center>
 <br>
 <pre><span class="keyword">module</span> Ldap_funserver: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_funserver.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>A functional ldap server construction kit<br>
@@ -133,16 +141,19 @@ This structure is the guts of the ldap server. For each operation that you
     OpenLDAP.<br>
 </div>
 
-<pre><span class="keyword">type</span> <a name="TYPEserver_info"></a><code class="type"></code>server_info </pre>
-<div class="info">
+<pre><span class="keyword">type</span> <a name="TYPElog_level"></a><code class="type"></code>log_level = <code class="type">[ `CONNECTION | `ERROR | `GENERAL | `OPERATIONS | `TRACE ]</code> </pre>
+
+<br>
 This abstract type contains the server context. It has the listening,
     socket, all the connected client sockets, and some internal data
     structures.<br>
-</div>
+<pre><span class="keyword">type</span> <a name="TYPEserver_info"></a><code class="type"></code>server_info </pre>
 
-<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?port:int -> <a href="Ldap_funserver.html#TYPEbackendInfo">backendInfo</a> -> <a href="Ldap_funserver.html#TYPEserver_info">server_info</a></code></pre><div class="info">
-Initialize the server, create the listening socket and return the server
-    context, which you will pass to serv to process connections.<br>
+<pre><span class="keyword">val</span> <a name="VALinit"></a>init : <code class="type">?log:(<a href="Ldap_funserver.html#TYPElog_level">log_level</a> -> string -> unit) -><br>       ?port:int -> <a href="Ldap_funserver.html#TYPEbackendInfo">backendInfo</a> -> <a href="Ldap_funserver.html#TYPEserver_info">server_info</a></code></pre><div class="info">
+Initialize the server, create the listening socket and return the
+    server context, which you will pass to serv to process
+    connections. log is a string -&gt; log_level -&gt; unit function to which log
+    messages will be sent.<br>
 </div>
 <pre><span class="keyword">val</span> <a name="VALshutdown"></a>shutdown : <code class="type"><a href="Ldap_funserver.html#TYPEserver_info">server_info</a> -> unit</code></pre><div class="info">
 Shutdown the server<br>

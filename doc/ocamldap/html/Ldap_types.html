@@ -2,7 +2,8 @@
 <head>
 <link rel="stylesheet" href="style.css" type="text/css">
 <link rel="Start" href="index.html">
-<link rel="next" href="Lber.html">
+<link rel="previous" href="Lber.html">
+<link rel="next" href="Ldap_error.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -11,19 +12,26 @@
 <link title="Index of classes" rel=Appendix href="index_classes.html">
 <link title="Index of class types" rel=Appendix href="index_class_types.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
 <link title="Lber" rel="Chapter" href="Lber.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
 <link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
 <link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
 <link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
 <link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
 <link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
 <link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
-<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html"><title>Ldap_types</title>
+<link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_types</title>
 </head>
 <body>
-<div class="navbar">&nbsp;<a href="index.html">Up</a>
-&nbsp;<a href="Lber.html">Next</a>
+<div class="navbar"><a href="Lber.html">Previous</a>
+&nbsp;<a href="index.html">Up</a>
+&nbsp;<a href="Ldap_error.html">Next</a>
 </div>
 <center><h1>Module <a href="type_Ldap_types.html">Ldap_types</a></h1></center>
 <br>
@@ -44,7 +52,7 @@ A decoding error has occurred, the argument contains a description
   you are talking to is non standard. Please report these right away in
   any case.<br>
 </div>
-<pre><span class="keyword">type</span> <a name="TYPEldap_resultcode"></a><code class="type"></code>ldap_resultcode = <code class="type">[ `ADMINLIMIT_EXCEEDED<br>       | `AFFECTS_MULTIPLE_DSAS<br>       | `ALIAS_DEREF_PROBLEM<br>       | `ALIAS_PROBLEM<br>       | `ALREADY_EXISTS<br>       | `AUTH_METHOD_NOT_SUPPORTED<br>       | `AUTH_UNKNOWN<br>       | `BUSY<br>       | `CLIENT_LOOP<br>       | `COMPARE_FALSE<br>       | `COMPARE_TRUE<br>       | `CONFIDENTIALITY_REQUIRED<br>       | `CONNECT_ERROR<br>       | `CONSTRAINT_VIOLATION<br>       | `CONTROL_NOT_FOUND<br>       | `DECODING_ERROR<br>       | `ENCODING_ERROR<br>       | `FILTER_ERROR<br>       | `INAPPROPRIATE_AUTH<br>       | `INAPPROPRIATE_MATCHING<br>       | `INSUFFICIENT_ACCESS<br>       | `INVALID_CREDENTIALS<br>       | `INVALID_DN_SYNTAX<br>       | `INVALID_SYNTAX<br>       | `IS_LEAF<br>       | `LOCAL_ERROR<br>       | `LOOP_DETECT<br>       | `MORE_RESULTS_TO_RETURN<br>       | `NAMING_VIOLATION<br>       | `NOT_ALLOWED_ON_NONLEAF<br>       | `NOT_ALLOWED_ON_RDN<br>       | `NOT_SUPPORTED<br>       | `NO_MEMORY<br>       | `NO_OBJECT_CLASS_MODS<br>       | `NO_RESULTS_RETURNED<br>       | `NO_SUCH_ATTRIBUTE<br>       | `NO_SUCH_OBJECT<br>       | `OBJECT_CLASS_VIOLATION<br>       | `OPERATIONS_ERROR<br>       | `OTHER<br>       | `PARAM_ERROR<br>       | `PARTIAL_RESULTS<br>       | `PROTOCOL_ERROR<br>       | `REFERRAL<br>       | `REFERRAL_LIMIT_EXCEEDED<br>       | `RESULTS_TOO_LARGE<br>       | `SASL_BIND_IN_PROGRESS<br>       | `SERVER_DOWN<br>       | `SIZELIMIT_EXCEEDED<br>       | `STRONG_AUTH_NOT_SUPPORTED<br>       | `STRONG_AUTH_REQUIRED<br>       | `SUCCESS<br>       | `TIMELIMIT_EXCEEDED<br>       | `TIMEOUT<br>       | `TYPE_OR_VALUE_EXISTS<br>       | `UNAVAILABLE<br>       | `UNAVAILABLE_CRITICAL_EXTENSION<br>       | `UNDEFINED_TYPE<br>       | `UNWILLING_TO_PERFORM<br>       | `USER_CANCELLED ]</code> </pre>
+<pre><span class="keyword">type</span> <a name="TYPEldap_resultcode"></a><code class="type"></code>ldap_resultcode = <code class="type">[ `ADMINLIMIT_EXCEEDED<br>       | `AFFECTS_MULTIPLE_DSAS<br>       | `ALIAS_DEREF_PROBLEM<br>       | `ALIAS_PROBLEM<br>       | `ALREADY_EXISTS<br>       | `AUTH_METHOD_NOT_SUPPORTED<br>       | `AUTH_UNKNOWN<br>       | `BUSY<br>       | `CLIENT_LOOP<br>       | `COMPARE_FALSE<br>       | `COMPARE_TRUE<br>       | `CONFIDENTIALITY_REQUIRED<br>       | `CONNECT_ERROR<br>       | `CONSTRAINT_VIOLATION<br>       | `CONTROL_NOT_FOUND<br>       | `DECODING_ERROR<br>       | `ENCODING_ERROR<br>       | `FILTER_ERROR<br>       | `INAPPROPRIATE_AUTH<br>       | `INAPPROPRIATE_MATCHING<br>       | `INSUFFICIENT_ACCESS<br>       | `INVALID_CREDENTIALS<br>       | `INVALID_DN_SYNTAX<br>       | `INVALID_SYNTAX<br>       | `IS_LEAF<br>       | `LOCAL_ERROR<br>       | `LOOP_DETECT<br>       | `MORE_RESULTS_TO_RETURN<br>       | `NAMING_VIOLATION<br>       | `NOT_ALLOWED_ON_NONLEAF<br>       | `NOT_ALLOWED_ON_RDN<br>       | `NOT_SUPPORTED<br>       | `NO_MEMORY<br>       | `NO_OBJECT_CLASS_MODS<br>       | `NO_RESULTS_RETURNED<br>       | `NO_SUCH_ATTRIBUTE<br>       | `NO_SUCH_OBJECT<br>       | `OBJECT_CLASS_VIOLATION<br>       | `OPERATIONS_ERROR<br>       | `OTHER<br>       | `PARAM_ERROR<br>       | `PROTOCOL_ERROR<br>       | `REFERRAL<br>       | `REFERRAL_LIMIT_EXCEEDED<br>       | `SASL_BIND_IN_PROGRESS<br>       | `SERVER_DOWN<br>       | `SIZELIMIT_EXCEEDED<br>       | `STRONG_AUTH_REQUIRED<br>       | `SUCCESS<br>       | `TIMELIMIT_EXCEEDED<br>       | `TIMEOUT<br>       | `TYPE_OR_VALUE_EXISTS<br>       | `UNAVAILABLE<br>       | `UNAVAILABLE_CRITICAL_EXTENSION<br>       | `UNDEFINED_TYPE<br>       | `UNKNOWN_ERROR of int<br>       | `UNWILLING_TO_PERFORM<br>       | `USER_CANCELLED ]</code> </pre>
 
 <br><code><span class="keyword">type</span> <a name="TYPEldap_result"></a><code class="type"></code>ldap_result = {</code><table class="typetable">
 <tr>
@@ -207,6 +215,8 @@ The exception raised to indicate all types of failure in the
 }
 
 
+<pre><span class="keyword">type</span> <a name="TYPEdn"></a><code class="type"></code>dn = <code class="type"><a href="Ldap_types.html#TYPEattribute">attribute</a> list</code> </pre>
+
 <br><code><span class="keyword">type</span> <a name="TYPEsearch_result_entry"></a><code class="type"></code>search_result_entry = {</code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -291,21 +301,21 @@ a type defining the scope of a search filter<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>substr_initial&nbsp;: <code class="type">string option</code>;</code></td>
+<code>substr_initial&nbsp;: <code class="type">string list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>substr_any&nbsp;: <code class="type">string option</code>;</code></td>
+<code>substr_any&nbsp;: <code class="type">string list</code>;</code></td>
 
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>substr_final&nbsp;: <code class="type">string option</code>;</code></td>
+<code>substr_final&nbsp;: <code class="type">string list</code>;</code></td>
 
 </tr></table>
 }
@@ -646,7 +656,7 @@ a type defining the scope of a search filter<br>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
-<code><span class="constructor">Abandon_request</span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<code><span class="constructor">Abandon_request</span> <span class="keyword">of</span> <code class="type">Int32.t</code></code></td>
 
 </tr>
 <tr>
@@ -697,7 +707,7 @@ a type defining the scope of a search filter<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code>messageID&nbsp;: <code class="type">int</code>;</code></td>
+<code>messageID&nbsp;: <code class="type">Int32.t</code>;</code></td>
 
 </tr>
 <tr>
