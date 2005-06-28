@@ -80,8 +80,40 @@ end
 
 let format_entry e = 
   Format.open_box 0;
-  Format.print_string ("<ldapentry_t " ^ e#dn ^ ">");
-  Format.close_box ()
+  Format.open_box 2;
+  Format.print_string ("<ldapentry_t " ^ e#dn);
+  Format.force_newline ();
+  let length_attrs = List.length e#attributes in
+  let j = ref 0 in
+    List.iter
+      (fun a ->
+	 let length = List.length (e#get_value a) in
+	 let i = ref 0 in
+	   Format.print_string (Printf.sprintf "(\"%s\", " a);
+
+	   Format.open_box 0;
+	   Format.print_string "[";
+	   List.iter
+	     (fun v ->
+		if !i < length - 1 then
+		  (Format.print_string (Printf.sprintf "\"%s\"; " v);
+		   Format.print_cut ())
+		else
+		  Format.print_string (Printf.sprintf "\"%s\"" v);
+		i := !i + 1)
+	     (e#get_value a);
+	   Format.print_string "]";
+	   Format.close_box ();
+	   (if !j < length_attrs - 1 then
+	      (Format.print_string "); ";
+	       Format.force_newline ())
+	    else
+	      Format.print_string ")");
+	   j := !j + 1)
+      (e#attributes);
+    Format.close_box ();
+    Format.print_string ">";
+    Format.close_box ()
 ;;
 
 module CaseInsensitiveString =

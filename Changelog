@@ -3,10 +3,10 @@
 	and ldapentry_t
 	* fixed in readbyte_of_fd, upon reading the C code for this
 	function I realized that under some conditions
-	Unix.in_channel_of_fd may fail. I was not aware of this
-	previously. We now catch the resulting Sys_error, and change
-	it to a Transport_error. It is very unlikely that this would
-	ever happen.
+	Unix.in_channel_of_fd may fail. 
+	I was not aware of this previously. We now catch the 
+	resulting Sys_error, and change it to a Transport_error. 
+	It is very unlikely that this would ever happen.
 	* Added a parser and pretty printer for extended ldif as used
 	by openldap. ldif change records can now be read and written 
 	from and to nice data structures. I implemented this because
@@ -21,6 +21,12 @@
 	* Fixed a bug in the filter grammar which would not allow multiple
 	substring components
 	* Fixed multiple bugs in the changerec parser and lexer
+	* Added a new module, ldap_mutex, which implements mutexes in
+	an ldap database using it's build in test and set mechanism. You
+	can use this to implement advisory locking around various database
+	operations such as the allocation of unique ids, and transactions.
+	* Added documentation for the ldap_toplevel module, and improved
+	the modify command.
 2.1.2
 	* fixed a bug in the encoding of substring filters, the 
 	length was not being computed correctly.

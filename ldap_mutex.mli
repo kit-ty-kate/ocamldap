@@ -16,11 +16,11 @@
    
    You should have received a copy of the GNU Lesser General Public            
    License along with this library; if not, write to the Free Software         
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA   
-*)
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA *)
 
 (** A library for implementing mutexes on top of LDAP's built in test
-    and set mechanism *)
+    and set mechanism. In order to use this module you must load
+    mutex.schema, which is an rfc2252 format schema file. *)
 
 (** raised when a mutex operation fails. The string argument contains
     the name of the method which failed, and the exception contains
@@ -36,6 +36,8 @@ end
 (**  new mutex ldapurls binddn bindpw mutexdn *)
 class mutex: string list -> string -> string -> string ->
 object
+  (** lock the mutex. This WILL block if the mutex is already locked *)
   method lock: unit
+  (** unlock the mutex *)
   method unlock: unit
 end

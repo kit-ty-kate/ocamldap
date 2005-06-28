@@ -26,5 +26,4 @@ uninstall: libuninstall
 documentation:
 	ocamlfind ocamldoc -d doc/ocamldap/html -colorize-code -html -package netstring,str,ssl lber.mli ldap_types.mli ldap_error.mli ldap_protocol.mli ldap_url.mli ldap_filter.mli ldap_dn.mli ldap_funclient.mli ldap_ooclient.mli ldap_schemaparser.mli ldap_funserver.mli ldif_oo.mli ldap_toplevel.mli ldap_mutex.mli ldif_changerec_oo.mli
 
-
 -include OCamlMakefile
