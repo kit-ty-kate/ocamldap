@@ -14,7 +14,7 @@ ldap_mutex.ml ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
 
-LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so ldap_toplevel.cmo)
+LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.o *.cmx ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code
 
 all: debug-code-library

@@ -76,7 +76,7 @@ object
     ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry_t)
   method unbind : unit
     method update_entry : ldapentry_t -> unit
-end
+end	
 
 let format_entry e = 
   Format.open_box 0;
@@ -90,14 +90,13 @@ let format_entry e =
 	 let length = List.length (e#get_value a) in
 	 let i = ref 0 in
 	   Format.print_string (Printf.sprintf "(\"%s\", " a);
-
 	   Format.open_box 0;
 	   Format.print_string "[";
 	   List.iter
 	     (fun v ->
 		if !i < length - 1 then
-		  (Format.print_string (Printf.sprintf "\"%s\"; " v);
-		   Format.print_cut ())
+		  (Format.print_string (Printf.sprintf "\"%s\";" v);
+		   Format.print_break 1 0)
 		else
 		  Format.print_string (Printf.sprintf "\"%s\"" v);
 		i := !i + 1)
@@ -105,7 +104,7 @@ let format_entry e =
 	   Format.print_string "]";
 	   Format.close_box ();
 	   (if !j < length_attrs - 1 then
-	      (Format.print_string "); ";
+	      (Format.print_string ");";
 	       Format.force_newline ())
 	    else
 	      Format.print_string ")");
@@ -114,7 +113,32 @@ let format_entry e =
     Format.close_box ();
     Format.print_string ">";
     Format.close_box ()
-;;
+
+let format_entries lst = 
+  let length = List.length lst in
+  let i = ref 0 in
+    Format.open_box 0;
+    Format.print_string "[";
+    if length > 5 then
+      List.iter
+	(fun e ->
+	   if !i < length - 1 then begin
+	     Format.print_string ("<ldapentry_t " ^ e#dn ^ ">; ");
+	     Format.print_cut ();
+	     i := !i + 1
+	   end
+	   else Format.print_string ("<ldapentry_t " ^ e#dn ^ ">"))
+	lst
+    else
+      List.iter
+	(fun e -> 
+	   if !i < length - 1 then begin
+	     format_entry e;
+	     Format.print_break 1 0
+	   end
+	   else
+	     format_entry e)
+	lst
 
 module CaseInsensitiveString =
   (struct

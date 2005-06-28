@@ -31,6 +31,7 @@ let eval s =
   assert(Toploop.execute_phrase false Format.err_formatter ph)
 ;;
 
+eval "#install_printer Ldap_ooclient.format_entries;;";;
 eval "#install_printer Ldap_ooclient.format_entry;;";;
 eval "#install_printer Ldap_schemaparser.format_oid;;";;
 eval "#install_printer Ldap_schemaparser.format_lcstring;;";;

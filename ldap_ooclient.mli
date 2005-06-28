@@ -53,6 +53,11 @@ val format_entry :
       get_value : string -> string list; .. > ->
     unit
 
+val format_entries :
+    < attributes : string list; dn : string;
+      get_value : string -> string list; .. > list ->
+    unit
+
 (** this object represents a remote object within local memory. It
   records all local changes made to it (if it's changetype is set to
   `MODIFY), and can commit them to the server at a later time. This
