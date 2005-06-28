@@ -28,10 +28,12 @@ object (self)
   method lock = 
     try
       let obj = 
-	ldap#search 
-	  ~base:mutexdn
-	  ~scope:`BASE
-	  "objectclass=*"
+	try
+	  ldap#search 
+	    ~base:mutexdn
+	    ~scope:`BASE
+	    "objectclass=*"
+	with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
       in
 	if List.length obj = 0 then begin
 	  self#addmutex;
@@ -57,10 +59,12 @@ object (self)
   method unlock =     
     try
       let obj = 
-	ldap#search 
-	  ~base:mutexdn
-	  ~scope:`BASE
-	  "objectclass=*"
+	try
+	  ldap#search 
+	    ~base:mutexdn
+	    ~scope:`BASE
+	    "objectclass=*"
+	with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
       in
 	if List.length obj = 0 then begin
 	  self#addmutex;
