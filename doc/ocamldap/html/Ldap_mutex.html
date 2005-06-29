@@ -36,7 +36,8 @@
 <center><h1>Module <a href="type_Ldap_mutex.html">Ldap_mutex</a></h1></center>
 <br>
 <pre><span class="keyword">module</span> Ldap_mutex: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_mutex.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>A library for implementing mutexes on top of LDAP's built in test
-    and set mechanism<br>
+    and set mechanism. In order to use this module you must load
+    mutex.schema, which is an rfc2252 format schema file.<br>
 <hr width="100%">
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONLdap_mutex"></a>Ldap_mutex <span class="keyword">of</span> <code class="type">string * exn</code></pre>
 <div class="info">

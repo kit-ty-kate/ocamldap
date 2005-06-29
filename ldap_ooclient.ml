@@ -366,8 +366,7 @@ let iter (f: ldapentry -> unit) (res: ?abandon:bool -> unit -> ldapentry) =
       f (res ());
     done
   with
-      LDAP_Failure (`SUCCESS, _, _)
-    | LDAP_Failure (`LOCAL_ERROR, _, _) -> ()
+      LDAP_Failure (`SUCCESS, _, _) -> ()
     | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
       
 let rev_map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
@@ -377,8 +376,7 @@ let rev_map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
        lst := (f (res ())) :: !lst
      done
      with 
-	 LDAP_Failure (`SUCCESS, _, _)
-       | LDAP_Failure (`LOCAL_ERROR, _, _) -> ()
+	 LDAP_Failure (`SUCCESS, _, _) -> ()
        | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn);
     !lst
 
@@ -390,8 +388,7 @@ let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapent
       try let e = res () in
 	apply f (f e v)
       with
-	  LDAP_Failure (`SUCCESS, _, _)
-	| LDAP_Failure (`LOCAL_ERROR, _, _) -> v
+	  LDAP_Failure (`SUCCESS, _, _) -> v
 	| exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
     in
       apply f v

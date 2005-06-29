@@ -51,7 +51,14 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;set_changetype&nbsp;:&nbsp;<span class="constructor">Ldap_ooclient</span>.changetype&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;set_dn&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;format_entry&nbsp;:&nbsp;&lt;&nbsp;dn&nbsp;:&nbsp;string;&nbsp;..&nbsp;&gt;&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;format_entry&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&nbsp;attributes&nbsp;:&nbsp;string&nbsp;list;&nbsp;dn&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get_value&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list;&nbsp;..&nbsp;&gt;&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;format_entries&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&lt;&nbsp;attributes&nbsp;:&nbsp;string&nbsp;list;&nbsp;dn&nbsp;:&nbsp;string;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get_value&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list;&nbsp;..&nbsp;&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">class</span>&nbsp;ldapentry&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">object</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;add&nbsp;:&nbsp;<span class="constructor">Ldap_ooclient</span>.op_lst&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>

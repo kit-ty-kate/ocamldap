@@ -33,4 +33,9 @@
 <br>
 <pre><span class="keyword">class</span> <a name="TYPEmutex"></a>mutex : <code class="type">string list -> string -> string -> string -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_mutex.mutex.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>new mutex ldapurls binddn bindpw mutexdn<br>
 <hr width="100%">
-<pre><span class="keyword">method</span> <a name="METHODlock"></a>lock : <code class="type">unit</code></pre><pre><span class="keyword">method</span> <a name="METHODunlock"></a>unlock : <code class="type">unit</code></pre></body></html>
+<pre><span class="keyword">method</span> <a name="METHODlock"></a>lock : <code class="type">unit</code></pre><div class="info">
+lock the mutex. This WILL block if the mutex is already locked
+<p>
+unlock the mutex<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODunlock"></a>unlock : <code class="type">unit</code></pre></body></html>
