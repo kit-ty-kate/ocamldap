@@ -20,41 +20,41 @@
 *)
 
 
-open Stream;;
-open Netencoding;;
+open Ldap_types
+open Netencoding
 
-exception Illegal_char of char * int;;
-exception End;;
+exception Illegal_char of char * int
+exception End
 
-type attribute   = string * string;;
-type ldif_record = {dn: string; attrs: attribute list};;
-type stream_rec  = {stream: char Stream.t;buf:Buffer.t;mutable line: int};;
+type stream_rec  = {stream: char Stream.t;buf:Buffer.t;mutable line: int}
 
 let optval o =
   match o with
       Some(c) -> c
-    | None -> raise End;;
+    | None -> raise End
 
 let rec read_comment s =  
   let check_next s = 
-    match (optval (peek s.stream)) with
-	' ' | '#' -> (junk s.stream);read_comment s (* line folded, or another comment *)
+    match (optval (Stream.peek s.stream)) with
+	' ' | '#' -> (Stream.junk s.stream);read_comment s (* line folded, or another comment *)
       |  _ -> ()
   in 
-    match (optval (peek s.stream)) with
-	'\n' -> (junk s.stream);s.line <- s.line + 1;check_next s
-      | '\r' -> (junk s.stream);(junk s.stream);s.line <- s.line + 1;check_next s
-      |  _   -> (junk s.stream);read_comment s
+    match (optval (Stream.peek s.stream)) with
+	'\n' -> (Stream.junk s.stream);s.line <- s.line + 1;check_next s
+      | '\r' -> 
+	  (Stream.junk s.stream);(Stream.junk s.stream);
+	  s.line <- s.line + 1;check_next s
+      |  _   -> (Stream.junk s.stream);read_comment s
 	   
 let comment s =
-  match (optval (peek s.stream)) with
-      '#' -> (junk s.stream);read_comment s
+  match (optval (Stream.peek s.stream)) with
+      '#' -> (Stream.junk s.stream);read_comment s
     |  _  -> ()
 
 let sep s = 
-  match (optval (peek s.stream)) with
-      '\n' -> (junk s.stream);s.line <- s.line + 1;"\n"
-    | '\r' -> (junk s.stream);(junk s.stream);s.line <- s.line + 1;"\n"
+  match (optval (Stream.peek s.stream)) with
+      '\n' -> (Stream.junk s.stream);s.line <- s.line + 1;"\n"
+    | '\r' -> (Stream.junk s.stream);(Stream.junk s.stream);s.line <- s.line + 1;"\n"
     |  c   -> raise (Illegal_char (c,s.line));;
 
 let seps s = 
@@ -66,23 +66,23 @@ let seps s =
   with Illegal_char(_,_) -> ();;
 
 let digit s =
-  match (optval (peek s.stream)) with
-      '0'..'9' -> (next s.stream)
+  match (optval (Stream.peek s.stream)) with
+      '0'..'9' -> (Stream.next s.stream)
     | c -> raise (Illegal_char (c,s.line));;
 
 let safe_char s =
-  match (optval (peek s.stream)) with
-      ' '..'~' -> (next s.stream)
+  match (optval (Stream.peek s.stream)) with
+      ' '..'~' -> (Stream.next s.stream)
     | c -> raise (Illegal_char (c,s.line));;
 
 let safe_init_char s =
-  match (optval (peek s.stream)) with
-      '!'..'9'|';'..'~'  -> (next s.stream)
+  match (optval (Stream.peek s.stream)) with
+      '!'..'9'|';'..'~'  -> (Stream.next s.stream)
     | c -> raise (Illegal_char (c,s.line));;
 
 let alpha s =
-  match (optval (peek s.stream)) with
-      'a'..'z'|'A'..'Z' -> (next s.stream)
+  match (optval (Stream.peek s.stream)) with
+      'a'..'z'|'A'..'Z' -> (Stream.next s.stream)
     | c -> raise (Illegal_char (c,s.line));;
 
 let safe_chars s =
@@ -94,16 +94,16 @@ let safe_chars s =
       done
     with 
 	Illegal_char('\n',_) -> 
-	  (match (npeek 2 s.stream) with
+	  (match (Stream.npeek 2 s.stream) with
 	       ['\n';' '] -> 
-		 (junk s.stream);(junk s.stream);
+		 (Stream.junk s.stream);(Stream.junk s.stream);
 		 s.line <- s.line + 1;
 		 (do_safe_chars s)
 	     | _ -> ())
       | Illegal_char('\r',_) -> 
-	  (match (npeek 3 s.stream) with
+	  (match (Stream.npeek 3 s.stream) with
 	       ['\r';'\n';' '] -> 
-		 (junk s.stream);(junk s.stream);(junk s.stream);
+		 (Stream.junk s.stream);(Stream.junk s.stream);(Stream.junk s.stream);
 		 s.line <- s.line + 1;
 		 (do_safe_chars s)
 	     | _ -> ())
@@ -118,11 +118,9 @@ let safe_string s =
   safe_chars s;
   Buffer.contents s.buf;;
 
-(*let ldap_oid s =;; *)
-
 let attr_type_char s =
-  match (optval (peek s.stream)) with
-      'A'..'Z'|'a'..'z'|'0'..'9'|'-' -> (next s.stream)
+  match (optval (Stream.peek s.stream)) with
+      'A'..'Z'|'a'..'z'|'0'..'9'|'-' -> (Stream.next s.stream)
     | c -> raise (Illegal_char (c, s.line));;
 
 let attr_type_chars s =
@@ -133,7 +131,6 @@ let attr_type_chars s =
     done; 
   with Illegal_char(_,_) -> ()
 
-
 let option s =
   Buffer.clear s.buf;
   Buffer.add_char s.buf (attr_type_char s);
@@ -141,8 +138,8 @@ let option s =
   Buffer.contents s.buf;;
 
 let rec options s =
-  match (optval (peek s.stream)) with
-      ';' -> let thisone = (junk s.stream);(option s) in thisone ^ (options s)
+  match (optval (Stream.peek s.stream)) with
+      ';' -> let thisone = (Stream.junk s.stream);(option s) in thisone ^ (options s)
     | ':' -> ""
     |  c  -> raise (Illegal_char (c, s.line));; (* syntax error *)
 
@@ -154,54 +151,68 @@ let attributeType s =
 
 let attributeDescription s =
   let name = (attributeType s) in
-  let options = (match (optval (peek s.stream)) with
+  let options = (match (optval (Stream.peek s.stream)) with
 		     ';' -> options s (* there are options *)
 		   |  _  -> "") in
-  let colon = (match (optval (peek s.stream)) with
-		   ':' -> (junk s.stream);""
+  let colon = (match (optval (Stream.peek s.stream)) with
+		   ':' -> (Stream.junk s.stream);""
 		 |  _  -> failwith "Parse, error. Missing colon in attribute spec")
   in
-    name;;
+    name
 
 let value_spec s =
-  match (optval (peek s.stream)) with
-      ':' -> (junk s.stream);
-        (match (optval (peek s.stream)) with
-	     ' ' -> (junk s.stream);
+  match (optval (Stream.peek s.stream)) with
+      ':' -> (Stream.junk s.stream);
+        (match (optval (Stream.peek s.stream)) with
+	     ' ' -> (Stream.junk s.stream);
                (Base64.decode (safe_string s))
 	   |  c  -> raise (Illegal_char (c, s.line)))
-    | '<' -> (junk s.stream);(match (optval (peek s.stream)) with
-				  ' ' -> (junk s.stream);(safe_string s) (* a url *)
+    | '<' -> (Stream.junk s.stream);(match (optval (Stream.peek s.stream)) with
+				  ' ' -> (Stream.junk s.stream);(safe_string s) (* a url *)
 				|  c  -> raise (Illegal_char (c, s.line)))
-    | ' ' -> (junk s.stream);(safe_string s)
-    |  c  -> raise (Illegal_char (c, s.line));;
+    | ' ' -> (Stream.junk s.stream);(safe_string s)
+    |  c  -> raise (Illegal_char (c, s.line))
 
-let rec attrval_spec s =
-  try
-    ignore (sep s);[]
-  with 
-      Illegal_char(_,_) ->
-	let attr = (attributeDescription s) in
-	let valu = (value_spec s) in
-	let sep  = (sep s) in
-	  (attr, valu) :: (attrval_spec s)
-    | End -> [] (* its ok to hit end of file *)
+let rec attrval_spec ?(attrs=[]) s =
+  let lc = String.lowercase in
+    try
+      ignore (sep s);attrval_spec ~attrs s
+    with 
+	Illegal_char(_,_) ->
+	  let attr = (attributeDescription s) in
+	  let valu = (value_spec s) in
+	  let sep  = (sep s) in
+	    (try
+	       let {attr_type=name;attr_vals=vals} = List.hd attrs in
+		 if (lc attr) = (lc name) then
+		   attrval_spec 
+		     ~attrs:({attr_type=name;
+			      attr_vals=(valu :: vals)} :: (List.tl attrs)) s
+		 else 
+		   attrval_spec 
+		     ~attrs:({attr_type=attr;attr_vals=[valu]} :: attrs) s
+	     with Failure "hd" -> 
+	       attrval_spec ~attrs:[{attr_type=attr;attr_vals=[valu]}] s)
+      | End -> attrs
 
 let distinguishedName s =
-  match (optval (peek s.stream)) with
-      ':' -> (junk s.stream);
-        (match (optval (peek s.stream)) with
-	     ' ' -> (junk s.stream);
+  match (optval (Stream.peek s.stream)) with
+      ':' -> (Stream.junk s.stream);
+        (match (optval (Stream.peek s.stream)) with
+	     ' ' -> (Stream.junk s.stream);
                (Base64.decode (safe_string s)) 
 	   |  c  -> raise (Illegal_char (c, s.line)))
-    | ' ' -> (junk s.stream);safe_string s
-    |  c  -> raise (Illegal_char (c, s.line));;
+    | ' ' -> (Stream.junk s.stream);safe_string s
+    |  c  -> raise (Illegal_char (c, s.line))
 
 let dn_spec s =
-  match (npeek 3 s.stream) with
-      ['d';'n';':'] -> (junk s.stream);(junk s.stream);(junk s.stream);
+  match (Stream.npeek 3 s.stream) with
+      ['d';'n';':'] -> 
+	(Stream.junk s.stream);
+	(Stream.junk s.stream);
+	(Stream.junk s.stream);
 	(distinguishedName s)
-    | _ -> failwith ("invalid dn on line: " ^ (string_of_int s.line));;
+    | _ -> failwith ("invalid dn on line: " ^ (string_of_int s.line))
 
 let ldif_attrval_record s =
   let _  = comment s in
@@ -209,4 +220,4 @@ let ldif_attrval_record s =
   let dn = dn_spec s in
   let _  = try seps s with End -> () in (* just a dn is a valid ldif file *)
   let attrs = attrval_spec s in
-    {dn=dn;attrs=attrs};;    
+    {sr_dn=dn;sr_attributes=attrs}

@@ -21,10 +21,11 @@
 *)
 
 
-open Str;;
-open Netencoding;;
-open Ldap_ooclient;;
-open Ldif_parser;;
+open Str
+open Netencoding
+open Ldap_ooclient
+open Ldif_parser
+open Ldap_types
 		     
 let safe_string_regex = 
   Str.regexp "^[\x01-\x09\x0b-\x0c\x0e-\x7f]+$"
@@ -95,29 +96,13 @@ object (self)
   val in_ch  = {stream=(Stream.of_channel in_ch);buf=Buffer.create 256;line=1}
   val out_ch = out_ch
   val outbuf = Buffer.create 50
-  method read_entry =
-    match (ldif_attrval_record in_ch) with
-	{dn=dn;attrs=attrs} -> 
-	  let e = new ldapentry in
-	    e#set_dn dn;
-	    List.iter 
-	      (fun attr ->
-		 match attr with
-		     (name, value) -> e#add [(name, [value])])
-	      attrs;
-	    e
+
+  method read_entry = Ldap_ooclient.to_entry (`Entry (ldif_attrval_record in_ch))
+
   method of_string s =
     let strm = {stream=(Stream.of_string s);buf=Buffer.create 256;line=1} in
-      match (ldif_attrval_record strm) with
-	  {dn=dn;attrs=attrs} -> 
-	    let e = new ldapentry in
-	      e#set_dn dn;
-	      List.iter 
-		(fun attr ->
-		   match attr with
-		       (name, value) -> e#add [(name, [value])])
-		attrs;
-	      e
+      Ldap_ooclient.to_entry (`Entry (ldif_attrval_record strm))
+
   method to_string (e:ldapentry_t) =
     try
       let contents = Buffer.contents (entry2ldif outbuf e) in
@@ -126,6 +111,7 @@ object (self)
     with exn ->
       Buffer.clear outbuf;
       raise exn
+
   method write_entry (e:ldapentry_t) =
     try
       Buffer.output_buffer out_ch (entry2ldif outbuf e);
