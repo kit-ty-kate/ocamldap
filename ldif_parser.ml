@@ -176,7 +176,7 @@ let value_spec s =
 let rec attrval_spec ?(attrs=[]) s =
   let lc = String.lowercase in
     try
-      ignore (sep s);attrval_spec ~attrs s
+      ignore (sep s);attrs
     with 
 	Illegal_char(_,_) ->
 	  let attr = (attributeDescription s) in
