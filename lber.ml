@@ -25,6 +25,7 @@ exception Encoding_error of string
 
 type readbyte_error = End_of_stream
 		      | Transport_error
+		      | Peek_error
 		      | Not_implemented
 exception Readbyte_error of readbyte_error
 
@@ -98,7 +99,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
   and byte_counter = ref 0 in
     match limit with
 	Definite limit ->
-	  let f ?(peek=false) () =
+	  let definite ?(peek=false) () =
 	    if not peek then
 	      if !byte_counter < limit then
 		(peek_counter := 1;
@@ -110,13 +111,13 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 	       rb ~peek:true ())
 	    else raise (Readbyte_error End_of_stream)
 	  in
-	    f
+	    definite
       | Indefinite -> 
 	  let peek_saw_eoc_octets = ref false
 	  and saw_eoc_octets = ref false
 	  and eoc_buf = String.create 1
 	  and eoc_buf_len = ref 0 in
-	  let f ?(peek=false) () = 
+	  let indefinite ?(peek=false) () = 
 	    if !eoc_buf_len = 0 then
 	      if peek && !peek_saw_eoc_octets then
 		raise (Readbyte_error End_of_stream)
@@ -139,7 +140,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 	      (eoc_buf_len := 0;
 	       eoc_buf.[0])
 	  in
-	    f
+	    indefinite
 
 (* return a readbyte implementation which works using a string *)
 let readbyte_of_string octets =
@@ -167,73 +168,82 @@ let readbyte_of_string octets =
   in
     f
 
-(* a readbyte implementation which reads from an FD. It implements a
-   peek buffer, so it can garentee that it will work with
-   readbyte_of_ber_element, even with blocking fds. *)
-let readbyte_of_fd fd =
-  let buf = String.create 1 in
-  let in_ch = (* This can fail, because it calls lseek *)
-    try Unix.in_channel_of_descr fd
-    with exn -> raise (Readbyte_error Transport_error) 
-  in
-  let peek_buf = String.create 50 in
-  let peek_buf_pos = ref 0 in
-  let peek_buf_len = ref 0 in
-  let rb ?(peek=false) () = 
-    if !peek_buf_len = 0 || peek then
-      let result = 
-	try input in_ch buf 0 1 
-	with exn -> raise (Readbyte_error Transport_error)
-      in
-	if result = 1 then
-	  if peek then
-	    (peek_buf.[!peek_buf_len] <- buf.[0];
-	     peek_buf_len := !peek_buf_len + 1;	       
-	     buf.[0])
-	  else buf.[0]
-	else (close_in in_ch;raise (Readbyte_error Transport_error))
-    else if !peek_buf_pos = !peek_buf_len - 1 then (* last char in peek buf *)
-      let b = peek_buf.[!peek_buf_pos] in
-	peek_buf_pos := 0;
-	peek_buf_len := 0;
-	b
-    else (* reading char in peek buf *)
-      let b = peek_buf.[!peek_buf_pos] in
-	peek_buf_pos := !peek_buf_pos + 1;
-	b
+let readbyte_of_read_close_and_fd read close bufsize fd =
+  let buf = String.create bufsize in
+  let buf_pos = ref 0 in
+  let buf_len = ref 0 in
+  let peek_pos = ref 0 in
+  let peek_len = ref 0 in
+  let peekwrap = ref false in
+  let peekwrap_len = ref 0 in
+  let rb ?(peek=false) () =     
+    if !buf_pos = !buf_len then begin (* new buffer needed *)
+      if !peekwrap then begin
+	buf_pos := 1;
+	buf_len := !peekwrap_len;
+	peekwrap := false;
+	buf.[0]
+      end else begin
+	let result = read fd buf 0 bufsize in
+	  if result > 1 then begin
+	    buf_pos := 1;
+	    buf_len := result;
+	    peek_len := result;
+	    peek_pos := 1;
+	    buf.[0]
+	  end else begin
+	    close fd;
+	    raise (Readbyte_error Transport_error)
+	  end
+      end
+    end else if peek && (!peek_pos = !peek_len - 1) then begin      
+      if (not !peekwrap) && !peek_pos < bufsize then begin
+	let result = read fd buf !peek_pos (bufsize - !peek_pos) in
+	  peek_len := !peek_len + result;
+	  buf_pos := !peek_len + result;
+	  let byte = buf.[!peek_pos] in
+	    peek_pos := !peek_pos + 1;
+	    byte
+      end else if !peekwrap && !peek_pos > !buf_pos then begin
+	peek_len := !peekwrap_len;
+	peek_pos := 1;
+	buf.[0]
+      end else if not !peekwrap && !buf_pos > 1 then begin
+	let result = read fd buf 0 !buf_pos in
+	  peek_len := result;
+	  peekwrap_len := result;
+	  peek_pos := 1;
+	  peekwrap := true;
+	  buf.[0]
+      end else raise (Readbyte_error Peek_error)
+    end else if peek then begin
+      let result = buf.[!peek_pos] in
+	peek_pos := !peek_pos + 1;
+	result
+    end else begin
+      let result = buf.[!buf_pos] in
+	buf_pos := !buf_pos + 1;
+	peek_pos := !buf_pos;
+	result
+    end      
   in
     rb
 
-(* a readbyte implementation which reads from an SSL socket. It is
-   otherwise the same as rb_of_fd *)
-let readbyte_of_ssl fd = 
-  let buf = String.create 16384 (* the size of an ssl record *)
-  and pos = ref 0
-  and len = ref 0
-  and peek_pos = ref 0 in
-  let rec rb ?(peek=false) () = 
-    if !pos = !len || (peek && !peek_pos = !len) then
-      let result = 
-	try Ssl.read fd buf 0 16384 
-	with exn -> raise (Readbyte_error Transport_error)
-      in
-	if result >= 1 then
-	  (len := result;
-	   (if peek then peek_pos := 1 else pos := 1);	    
-	   buf.[0])
-	else (Ssl.shutdown fd;raise (Readbyte_error Transport_error))
-    else
-      if peek then
-	let c = buf.[!peek_pos] in
-	  peek_pos := !peek_pos + 1;
-	  c
-      else
-	let c = buf.[!pos] in
-	  pos := !pos + 1;
-	  peek_pos := !pos;
-	  c	    
+let readbyte_of_fd fd = 
+  let read fd buf off len =
+    try Unix.read fd buf off len
+    with exn -> raise (Readbyte_error Transport_error)
   in
-    rb
+  let close fd = Unix.close fd in
+    readbyte_of_read_close_and_fd read close 4096 fd
+
+let readbyte_of_ssl fd = 
+  let read fd buf off len = 
+    try Ssl.read fd buf 0 16384 
+    with exn -> raise (Readbyte_error Transport_error)
+  in
+  let close fd = Ssl.shutdown fd in
+    readbyte_of_read_close_and_fd read close 16384 fd
 
 let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the definite length form *)
   let octet = int_of_char (readbyte ~peek:peek ()) in
@@ -343,9 +353,10 @@ let encode_ber_header {ber_class=cls;ber_primitive=pri;ber_tag=tag;ber_length=le
 
 let read_contents ?(peek=false) (readbyte:readbyte) len =
   let rec readnbytes (readbyte:readbyte) buf n c =
-      if c < n then
-	(Buffer.add_char buf (readbyte ~peek:peek ());readnbytes readbyte buf n (c + 1))
-      else Buffer.contents buf
+      if c < n then begin
+	Buffer.add_char buf (readbyte ~peek:peek ());
+	readnbytes readbyte buf n (c + 1)
+      end else Buffer.contents buf
   in
   let rec readuntileoc (readbyte:readbyte) buf =
     let octet1 = readbyte ~peek:peek () in
@@ -588,15 +599,14 @@ let encode_ber_enum ?(cls=Universal) ?(tag=10) value =
 (* sec 8.7 *)
 let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=None) 
   (readbyte:readbyte) = 
-  let decode_ber_octetstring' contents = contents in
-    match contents with
-	None -> (* have not yet read the header, or unpacked the contents *)
-	  (match decode_ber_header readbyte with
-	       {ber_class=c;ber_tag=t;ber_length=octetstring_length} when c=cls && t=tag ->
-		 decode_ber_octetstring' (read_contents ~peek:peek readbyte octetstring_length)
-	     | _ -> raise (Decoding_error "expected octetstring"))
-      | Some contents -> decode_ber_octetstring' contents (* already read header *)
-
+  match contents with
+      None -> (* have not yet read the header, or unpacked the contents *)
+	(match decode_ber_header readbyte with
+	     {ber_class=c;ber_tag=t;ber_length=octetstring_length} when c=cls && t=tag ->
+	       read_contents ~peek:peek readbyte octetstring_length
+	   | _ -> raise (Decoding_error "expected octetstring"))
+    | Some contents -> contents (* already read header *)
+	
 let encode_ber_octetstring ?(cls=Universal) ?(tag=4) string = 
   let len = String.length string in
   let buf = Buffer.create (len + 3) in

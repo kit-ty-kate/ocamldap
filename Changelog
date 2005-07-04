@@ -3,6 +3,9 @@
 	(Ldap_parser) to produce search_result_entry instead of its own
 	type. This allows better cross module communication, and simplified
 	the Ldif_oo module's job a bit.
+	* 60% improvement in decoder performance.
+	* Fixed a bug in the ssl readbyte implementation which could
+	cause data loss to occurr if peeking very far ahead.
 2.1.3
 	* Added toplevel pretty printers for Oid.t, Lcstring.t, 
 	and ldapentry_t
