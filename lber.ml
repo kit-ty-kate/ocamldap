@@ -26,6 +26,7 @@ exception Encoding_error of string
 type readbyte_error = End_of_stream
 		      | Transport_error
 		      | Peek_error
+		      | Request_too_large
 		      | Not_implemented
 exception Readbyte_error of readbyte_error
 
@@ -33,7 +34,7 @@ exception Readbyte_error of readbyte_error
    the user of the encodeing functions herin will pass a function
    of the type readbyte, or writebyte to us when the encoding function
    is called. We will use that function to get or set raw data *)
-type readbyte = ?peek:bool -> unit -> char
+type readbyte = ?peek:bool -> int -> string
 type writebyte = (char -> unit)
 
 (* note on syntax. In this program I use some somewhat little used,
@@ -99,34 +100,36 @@ let readbyte_of_ber_element limit (rb:readbyte) =
   and byte_counter = ref 0 in
     match limit with
 	Definite limit ->
-	  let definite ?(peek=false) () =
+	  let f ?(peek=false) length =
 	    if not peek then
-	      if !byte_counter < limit then
-		(peek_counter := 1;
-		 byte_counter := !byte_counter + 1;
-		 rb ())
+	      if !byte_counter + length <= limit then (
+		peek_counter := 1;
+		byte_counter := !byte_counter + length;
+		rb length
+	      )
 	      else raise (Readbyte_error End_of_stream)
-	    else if !peek_counter < limit && !byte_counter < limit then
-	      (peek_counter := !peek_counter + 1;
-	       rb ~peek:true ())
+	    else if !peek_counter + length <= limit && !byte_counter < limit then (
+	      peek_counter := !peek_counter + length;
+	      rb ~peek:true length
+	    )
 	    else raise (Readbyte_error End_of_stream)
 	  in
-	    definite
+	    f
       | Indefinite -> 
-	  let peek_saw_eoc_octets = ref false
+(*	  let peek_saw_eoc_octets = ref false
 	  and saw_eoc_octets = ref false
 	  and eoc_buf = String.create 1
 	  and eoc_buf_len = ref 0 in
-	  let indefinite ?(peek=false) () = 
+	  let f ?(peek=false) length = 
 	    if !eoc_buf_len = 0 then
 	      if peek && !peek_saw_eoc_octets then
 		raise (Readbyte_error End_of_stream)
 	      else if !saw_eoc_octets then
 		raise (Readbyte_error End_of_stream)
 	      else
-		let b = rb ~peek:peek () in
+		let b = rb ~peek:peek 1 in
 		  if (int_of_char b) = 0b0000_0000 then
-		    let b1 = rb ~peek:peek () in
+		    let b1 = rb ~peek:peek 1 in
 		      if (int_of_char b1) = 0b0000_0000 then
 			((if peek then peek_saw_eoc_octets := true
 			  else saw_eoc_octets := true);
@@ -134,119 +137,169 @@ let readbyte_of_ber_element limit (rb:readbyte) =
 		      else
 			(eoc_buf.[0] <- b1;
 			 eoc_buf_len := 1;
-			 b)
-		  else b
+			 String.make 1 b)
+		  else String.make 1 b
 	    else 
 	      (eoc_buf_len := 0;
-	       eoc_buf.[0])
+	       eoc_buf)
 	  in
-	    indefinite
+	    f *)
+	  raise (Readbyte_error Not_implemented)
 
 (* return a readbyte implementation which works using a string *)
 let readbyte_of_string octets =
-  let strm = Stream.of_string octets in
+(*  let strm = Stream.of_string octets in
   let peek_counter = ref 1 in
   let limit = ref 0 in
-  let f ?(peek=false) () =
-    let rec last lst = (* thank god this is almost never used. puke O(n) ness puke *)
+  let f ?(peek=false) length =
+    let rec last lst =
       match lst with
 	  h :: [] -> h
 	| h :: t -> last t
 	| [] -> failwith "readbyte bug in \"last\" function!"
     in
-      if not peek then
-	(peek_counter := 1; (* reset the peek counter when we really read a byte *)
-	 try Stream.next strm
-	 with Stream.Failure -> raise (Readbyte_error End_of_stream))
+      if not peek then (
+	peek_counter := 1; (* reset the peek counter when we really read a byte *)
+	try String.make 1 (Stream.next strm)
+	with Stream.Failure -> raise (Readbyte_error End_of_stream)
+      )
       else	
 	let elts = (Stream.npeek !peek_counter strm) in
 	  if List.length elts = !peek_counter then
 	    (peek_counter := !peek_counter + 1;
-	     last elts)
+	     (String.make 1 (last elts)))
 	  else raise (Readbyte_error End_of_stream)
 	    (* if there are not enough elements in the stream, fail *)
   in
     f
+*)
+  raise (Readbyte_error Not_implemented)
 
-let readbyte_of_read_close_and_fd read close bufsize fd =
-  let buf = String.create bufsize in
-  let buf_pos = ref 0 in
+(* a readbyte implementation which reads from an FD. It implements a
+   peek buffer, so it can garentee that it will work with
+   readbyte_of_ber_element, even with blocking fds. *)
+let readbyte_of_fd fd =
+  let bufsize = 65536 in
+  let buf = String.create (bufsize * 2) in
   let buf_len = ref 0 in
+  let buf_pos = ref 0 in
   let peek_pos = ref 0 in
-  let peek_len = ref 0 in
-  let peekwrap = ref false in
-  let peekwrap_len = ref 0 in
-  let rb ?(peek=false) () =     
-    if !buf_pos = !buf_len then begin (* new buffer needed *)
-      if !peekwrap then begin
-	buf_pos := 1;
-	buf_len := !peekwrap_len;
-	peekwrap := false;
-	buf.[0]
-      end else begin
-	let result = read fd buf 0 bufsize in
-	  if result > 1 then begin
-	    buf_pos := 1;
-	    buf_len := result;
-	    peek_len := result;
-	    peek_pos := 1;
-	    buf.[0]
-	  end else begin
-	    close fd;
-	    raise (Readbyte_error Transport_error)
-	  end
-      end
-    end else if peek && (!peek_pos = !peek_len - 1) then begin      
-      if (not !peekwrap) && !peek_pos < bufsize then begin
-	let result = read fd buf !peek_pos (bufsize - !peek_pos) in
-	  peek_len := !peek_len + result;
-	  buf_pos := !peek_len + result;
-	  let byte = buf.[!peek_pos] in
-	    peek_pos := !peek_pos + 1;
-	    byte
-      end else if !peekwrap && !peek_pos > !buf_pos then begin
-	peek_len := !peekwrap_len;
-	peek_pos := 1;
-	buf.[0]
-      end else if not !peekwrap && !buf_pos > 1 then begin
-	let result = read fd buf 0 !buf_pos in
-	  peek_len := result;
-	  peekwrap_len := result;
-	  peek_pos := 1;
-	  peekwrap := true;
-	  buf.[0]
-      end else raise (Readbyte_error Peek_error)
-    end else if peek then begin
-      let result = buf.[!peek_pos] in
-	peek_pos := !peek_pos + 1;
-	result
-    end else begin
-      let result = buf.[!buf_pos] in
-	buf_pos := !buf_pos + 1;
-	peek_pos := !buf_pos;
-	result
-    end      
+  let peek_buf_len = ref 0 in
+  let read buf off len = 
+    try Unix.read fd buf off len
+    with exn -> raise (Readbyte_error Transport_error)
+  in    
+  let read_at_least_nbytes buf off len nbytes = 
+    let total = ref 0 in
+      while !total < nbytes
+      do
+	let rd = read buf (!total + off) (len - !total) in
+	  if rd <= 0 then
+	    raise (Readbyte_error Transport_error);
+	  total := !total + rd;
+      done;
+      !total
+  in
+  let rb ?(peek=false) length = 
+    if length > bufsize then raise (Readbyte_error Request_too_large);
+    if not peek then (
+      if length <= !buf_len - !buf_pos then (
+	let result = String.sub buf !buf_pos length in
+	  buf_pos := !buf_pos + length;
+	  peek_pos := !buf_pos;
+	  result
+      )
+      else (
+	let result = String.create length in
+	let nbytes_really_in_buffer = (!buf_len - !buf_pos) + !peek_buf_len in
+	let nbytes_in_buffer = 
+	  if nbytes_really_in_buffer > length then length
+	  else nbytes_really_in_buffer
+	in	  
+	let nbytes_to_read = length - nbytes_in_buffer in
+	  if nbytes_in_buffer > 0 then
+	    String.blit buf !buf_pos result 0 nbytes_in_buffer;
+	  if nbytes_to_read > 0 then (
+	    let nbytes_read = read_at_least_nbytes buf 0 bufsize nbytes_to_read in
+	      String.blit buf 0 result nbytes_in_buffer nbytes_to_read;
+	      buf_pos := nbytes_to_read;
+	      buf_len := nbytes_read;
+	      peek_pos := !buf_pos;
+	      peek_buf_len := 0;
+	      result
+	  )
+	  else (
+	    String.blit buf 0 buf (!buf_pos + length) (nbytes_really_in_buffer - length);
+	    buf_len := (nbytes_really_in_buffer - length);
+	    buf_pos := 0;
+	    peek_pos := !buf_pos;
+	    peek_buf_len := 0;
+	    result
+	  )
+      )
+    ) (* if not peek *)
+    else (
+      if length <= (!buf_len + !peek_buf_len) - !peek_pos then (
+	let result = String.sub buf !peek_pos length in
+	  peek_pos := !peek_pos + length;
+	  result
+      )
+      else (
+	if length + !peek_pos > 2 * bufsize then raise (Readbyte_error Peek_error);
+	let result = String.create length in
+	let nbytes_in_buffer = (!buf_len + !peek_buf_len) - !peek_pos in
+	let nbytes_to_read = length - nbytes_in_buffer in
+	let read_start_pos = !peek_pos + nbytes_in_buffer in
+	  String.blit buf !peek_pos result 0 nbytes_in_buffer;
+	  let nbytes_read = 
+	    read_at_least_nbytes buf 
+	      read_start_pos
+	      (bufsize - (!buf_len + !peek_buf_len))
+	      nbytes_to_read
+	  in
+	    String.blit buf read_start_pos result nbytes_in_buffer nbytes_read;
+	    peek_buf_len := !peek_buf_len + nbytes_read;
+	    peek_pos := !peek_pos + length;
+	    result
+      )
+    )
   in
     rb
 
-let readbyte_of_fd fd = 
-  let read fd buf off len =
-    try Unix.read fd buf off len
-    with exn -> raise (Readbyte_error Transport_error)
-  in
-  let close fd = Unix.close fd in
-    readbyte_of_read_close_and_fd read close 4096 fd
-
+(* a readbyte implementation which reads from an SSL socket. It is
+   otherwise the same as rb_of_fd *)
 let readbyte_of_ssl fd = 
-  let read fd buf off len = 
-    try Ssl.read fd buf 0 16384 
-    with exn -> raise (Readbyte_error Transport_error)
+(*  let buf = String.create 16384 (* the size of an ssl record *)
+  and pos = ref 0
+  and len = ref 0
+  and peek_pos = ref 0 in
+  let rec rb ?(peek=false) length = 
+    if !pos = !len || (peek && !peek_pos = !len) then
+      let result = 
+	try Ssl.read fd buf 0 16384 
+	with exn -> raise (Readbyte_error Transport_error)
+      in
+	if result >= 1 then
+	  (len := result;
+	   (if peek then peek_pos := 1 else pos := 1);	    
+	   buf)
+	else (Ssl.shutdown fd;raise (Readbyte_error Transport_error))
+    else
+      if peek then
+	let c = buf in
+	  peek_pos := !peek_pos + 1;
+	  c
+      else
+	let c = buf in
+	  pos := !pos + 1;
+	  peek_pos := !pos;
+	  c	    
   in
-  let close fd = Ssl.shutdown fd in
-    readbyte_of_read_close_and_fd read close 16384 fd
+    rb *)
+  raise (Readbyte_error Not_implemented)
 
 let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the definite length form *)
-  let octet = int_of_char (readbyte ~peek:peek ()) in
+  let octet = int_of_char (readbyte ~peek:peek 1).[0] in
     if octet = 0b1111_1111 then
       (* sec/ 8.1.3.5c *)
       raise (Decoding_error "illegal initial length octet")
@@ -262,7 +315,7 @@ let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the d
 	if numoctets > 4 then raise (Decoding_error "length cannot be represented");
 	if remainingoctets = 0 then Definite value
 	else
-	  let octet = int_of_char (readbyte ~peek:peek ()) in
+	  let octet = int_of_char (readbyte ~peek:peek 1).[0] in
 	    if ((numoctets = 4) && (remainingoctets = 4) &&
 		(octet land 0b1000_0000 = 0b1000_0000)) (* we have only 31 bits *)
 	    then
@@ -275,12 +328,12 @@ let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the d
 	decode_multioctet_length readbyte numoctets numoctets 0
 
 let decode_ber_header ?(peek=false) (readbyte:readbyte) =
-  let leading_octet = int_of_char (readbyte ~peek:peek ()) in
+  let leading_octet = int_of_char (readbyte ~peek:peek 1).[0] in
   let ber_tag = (* sec. 8.1.2.2c *)
     if leading_octet land 0b0001_1111 = 0b0001_1111 then
       (* sec. 8.1.2.4 multi octet tag encoding *)
       let rec decode_multioctet_tag (readbyte:readbyte) tag_value =
-	let octet = int_of_char (readbyte ~peek:peek ()) in
+	let octet = int_of_char (readbyte ~peek:peek 1).[0] in
 	  if octet land 0b1000_0000 = 0b0000_0000 then tag_value + (octet land 0b0111_1111)
 	  else decode_multioctet_tag readbyte (tag_value + (octet land 0b0111_1111))
       in
@@ -352,16 +405,10 @@ let encode_ber_header {ber_class=cls;ber_primitive=pri;ber_tag=tag;ber_length=le
     Buffer.contents buf
 
 let read_contents ?(peek=false) (readbyte:readbyte) len =
-  let rec readnbytes (readbyte:readbyte) buf n c =
-      if c < n then begin
-	Buffer.add_char buf (readbyte ~peek:peek ());
-	readnbytes readbyte buf n (c + 1)
-      end else Buffer.contents buf
-  in
   let rec readuntileoc (readbyte:readbyte) buf =
-    let octet1 = readbyte ~peek:peek () in
+    let octet1 = (readbyte ~peek 1).[0] in
       if (int_of_char octet1) = 0b0000_0000 then
-	let octet2 = readbyte ~peek:peek () in 
+	let octet2 = (readbyte ~peek 1).[0] in 
 	  if (int_of_char octet2) = 0b0000_0000 then
 	    Buffer.contents buf
 	  else
@@ -371,12 +418,12 @@ let read_contents ?(peek=false) (readbyte:readbyte) len =
 	(Buffer.add_char buf octet1;readuntileoc readbyte buf)
   in
     match len with
-	Definite n -> readnbytes readbyte (Buffer.create (n + 1)) n 0
+	Definite n -> readbyte ~peek n
       | Indefinite -> readuntileoc readbyte (Buffer.create 5)
 
 let decode_ber_end_of_contents ?(peek=false) (readbyte:readbyte) =
-  if not (((int_of_char (readbyte ~peek:peek ())) = 0) && 
-	  (int_of_char (readbyte ~peek:peek ())) = 0) then 
+  if not (((int_of_char (readbyte ~peek 1).[0]) = 0) && 
+	  (int_of_char (readbyte ~peek 1).[0]) = 0) then 
     raise (Decoding_error "missing end of contents octets")
 
 (* sec. 8.2 *)
@@ -603,10 +650,10 @@ let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=No
       None -> (* have not yet read the header, or unpacked the contents *)
 	(match decode_ber_header readbyte with
 	     {ber_class=c;ber_tag=t;ber_length=octetstring_length} when c=cls && t=tag ->
-	       read_contents ~peek:peek readbyte octetstring_length
+	       read_contents ~peek readbyte octetstring_length
 	   | _ -> raise (Decoding_error "expected octetstring"))
-    | Some contents -> contents (* already read header *)
-	
+    | Some contents -> contents
+
 let encode_ber_octetstring ?(cls=Universal) ?(tag=4) string = 
   let len = String.length string in
   let buf = Buffer.create (len + 3) in
@@ -650,4 +697,3 @@ let rec encode_berval_list ?(buf=Buffer.create 50) efun lst =
 let rec decode_berval_list ?(lst=[]) dfun (readbyte:readbyte) =
   try decode_berval_list ~lst:((dfun readbyte) :: lst) dfun readbyte
   with Readbyte_error End_of_stream -> lst
-
