@@ -179,7 +179,7 @@ let readbyte_of_string octets =
    peek buffer, so it can garentee that it will work with
    readbyte_of_ber_element, even with blocking fds. *)
 let readbyte_of_fd fd =
-  let bufsize = 65536 in
+  let bufsize = 256 in
   let buf = String.create (bufsize * 2) in
   let buf_len = ref 0 in
   let buf_pos = ref 0 in
@@ -200,9 +200,25 @@ let readbyte_of_fd fd =
       done;
       !total
   in
-  let rb ?(peek=false) length = 
-    if length > bufsize then raise (Readbyte_error Request_too_large);
-    if not peek then (
+  let rec rb ?(peek=false) length = 
+    if length > bufsize then (
+      if length > Sys.max_string_length then raise (Readbyte_error Request_too_large);
+      let result = String.create length in
+      let total = ref 0 in
+	while !total < length
+	do
+	  let nbytes_to_read = 
+	    if length - !total < bufsize then
+	      length - !total
+	    else bufsize
+	  in
+	  let iresult = rb ~peek nbytes_to_read in
+	    String.blit result !total iresult 0 nbytes_to_read;
+	    total := !total + nbytes_to_read
+	done;
+	result
+    )
+    else if not peek then (
       if length <= !buf_len - !buf_pos then (
 	let result = String.sub buf !buf_pos length in
 	  buf_pos := !buf_pos + length;

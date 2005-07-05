@@ -30,6 +30,7 @@ let ldif_buffer = Buffer.create 3124
 let print_entry e =  
   match e with
       `Entry {sr_dn=dn;sr_attributes=attrs} ->
+	Buffer.add_string ldif_buffer "dn: ";
 	Buffer.add_string ldif_buffer dn;
 	Buffer.add_string ldif_buffer "\n";
 	List.iter
