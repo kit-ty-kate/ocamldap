@@ -179,7 +179,7 @@ let readbyte_of_string octets =
    peek buffer, so it can garentee that it will work with
    readbyte_of_ber_element, even with blocking fds. *)
 let readbyte_of_fd fd =
-  let bufsize = 8 in
+  let bufsize = 16384 in
   let buf = String.create (bufsize * 2) in
   let buf_len = ref 0 in
   let buf_pos = ref 0 in
