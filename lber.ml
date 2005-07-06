@@ -179,7 +179,7 @@ let readbyte_of_string octets =
    peek buffer, so it can garentee that it will work with
    readbyte_of_ber_element, even with blocking fds. *)
 let readbyte_of_fd fd =
-  let bufsize = 256 in
+  let bufsize = 8 in
   let buf = String.create (bufsize * 2) in
   let buf_len = ref 0 in
   let buf_pos = ref 0 in
@@ -201,6 +201,7 @@ let readbyte_of_fd fd =
       !total
   in
   let rec rb ?(peek=false) length = 
+    if length <= 0 then raise (Invalid_argument "Readbyte.length");
     if length > bufsize then (
       if length > Sys.max_string_length then raise (Readbyte_error Request_too_large);
       let result = String.create length in
@@ -434,7 +435,7 @@ let read_contents ?(peek=false) (readbyte:readbyte) len =
 	(Buffer.add_char buf octet1;readuntileoc readbyte buf)
   in
     match len with
-	Definite n -> readbyte ~peek n
+	Definite n -> if n = 0 then "" else readbyte ~peek n
       | Indefinite -> readuntileoc readbyte (Buffer.create 5)
 
 let decode_ber_end_of_contents ?(peek=false) (readbyte:readbyte) =
