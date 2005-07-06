@@ -214,7 +214,7 @@ let readbyte_of_fd fd =
 	    else bufsize
 	  in
 	  let iresult = rb ~peek nbytes_to_read in
-	    String.blit result !total iresult 0 nbytes_to_read;
+	    String.blit iresult 0 result !total nbytes_to_read;
 	    total := !total + nbytes_to_read
 	done;
 	result
