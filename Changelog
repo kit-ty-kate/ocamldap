@@ -6,7 +6,10 @@
 	* Fixed a bug in the ldif pretty printer. It would print values
 	containing only white space, or with leading white space
 	without base64 encoding them, this is an error.
-	* 2.5x decoder speedup. (4.0 MB/s sustained on an 800Mhz G4)
+	* 2.5x decoder speedup. (4.0 MB/s sustained on an 800Mhz G4). The
+	bytecode decoder is now 10% faster than the original native code
+	compiled decoder released in 2.0, and it is 14 times faster than
+	Perl's Net::LDAP library.
 	* Fixed a bug in the ssl readbyte implementation which could
 	cause data loss to occurr if peeking very far ahead.
 	* The print method of ldapentry is now deprecated
