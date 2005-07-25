@@ -308,6 +308,7 @@ object (self)
   method set_dn x = dn <- x
   method dn = dn
   method print =
+    print_endline "THIS METHOD IS DEPRECATED, use Ldif_oo, or rely on the toplevel printers";
     print_endline ("dn: " ^ self#dn);
     (List.iter 
        (fun a -> 

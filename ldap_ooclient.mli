@@ -107,7 +107,7 @@ class ldapentry :
 
     (** print an ldif like representation of the object to stdout, see
       Ldif_oo for standards compliant ldif. Usefull for toplevel
-      sessions. *)
+      sessions. DEPRECATED. *)
     method print : unit
 
     (** replace values in the object, does not change the database
