@@ -2,7 +2,7 @@
    X.690 all comments containing "sec. x.x.x.x" are section numbers
    referring to sections in x.690
 
-   Copyright (C) 2004 Eric Stokes, Matthew Backes, and The
+   Copyright (C) 2004 Eric Stokes, and The
    California State University at Northridge
 
    This library is free software; you can redistribute it and/or               
@@ -58,26 +58,6 @@ type ber_val_header = {ber_class: ber_class;
 		       ber_primitive: bool;
 		       ber_tag: int;
 		       ber_length: ber_length}
-
-(* this type is a draft, and is not yet used,
-   it will likely expand (and get more precise) 
-   in the future. However the basic idea will be that
-   the generalized decoder will return this type *)
-type berval = Boolean of bool
-	      | Int of Int32.t
-	      | Bitstring of string
-	      | Octetstring of string
-	      | Null
-	      | Oid of string
-	      | Odt of string
-	      | Real of float
-	      | Enum of int32
-	      | Utf8string of string
-	      | RelativeOid of string
-	      | Sequence of berval list
-	      | Set of berval list
-	      | Charstring of string
-	      | Time of string
 
 (* readbyte implementations. A readbyte is a higher order function
    which creates functions which provide a uniform way for decoding
@@ -175,18 +155,15 @@ let readbyte_of_string octets =
 *)
   raise (Readbyte_error Not_implemented)
 
-(* a readbyte implementation which reads from an FD. It implements a
-   peek buffer, so it can garentee that it will work with
-   readbyte_of_ber_element, even with blocking fds. *)
-let readbyte_of_fd fd =
-  let bufsize = 16384 in
+let readbyte_of_readfun rfun =
+  let bufsize = 16384 in (* must be this for ssl *)
   let buf = String.create (bufsize * 2) in
   let buf_len = ref 0 in
   let buf_pos = ref 0 in
   let peek_pos = ref 0 in
   let peek_buf_len = ref 0 in
   let read buf off len = 
-    try Unix.read fd buf off len
+    try rfun buf off len
     with exn -> raise (Readbyte_error Transport_error)
   in    
   let read_at_least_nbytes buf off len nbytes = 
@@ -283,37 +260,22 @@ let readbyte_of_fd fd =
   in
     rb
 
+(* a readbyte implementation which reads from an FD. It implements a
+   peek buffer, so it can garentee that it will work with
+   readbyte_of_ber_element, even with blocking fds. *)
+let readbyte_of_fd fd = 
+  readbyte_of_readfun 
+    (fun buf off len ->
+       try Unix.read fd buf off len
+       with exn -> Unix.close fd;raise exn)
+
 (* a readbyte implementation which reads from an SSL socket. It is
    otherwise the same as rb_of_fd *)
 let readbyte_of_ssl fd = 
-(*  let buf = String.create 16384 (* the size of an ssl record *)
-  and pos = ref 0
-  and len = ref 0
-  and peek_pos = ref 0 in
-  let rec rb ?(peek=false) length = 
-    if !pos = !len || (peek && !peek_pos = !len) then
-      let result = 
-	try Ssl.read fd buf 0 16384 
-	with exn -> raise (Readbyte_error Transport_error)
-      in
-	if result >= 1 then
-	  (len := result;
-	   (if peek then peek_pos := 1 else pos := 1);	    
-	   buf)
-	else (Ssl.shutdown fd;raise (Readbyte_error Transport_error))
-    else
-      if peek then
-	let c = buf in
-	  peek_pos := !peek_pos + 1;
-	  c
-      else
-	let c = buf in
-	  pos := !pos + 1;
-	  peek_pos := !pos;
-	  c	    
-  in
-    rb *)
-  raise (Readbyte_error Not_implemented)
+  readbyte_of_readfun
+    (fun buf off len -> 
+       try Ssl.read fd buf off len
+       with exn -> Ssl.shutdown fd;raise exn)
 
 let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the definite length form *)
   let octet = int_of_char (readbyte ~peek:peek 1).[0] in

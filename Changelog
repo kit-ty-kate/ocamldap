@@ -3,6 +3,9 @@
 	(Ldap_parser) to produce search_result_entry instead of its own
 	type. This allows better cross module communication, and simplified
 	the Ldif_oo module's job a bit.
+	* Fixed a bug in the ldif pretty printer. It would print values
+	containing only white space, or with leading white space
+	without base64 encoding them, this is an error.
 	* 2.5x decoder speedup.
 	* Fixed a bug in the ssl readbyte implementation which could
 	cause data loss to occurr if peeking very far ahead.

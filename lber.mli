@@ -45,32 +45,15 @@ type ber_val_header = {
   ber_length : ber_length;
 }
 
-(* used only by the as yet nonexistant generic ber encoder/decoder *)
-type berval =
-    Boolean of bool
-  | Int of Int32.t
-  | Bitstring of string
-  | Octetstring of string
-  | Null
-  | Oid of string
-  | Odt of string
-  | Real of float
-  | Enum of int32
-  | Utf8string of string
-  | RelativeOid of string
-  | Sequence of berval list
-  | Set of berval list
-  | Charstring of string
-  | Time of string
-
-(** return a readbyte function for a string *)
+(** return a readbyte function for a string, currently not implemented *)
 val readbyte_of_string : string -> readbyte
 
 (** return a readbyte implementation which uses another readbyte, but
     allows setting a read boundry. Useful for constructing views of the
     octet stream which end at the end of a ber structure. This is
-    essential for reading certian structures because lenght is only
-    encoded in the toplevel in order to save space. 
+    essential for reading certian structures because length is only
+    encoded in the toplevel in order to save space. Currently only
+    implemented for definite lengths.
 
     @raise Readbyte_error in the event of a an io error, or the end of file *)
 val readbyte_of_ber_element : ber_length -> readbyte -> readbyte

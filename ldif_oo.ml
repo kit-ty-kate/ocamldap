@@ -33,10 +33,16 @@ let safe_string_regex =
 let password_regex =
   Str.regexp_case_fold ".*p\\(ass\\)?w\\(or\\)?d$"
 
+let empty_regex = 
+  Str.regexp "^ *$\\|^  *.*$"
+
 let safe_val buf s = 
-  if Str.string_match safe_string_regex s 0 then begin
+  if 
+    (Str.string_match safe_string_regex s 0) && 
+    (not (Str.string_match empty_regex s 0))
+  then begin
     Buffer.add_string buf ": ";
-     Buffer.add_string buf s
+    Buffer.add_string buf s
   end
   else begin
     Buffer.add_string buf ":: ";
