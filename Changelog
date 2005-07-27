@@ -1,3 +1,6 @@
+2.1.5
+	* Fixed a bug in the delete method of ldapentry, it would not correctly
+	process a list of deleteions in a certian case
 2.1.4
 	* Changed the type of the result of the low level ldif parser
 	(Ldif_parser) to produce search_result_entry instead of its own

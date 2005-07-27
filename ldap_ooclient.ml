@@ -264,15 +264,16 @@ object (self)
       match x with
 	  [] -> ()
 	| (attr, values) :: lst ->
-	    (let lcname = lowercase attr in
-	       match values with
-		   [] -> Hashtbl.remove data lcname
-		 | _  -> ((try List.iter (Ulist.remove (Hashtbl.find data lcname)) values
-			   with Not_found -> ());
-			  (match Ulist.tolst (Hashtbl.find data lcname) with
-			       [] -> Hashtbl.remove data lcname
-			     | _  -> ());
-			  do_delete lst))
+	    let lcname = lowercase attr in
+	      match values with
+		  [] -> Hashtbl.remove data lcname;do_delete lst
+		| _  -> 
+		    (try List.iter (Ulist.remove (Hashtbl.find data lcname)) values
+		     with Not_found -> ());
+		    (match Ulist.tolst (Hashtbl.find data lcname) with
+			 [] -> Hashtbl.remove data lcname
+		       | _  -> ());
+		    do_delete lst
     in
       do_delete x; self#push_change `DELETE x
 
