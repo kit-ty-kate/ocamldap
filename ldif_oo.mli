@@ -37,6 +37,12 @@ val fold : ('a -> 'b -> 'a) -> < read_entry : 'b; .. > -> 'a -> 'a
 val entry2ldif : ?ext:bool -> Buffer.t ->
   < attributes : string list; dn : string; get_value : string -> 
   string list; .. > -> Buffer.t
+
+(** read all the entries in the named ldif file and return them in a list *)
+val read_ldif_file : string -> Ldap_ooclient.ldapentry list
+
+(** write all the entries in the given list to the named file in ldif format *)
+val write_ldif_file : string -> Ldap_ooclient.ldapentry list -> unit
    
 class ldif: 
   ?in_ch:Pervasives.in_channel -> 

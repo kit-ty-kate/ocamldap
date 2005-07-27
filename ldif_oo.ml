@@ -96,7 +96,7 @@ let fold f ldif v =
       with End -> !objects
   in
     List.fold_left f v objects
-    
+
 class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
   val in_ch  = {stream=(Stream.of_channel in_ch);buf=Buffer.create 256;line=1}
@@ -126,3 +126,20 @@ object (self)
       Buffer.clear outbuf;
       raise exn
 end
+
+let read_ldif_file file =
+  let fd = open_in file in
+    try
+      let ldif = new ldif ~in_ch:fd () in
+      let entries = fold (fun l e -> e :: l) ldif [] in
+	close_in fd;
+	entries
+    with exn -> close_in fd;raise exn
+
+let write_ldif_file file entries =
+  let fd = open_out file in
+    try
+      let ldif = new ldif ~out_ch:fd () in
+	List.iter ldif#write_entry entries;
+	close_out fd
+    with exn -> close_out fd;raise exn
