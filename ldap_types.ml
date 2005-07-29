@@ -291,3 +291,13 @@ type ldap_url = {
   url_filter: filter option;
   url_ext: ((bool * string * string) list) option;
 }
+
+(** see draft-zeilenga-ldap-grouping-xx Ldap grouping is a way of
+    telling the server that a set of ldap operations is related, its most
+    interesting application is transactions across multiple objects. 
+    This draft is not yet implemented by any present day ldap server *)
+type ldap_grouping_type = [ `LDAP_GROUP_TXN ]
+
+(** a cookie that is sent with every ldap operation which is part of a
+    group *)
+type ldap_grouping_cookie

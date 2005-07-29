@@ -127,11 +127,6 @@ let receive_message con msgid =
       | Readbyte_error End_of_stream ->
 	  raise (LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
 
-(* test all functionality, especially dns awareness 
-   - implement connect timeouts. 
-   - do we really want to fail
-   if any host after the first is unknown? 
-   - allow the use of ldapurls in the hosts list*)
 let init ?(connect_timeout = 1) ?(version = 3) hosts =
   if ((version < 2) || (version > 3)) then
     raise (LDAP_Failure (`LOCAL_ERROR, "invalid protocol version", ext_res))
@@ -388,3 +383,6 @@ let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
 	 | _ -> raise (LDAP_Failure (`LOCAL_ERROR, "invalid modify dn response", ext_res))
      with exn -> free_messageid con msgid;raise exn);
     free_messageid con msgid
+
+let create_grouping_s groupingType value = ()
+let end_grouping_s cookie value = ()
