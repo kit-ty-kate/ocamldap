@@ -81,7 +81,7 @@ end
 let format_entry e = 
   Format.open_box 0;
   Format.open_box 2;
-  Format.print_string ("<ldapentry_t " ^ e#dn);
+  Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn));
   Format.force_newline ();
   let length_attrs = List.length e#attributes in
   let j = ref 0 in
@@ -89,7 +89,7 @@ let format_entry e =
       (fun a ->
 	 let length = List.length (e#get_value a) in
 	 let i = ref 0 in
-	   Format.print_string (Printf.sprintf "(\"%s\", " a);
+	   Format.print_string (Printf.sprintf "(\"%s\", " (String.escaped a));
 	   Format.open_box 0;
 	   Format.print_string "[";
 	   List.iter
