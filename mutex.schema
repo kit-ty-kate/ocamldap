@@ -15,7 +15,7 @@ attributetype ( 1.3.6.1.4.1.4754.10.37
 attributetype ( 1.3.6.1.4.1.4754.10.39
 	NAME 'lockedObject'
 	EQUALITY distinguishedNameMatch
-	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{512} )
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.12{512} )
 
 attributetype ( 1.3.6.1.4.1.4754.10.38
 	NAME 'mutexName'
