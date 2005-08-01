@@ -5,7 +5,8 @@
 	write_ldif_file. The former reads all the entries in an ldif file 
 	into a list of entries, while the latter writes all the entries in 
 	the given list to an ldif file.
-	* Added an object locking table to ldap_mutex
+	* Added an object locking table to ldap_mutex, which allows individual objects
+	to be locked (advisory locking like POSIX flock)
 	* Applied a patch which makes the toplevel printers to pass all data through 
 	String.escaped, and which adds a close bracket which was missing in some cases.
 	Thanks to Victor Seletsky for this patch.
