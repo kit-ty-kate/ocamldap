@@ -33,6 +33,12 @@ object
   method unlock: unit
 end
 
+class type object_lock_table_t =
+object
+  method lock: Ldap_types.dn -> unit
+  method unlock: Ldap_types.dn -> unit
+end
+
 (**  new mutex ldapurls binddn bindpw mutexdn *)
 class mutex: string list -> string -> string -> string ->
 object
