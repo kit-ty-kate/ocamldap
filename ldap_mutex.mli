@@ -47,3 +47,12 @@ object
   (** unlock the mutex *)
   method unlock: unit
 end
+
+(** new object_lock_table ldapurls binddn bindpw mutexdn *)
+class object_lock_table: string list -> string -> string -> string ->
+object
+  (** lock the specified dn, if it is already locked, then block until the lock can be aquired *)
+  method lock: Ldap_types.dn -> unit
+  (** unlock the specified dn, if it is not locked do nothing *)
+  method unlock: Ldap_types.dn -> unit
+end
