@@ -95,10 +95,10 @@ let format_entry e =
 	   List.iter
 	     (fun v ->
 		if !i < length - 1 then
-		  (Format.print_string (Printf.sprintf "\"%s\";" v);
+		  (Format.print_string (Printf.sprintf "\"%s\";" (String.escaped v));
 		   Format.print_break 1 0)
 		else
-		  Format.print_string (Printf.sprintf "\"%s\"" v);
+		  Format.print_string (Printf.sprintf "\"%s\"" (String.escaped v));
 		i := !i + 1)
 	     (e#get_value a);
 	   Format.print_string "]";
@@ -123,22 +123,24 @@ let format_entries lst =
       List.iter
 	(fun e ->
 	   if !i < length - 1 then begin
-	     Format.print_string ("<ldapentry_t " ^ e#dn ^ ">; ");
+	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
 	     Format.print_cut ();
 	     i := !i + 1
 	   end
-	   else Format.print_string ("<ldapentry_t " ^ e#dn ^ ">"))
+	   else Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
 	lst
     else
       List.iter
 	(fun e -> 
-	   if !i < length - 1 then begin
+	   if 0 < length - 1 then begin
 	     format_entry e;
 	     Format.print_break 1 0
 	   end
 	   else
 	     format_entry e)
-	lst
+	lst;
+    Format.print_string "]";
+    Format.close_box()
 
 module CaseInsensitiveString =
   (struct
