@@ -23,6 +23,7 @@
 open Ldap_types
 open Ldap_funclient
 open Ldap_schemaparser
+open Ldap_mutex
 open String
 
 (* types used throughout the library *)
@@ -140,7 +141,7 @@ let format_entries lst =
 	     format_entry e)
 	lst;
     Format.print_string "]";
-    Format.close_box()
+    Format.close_box ()
 
 module CaseInsensitiveString =
   (struct
