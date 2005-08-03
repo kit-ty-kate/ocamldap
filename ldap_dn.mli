@@ -41,9 +41,13 @@ val to_string : Ldap_types.dn -> string
 
 (** Escape a string which you intend to be part of a VALUE in the
     dn. Do not use on the whole dn, just an attribute value. It is NOT
-    necessary to use this if you intent to call to_string on your
+    necessary to use this if you intend to call to_string on your
     dn. It will be done for you as part of the conversion
     process. This function is exposed for the case where you find it
     easier to manipulate the dn via a regular expression, or other
     string based means, and you find it necessary to escape values. *)
 val escape_value : string -> string
+
+(** returns the canonical dn. A simple string compare can tell you
+    accurately whether two canonical dns are equal or not. *)
+val canonical_dn : string -> string

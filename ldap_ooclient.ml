@@ -55,6 +55,12 @@ object
   method print : unit
 end;;
 
+(* the internal representation of a transaction *)
+type txn = {
+  id: int;
+  entries: (int, ldapentry_t) Hashtbl.t
+}
+
 class type ldapcon_t =
 object
   method add : ldapentry_t -> unit
@@ -76,7 +82,7 @@ object
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry_t)
   method unbind : unit
-    method update_entry : ldapentry_t -> unit
+  method update_entry : ldapentry_t -> unit
 end	
 
 let format_entry e = 
@@ -407,6 +413,7 @@ object (self)
   val mutable bound = true
   val mutable reconnect_successful = true
   val mutable con = init ~connect_timeout:connect_timeout ~version:version hosts
+  val mutable txn_id = 0
 
   method private reconnect =
     if bound then unbind con;
@@ -522,7 +529,10 @@ object (self)
 		    ~attrs: ["objectClasses";"attributeTypes";
 			     "matchingRules";"ldapSyntaxes"]
 		    "(objectclass=subschema)") with
-	       [e] -> readSchema (e#get_value "objectclasses") (e#get_value "attributetypes")
+	       [e] -> 
+		 readSchema 
+		   (e#get_value "objectclasses")
+		   (e#get_value "attributetypes")
 	     |  _  -> raise Not_found)
       else
 	raise Not_found
@@ -551,6 +561,27 @@ object (self)
 	raise Not_found
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#rawschema
 end;;
+
+class ldaptxcon 
+  ?(connect_timeout=1) 
+  ?(referral_policy=`RETURN) 
+  ?(version = 3) 
+  hosts binddn bindpw mutextbldn = 
+object
+  inherit ldapcon as super
+  initializer
+    super#bind binddn bindpw
+  
+  val lock_table = new object_lock_table hosts binddn bindpw mutextbldn
+    
+  method begin_txn =
+    let txn = {id=txn_id;entries=Hashtbl.create 1} in
+      txn_id <- txn_id + 1;
+      txn
+	
+  method associate_entry_with_txn txn entry
+    
+end
 
 (********************************************************************************)
 (********************************************************************************)

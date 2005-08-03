@@ -106,7 +106,11 @@ let to_string dn =
 	 let rec string_values s attr vals =
 	   match vals with
 	       valu :: [] -> sprintf "%s%s=%s" s attr (escape_value valu)
-	     | valu :: tl -> string_values (sprintf "%s%s=%s+" s attr (escape_value valu)) attr tl
+	     | valu :: tl -> 
+		 string_values 
+		   (sprintf "%s%s=%s+" 
+		      s attr (escape_value valu)) 
+		   attr tl
 	     | [] -> s
 	 in
 	   if List.length vals = 0 then
@@ -125,3 +129,5 @@ let to_string dn =
       | [] -> s
   in
     components_to_dn "" (dn_to_strcomponents dn)
+
+let canonical_dn dn = String.lowercase (to_string (of_string dn))
