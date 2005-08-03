@@ -58,7 +58,7 @@ end;;
 (* the internal representation of a transaction *)
 type txn = {
   id: int;
-  entries: (int, ldapentry_t) Hashtbl.t
+  entries: (string, ldapentry_t) Hashtbl.t
 }
 
 class type ldapcon_t =
@@ -579,8 +579,18 @@ object
       txn_id <- txn_id + 1;
       txn
 	
-  method associate_entry_with_txn txn entry
-    
+  method associate_entry_with_txn txn entry = 
+    let dn = Ldap_dn.canonical_dn entry#dn in
+      if Hashtbl.mem txn.entries dn then
+	raise 
+	  (`LDAP_Failure 
+	     (`LOCAL_ERROR, 
+	      "dn: " ^ dn ^ " is already part of this transaction",
+	      {ext_matched_dn="";ext_referral=None}))
+      else begin
+	lock_table#lock dn;
+	Hashtbl.add txn.entries dn entry
+      end
 end
 
 (********************************************************************************)
