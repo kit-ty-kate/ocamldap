@@ -185,17 +185,61 @@ class ldapcon :
     method update_entry : ldapentry -> unit
   end
 
+(** functions for implementing mutexes on top of LDAP's built in test
+    and set mechanism. In order to use this module you must load
+    mutex.schema, which is an rfc2252 format schema file.  raised when
+    a mutex operation fails. The string argument contains the name of
+    the method which failed, and the exception contains details about
+    what failed. *)
+exception Ldap_mutex of string * exn
+
+class type mutex_t =
+object
+  method lock: unit
+  method unlock: unit
+end
+
+class type object_lock_table_t =
+object
+  method lock: Ldap_types.dn -> unit
+  method unlock: Ldap_types.dn -> unit
+end
+
+(**  new mutex ldapurls binddn bindpw mutexdn *)
+class mutex: string list -> string -> string -> string ->
+object
+  (** lock the mutex. This WILL block if the mutex is already locked *)
+  method lock: unit
+  (** unlock the mutex *)
+  method unlock: unit
+end
+
+(** new object_lock_table ldapurls binddn bindpw mutexdn *)
+class object_lock_table: string list -> string -> string -> string ->
+object
+  (** lock the specified dn, if it is already locked, then block until the lock can be aquired *)
+  method lock: Ldap_types.dn -> unit
+  (** unlock the specified dn, if it is not locked do nothing *)
+  method unlock: Ldap_types.dn -> unit
+end
+
+(** the abstract type of a transaction *)
 type txn
-exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
+
+(** raised when a commit fails, contains a list of entries which were
+    not rolled back successfully only if rollback failed as well,
+    otherwise None *)
 exception Txn_commit_failure of string * exn * ldapentry_t list option
+
+(** raised when an explicit rollback fails *)
 exception Txn_rollback_failure of string * exn
 
-(** A subclass of ldapcon which implements (on the client side) an
-    interface to draft_zeilenga_ldap_txn. A draft standard for multi
-    object transactions over the ldap protocol. This class can only
-    implement advisory transactions, because it is not the database,
-    therefore it must depend on advisory locking mechanisms (like
-    flock) for the transactions to be consistant. You use this class
+(** A subclass of ldapcon which implements an interface to
+    draft_zeilenga_ldap_txn. A draft standard for multi object
+    transactions over the ldap protocol. This class can only implement
+    advisory transactions, because it is not the database, therefore
+    it must depend on the advisory locking mechanisms provided by the
+    database for the transactions to be consistant. You use this class
     by calling begin_txn to get a transaction id, and then associating
     a set of ldapentry objects with the transaction by calling
     associate_entry_with_txn. You are then free to modify those

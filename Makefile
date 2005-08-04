@@ -9,10 +9,10 @@ ldap_schemaparser.ml ldap_ooclient.mli ldap_ooclient.ml ldif_parser.ml	\
 ldif_oo.ml ldif_oo.mli ldap_funserver.mli ldap_funserver.ml		\
 ldap_dnparser.mly ldap_dnlexer.mll ldap_dn.mli ldap_dn.ml		\
 ldif_changerec_parser.mly ldif_changerec_lexer.mll			\
-ldif_changerec_oo.mli ldif_changerec_oo.ml ldap_mutex.mli		\
-ldap_mutex.ml ldap_toplevel.ml
+ldif_changerec_oo.mli ldif_changerec_oo.ml ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
+OCAMLFLAGS=-rectypes
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.o *.cmx ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code
