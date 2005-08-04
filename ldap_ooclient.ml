@@ -567,11 +567,19 @@ class ldaptxcon
   ?(referral_policy=`RETURN) 
   ?(version = 3) 
   hosts binddn bindpw mutextbldn = 
+let copy_entry entry =
+  let new_entry = new ldapentry in
+    new_entry#set_dn (entry#dn);
+    List.iter
+      (fun attr -> new_entry#add [(attr, entry#get_value attr)])
+      entry#attributes;
+    new_entry
+in
 object
   inherit ldapcon as super
   initializer
     super#bind binddn bindpw
-  
+      
   val lock_table = new object_lock_table hosts binddn bindpw mutextbldn
     
   method begin_txn =
@@ -583,14 +591,36 @@ object
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then
 	raise 
-	  (`LDAP_Failure 
+	  (LDAP_Failure 
 	     (`LOCAL_ERROR, 
 	      "dn: " ^ dn ^ " is already part of this transaction",
 	      {ext_matched_dn="";ext_referral=None}))
-      else begin
-	lock_table#lock dn;
-	Hashtbl.add txn.entries dn entry
-      end
+      else
+	if entry#changes = [] then begin
+	  lock_table#lock dn;
+	  Hashtbl.add txn.entries dn ((copy_entry entry), (entry :> ldapentry_t))
+	end else
+	  raise
+	    (LDAP_Failure
+	       (`LOCAL_ERROR,
+		"this entry has been changed since it was downloaded " ^ 
+		  "commit your current changes, and then add the entry to " ^
+		  "this transaction",
+		{ext_matched_dn="";ext_referral=None}))
+
+  method disassociate_entry_from_txn txn entry = 
+    let dn = Ldap_dn.canonical_dn entry#dn in
+      if Hashtbl.mem txn.entries dn then
+	Hashtbl.remove txn.entries dn
+      else
+	raise
+	  (LDAP_Failure
+	     (`LOCAL_ERROR, 
+	      "dn: " ^ dn ^ " is not part of this transaction",
+	      {ext_matched_dn="";ext_referral=None}))
+
+  method commit_txn txn = 
+    
 end
 
 (********************************************************************************)
@@ -914,6 +944,19 @@ object (self)
   method replace x = 
     self#single_val_check x false;super#replace x;
     self#drive_updatecon;self#drive_reconsile Optimistic
+
+  method modify x = 
+    let filter_mod x op = 
+      List.rev_map
+	(fun (_, a, v) -> (a, v))
+	(List.filter 
+	   (function (the_op, _, _) when the_op = op -> true | _ -> false) x)
+    in
+      self#single_val_check (filter_mod x `ADD) true;
+      self#single_val_check (filter_mod x `REPLACE) false;
+      super#modify x;
+      self#drive_updatecon;
+      self#drive_reconsile Pessimistic
 
   method get_value x =
     try super#get_value x with Not_found ->
