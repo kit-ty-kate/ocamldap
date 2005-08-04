@@ -55,12 +55,6 @@ object
   method print : unit
 end;;
 
-(* the internal representation of a transaction *)
-type txn = {
-  id: int;
-  entries: (string, ldapentry_t) Hashtbl.t
-}
-
 class type ldapcon_t =
 object
   method add : ldapentry_t -> unit
@@ -562,6 +556,13 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#rawschema
 end;;
 
+type txn = {
+  dead: bool;
+  entries: (string, (ldapentry_t * ldapentry_t)) Hashtbl.t
+}
+exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
+exception Txn_commit_failure of string * exn * ldapentry_t list option
+exception Txn_rollback_failure of string * exn * ldapentry_t list option
 class ldaptxcon 
   ?(connect_timeout=1) 
   ?(referral_policy=`RETURN) 
@@ -575,19 +576,25 @@ let copy_entry entry =
       entry#attributes;
     new_entry
 in
-object
+object (self)
   inherit ldapcon as super
   initializer
     super#bind binddn bindpw
       
   val lock_table = new object_lock_table hosts binddn bindpw mutextbldn
-    
-  method begin_txn =
-    let txn = {id=txn_id;entries=Hashtbl.create 1} in
-      txn_id <- txn_id + 1;
-      txn
+
+  method private check_dead txn = 
+    if txn.dead then
+      raise
+	(LDAP_Failure 
+	   (`LOCAL_ERROR, 
+	    "this transaction has been comitted",
+	    {ext_matched_dn="";ext_referral=None}))
+
+  method begin_txn = {dead=false;entries=Hashtbl.create 1}
 	
   method associate_entry_with_txn txn entry = 
+    self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then
 	raise 
@@ -597,7 +604,7 @@ object
 	      {ext_matched_dn="";ext_referral=None}))
       else
 	if entry#changes = [] then begin
-	  lock_table#lock dn;
+	  lock_table#lock dn
 	  Hashtbl.add txn.entries dn ((copy_entry entry), (entry :> ldapentry_t))
 	end else
 	  raise
@@ -609,10 +616,12 @@ object
 		{ext_matched_dn="";ext_referral=None}))
 
   method disassociate_entry_from_txn txn entry = 
+    self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
-      if Hashtbl.mem txn.entries dn then
-	Hashtbl.remove txn.entries dn
-      else
+      if Hashtbl.mem txn.entries dn then begin
+	Hashtbl.remove txn.entries dn;
+	lock_table#unlock dn;
+      end else
 	raise
 	  (LDAP_Failure
 	     (`LOCAL_ERROR, 
@@ -620,7 +629,38 @@ object
 	      {ext_matched_dn="";ext_referral=None}))
 
   method commit_txn txn = 
-    
+    self#check_dead txn;
+    try
+      List.iter
+	(fun (_, e) -> lock_table#unlock e#dn)
+	(Hashtbl.fold
+	   (fun k (original_entry, modified_entry) successful_so_far ->
+	      try 
+		super#update_entry modified_entry;
+		(original_entry, modified_entry) :: successful_so_far
+	      with exn ->
+		raise (Rollback (exn, successful_so_far)))
+	   []
+	   txn.entries)
+    with Rollback (exn, successful_so_far) ->
+      (match
+	 List.fold_left
+	   (fun not_rolled_back (original_entry, modified_entry) ->
+	      try
+		modified_entry#modify (original_entry#diff modified_entry);
+		super#update_entry modified_entry;
+		not_rolled_back
+	      with -> modified_entry :: not_rolled_back)
+	   []
+	   successful_so_far
+       with
+	   [] -> raise (Txn_commit_failure ("rollback successful", exn, None))
+	 | failed_to_rollback -> 
+	     raise 
+	       (Txn_commit_failure 
+		  ("rollback failed", exn, 
+		   Some failed_to_rollback)))
+	  
 end
 
 (********************************************************************************)
