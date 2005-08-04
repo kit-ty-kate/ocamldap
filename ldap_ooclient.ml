@@ -563,7 +563,7 @@ type txn = {
 exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
 exception Txn_commit_failure of string * exn * ldapentry_t list option
 exception Txn_rollback_failure of string * exn
-class ldaptxcon 
+class ldaptxncon 
   ?(connect_timeout=1) 
   ?(referral_policy=`RETURN) 
   ?(version = 3) 
@@ -577,9 +577,9 @@ let copy_entry entry =
     new_entry
 in
 object (self)
-  inherit ldapcon as super
+  inherit ldapcon ~connect_timeout ~referral_policy ~version hosts as super
   initializer
-    super#bind binddn bindpw
+    super#bind binddn ~cred:bindpw
       
   val lock_table = new object_lock_table hosts binddn bindpw mutextbldn
 
@@ -593,7 +593,7 @@ object (self)
 
   method begin_txn = {dead=false;entries=Hashtbl.create 1}
 	
-  method associate_entry_with_txn txn entry = 
+  method associate_entry_with_txn txn (entry: ldapentry_t) = 
     self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then
@@ -604,7 +604,7 @@ object (self)
 	      {ext_matched_dn="";ext_referral=None}))
       else
 	if entry#changes = [] then begin
-	  lock_table#lock dn
+	  lock_table#lock (Ldap_dn.of_string dn);
 	  Hashtbl.add txn.entries dn ((copy_entry entry), (entry :> ldapentry_t))
 	end else
 	  raise
@@ -615,12 +615,12 @@ object (self)
 		  "this transaction",
 		{ext_matched_dn="";ext_referral=None}))
 
-  method disassociate_entry_from_txn txn entry = 
+  method disassociate_entry_from_txn txn (entry: ldapentry_t) = 
     self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then begin
 	Hashtbl.remove txn.entries dn;
-	lock_table#unlock dn;
+	lock_table#unlock (Ldap_dn.of_string dn);
       end else
 	raise
 	  (LDAP_Failure
@@ -633,7 +633,7 @@ object (self)
     txn.dead <- true;
     try
       List.iter
-	(fun (_, e) -> lock_table#unlock e#dn)
+	(fun (_, e) -> lock_table#unlock (Ldap_dn.of_string e#dn))
 	(Hashtbl.fold
 	   (fun k (original_entry, modified_entry) successful_so_far ->
 	      try 
@@ -641,8 +641,8 @@ object (self)
 		(original_entry, modified_entry) :: successful_so_far
 	      with exn ->
 		raise (Rollback (exn, successful_so_far)))
-	   []
-	   txn.entries)
+	   txn.entries
+	   [])
     with Rollback (exn, successful_so_far) ->
       (match
 	 List.fold_left
@@ -656,10 +656,14 @@ object (self)
 	   successful_so_far
        with
 	   [] -> 
-	     Hashtbl.iter (fun k (e, _) -> lock_table#unlock e#dn) txn.entries;
+	     Hashtbl.iter 
+	       (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+	       txn.entries;
 	     raise (Txn_commit_failure ("rollback successful", exn, None))
 	 | not_rolled_back ->
-	     Hashtbl.iter (fun k (e, _) -> lock_table#unlock e#dn) txn.entries;
+	     Hashtbl.iter 
+	       (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+	       txn.entries;
 	     raise 
 	       (Txn_commit_failure 
 		  ("rollback failed", exn, 
@@ -668,14 +672,13 @@ object (self)
   method rollback_txn txn =
     txn.dead <- true;
     Hashtbl.iter
-      (fun k (original_entry, modified_entry) not_rolled_back ->
+      (fun k (original_entry, modified_entry) ->
 	 try
-	   lock_table#unlock original_entry#dn;
+	   lock_table#unlock (Ldap_dn.of_string original_entry#dn);
 	   modified_entry#modify (original_entry#diff modified_entry);
 	   modified_entry#flush_changes
 	 with exn -> raise (Txn_rollback_failure ("rollback failed", exn)))
-      txn.entries
-	  
+      txn.entries	  
 end
 
 (********************************************************************************)

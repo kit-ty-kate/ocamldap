@@ -301,6 +301,3 @@ type ldap_grouping_type = [ `LDAP_GROUP_TXN ]
 (** a cookie that is sent with every ldap operation which is part of a
     group *)
 type ldap_grouping_cookie
-
-(** the type of an ldap transaction identifier *)
-type ldap_txn_id

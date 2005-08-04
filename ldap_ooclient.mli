@@ -185,6 +185,62 @@ class ldapcon :
     method update_entry : ldapentry -> unit
   end
 
+type txn
+exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
+exception Txn_commit_failure of string * exn * ldapentry_t list option
+exception Txn_rollback_failure of string * exn
+
+(** A subclass of ldapcon which implements (on the client side) an
+    interface to draft_zeilenga_ldap_txn. A draft standard for multi
+    object transactions over the ldap protocol. This class can only
+    implement advisory transactions, because it is not the database,
+    therefore it must depend on advisory locking mechanisms (like
+    flock) for the transactions to be consistant. You use this class
+    by calling begin_txn to get a transaction id, and then associating
+    a set of ldapentry objects with the transaction by calling
+    associate_entry_with_txn. You are then free to modify those
+    entries in any way you like, and when you are done, you can either
+    call commit_txn, or rollback_txn. Commit will commit the changes
+    of all the entries associated with the transaction to the
+    database. For other writers which obey advisory locking the commit
+    operation is atomic. For readers the commit operation is not
+    atomic.  Rollback undoes all the changes you've made in memory,
+    and unlocks all the objects in the transaction. After a
+    transaction object has been commited or rolled back it is
+    considered "dead", and cannot be used again. *)
+class ldaptxncon :
+  ?connect_timeout:int ->
+  ?referral_policy:[> `RETURN ] ->
+  ?version:int ->
+  string list -> string -> string -> string -> (* hosts binddn bindpw mutextbldn *)
+  object
+    method add : ldapentry -> unit
+    method bind :
+      ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
+    method delete : string -> unit
+    method modify :
+      string ->
+      (Ldap_types.modify_optype * string * string list) list -> unit
+    method modrdn : string -> ?deleteoldrdn:bool -> string -> unit
+    method rawschema : ldapentry
+    method schema : Ldap_schemaparser.schema
+    method search :
+      ?scope:Ldap_types.search_scope ->
+      ?attrs:string list ->
+      ?attrsonly:bool -> ?base:string -> string -> ldapentry list
+    method search_a :
+      ?scope:Ldap_types.search_scope ->
+      ?attrs:string list ->
+      ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
+    method unbind : unit
+    method update_entry : ldapentry -> unit
+    method begin_txn : txn
+    method associate_entry_with_txn : txn -> ldapentry_t -> unit
+    method disassociate_entry_from_txn : txn -> ldapentry_t -> unit
+    method commit_txn : txn -> unit
+    method rollback_txn : txn -> unit
+  end
+
 module OrdOid :
 sig
   type t = Ldap_schemaparser.Oid.t
@@ -282,7 +338,7 @@ class scldapentry :
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
     method of_entry : ?scflavor:scflavor -> ldapentry -> unit
-    method print : unit
+    method print : unit 
     method replace : op_lst -> unit
     method set_changetype : changetype -> unit
     method set_dn : string -> unit
