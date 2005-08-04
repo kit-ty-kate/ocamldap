@@ -557,12 +557,12 @@ object (self)
 end;;
 
 type txn = {
-  dead: bool;
+  mutable dead: bool;
   entries: (string, (ldapentry_t * ldapentry_t)) Hashtbl.t
 }
 exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
 exception Txn_commit_failure of string * exn * ldapentry_t list option
-exception Txn_rollback_failure of string * exn * ldapentry_t list option
+exception Txn_rollback_failure of string * exn
 class ldaptxcon 
   ?(connect_timeout=1) 
   ?(referral_policy=`RETURN) 
@@ -630,6 +630,7 @@ object (self)
 
   method commit_txn txn = 
     self#check_dead txn;
+    txn.dead <- true;
     try
       List.iter
 	(fun (_, e) -> lock_table#unlock e#dn)
@@ -650,16 +651,30 @@ object (self)
 		modified_entry#modify (original_entry#diff modified_entry);
 		super#update_entry modified_entry;
 		not_rolled_back
-	      with -> modified_entry :: not_rolled_back)
+	      with _ -> modified_entry :: not_rolled_back)
 	   []
 	   successful_so_far
        with
-	   [] -> raise (Txn_commit_failure ("rollback successful", exn, None))
-	 | failed_to_rollback -> 
+	   [] -> 
+	     Hashtbl.iter (fun k (e, _) -> lock_table#unlock e#dn) txn.entries;
+	     raise (Txn_commit_failure ("rollback successful", exn, None))
+	 | not_rolled_back ->
+	     Hashtbl.iter (fun k (e, _) -> lock_table#unlock e#dn) txn.entries;
 	     raise 
 	       (Txn_commit_failure 
 		  ("rollback failed", exn, 
-		   Some failed_to_rollback)))
+		   Some not_rolled_back)))
+
+  method rollback_txn txn =
+    txn.dead <- true;
+    Hashtbl.iter
+      (fun k (original_entry, modified_entry) not_rolled_back ->
+	 try
+	   lock_table#unlock original_entry#dn;
+	   modified_entry#modify (original_entry#diff modified_entry);
+	   modified_entry#flush_changes
+	 with exn -> raise (Txn_rollback_failure ("rollback failed", exn)))
+      txn.entries
 	  
 end
 
