@@ -23,7 +23,6 @@
 open Ldap_types
 open Ldap_funclient
 open Ldap_schemaparser
-open Ldap_mutex
 open String
 
 (* types used throughout the library *)
@@ -556,6 +555,7 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#rawschema
 end;;
 
+(* ldap mutexes *)
 exception Ldap_mutex of string * exn
 
 class type mutex_t =
@@ -574,6 +574,9 @@ let addmutex ldap mutexdn =
   let mt = new ldapentry in
   let mtrdn = List.hd (Ldap_dn.of_string mutexdn) in
     mt#set_dn mutexdn;
+
+
+
     mt#add [("objectclass", ["top";"mutex"]);
 	    (mtrdn.attr_type, mtrdn.attr_vals)];
     try ldap#add mt
@@ -597,12 +600,13 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
 	while true
 	do
 	  try 
-	    ldap#modify 
-	      (List.hd obj)#dn lockval;
+	    ldap#modify (List.hd obj)#dn lockval;
 	    failwith "locked"
 	  with (* the mutex is locked already *)
 	      LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
-	    | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) -> ()
+	    | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) ->
+		(* this is so evil *)
+		ignore (Unix.select [] [] [] 0.25) (* wait 1/4 of a second *)
 	done
       else failwith "huge error, multiple objects with the same dn"
   with
@@ -664,7 +668,7 @@ type txn = {
 exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
 exception Txn_commit_failure of string * exn * ldapentry_t list option
 exception Txn_rollback_failure of string * exn
-class ldaptxncon 
+class ldapadvisorytxcon 
   ?(connect_timeout=1) 
   ?(referral_policy=`RETURN) 
   ?(version = 3) 
@@ -689,12 +693,12 @@ object (self)
       raise
 	(LDAP_Failure 
 	   (`LOCAL_ERROR, 
-	    "this transaction has been comitted",
+	    "this transaction is dead, create a new one",
 	    {ext_matched_dn="";ext_referral=None}))
 
   method begin_txn = {dead=false;entries=Hashtbl.create 1}
 	
-  method associate_entry_with_txn txn (entry: ldapentry_t) = 
+  method associate_entry txn (entry: ldapentry_t) = 
     self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then
@@ -716,7 +720,10 @@ object (self)
 		  "this transaction",
 		{ext_matched_dn="";ext_referral=None}))
 
-  method disassociate_entry_from_txn txn (entry: ldapentry_t) = 
+  method associate_entries txn entries = 
+    List.iter (self#associate_entry txn) entries
+
+  method disassociate_entry txn (entry: ldapentry_t) = 
     self#check_dead txn;
     let dn = Ldap_dn.canonical_dn entry#dn in
       if Hashtbl.mem txn.entries dn then begin
@@ -728,6 +735,9 @@ object (self)
 	     (`LOCAL_ERROR, 
 	      "dn: " ^ dn ^ " is not part of this transaction",
 	      {ext_matched_dn="";ext_referral=None}))
+
+  method disassociate_entries txn entries = 
+    List.iter (self#disassociate_entry txn) entries
 
   method commit_txn txn = 
     self#check_dead txn;
@@ -745,26 +755,32 @@ object (self)
 	   txn.entries
 	   [])
     with Rollback (exn, successful_so_far) ->
+      (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
       (match
-	 List.fold_left
-	   (fun not_rolled_back (original_entry, modified_entry) ->
-	      try
-		modified_entry#modify (original_entry#diff modified_entry);
-		super#update_entry modified_entry;
-		not_rolled_back
-	      with _ -> modified_entry :: not_rolled_back)
-	   []
-	   successful_so_far
+	 ((Hashtbl.iter (* rollback everything in memory *)
+	     (fun k (original_entry, modified_entry) ->
+		modified_entry#modify (original_entry#diff modified_entry))
+	     txn.entries);
+	  (List.fold_left (* rollback in the directory only what we commited *)
+	     (fun not_rolled_back (original_entry, modified_entry) ->
+		try
+		  super#update_entry modified_entry;
+		  not_rolled_back
+		with _ -> modified_entry :: not_rolled_back)
+	     []
+	     successful_so_far))
        with
 	   [] -> 
 	     Hashtbl.iter 
 	       (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
 	       txn.entries;
+	     (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
 	     raise (Txn_commit_failure ("rollback successful", exn, None))
 	 | not_rolled_back ->
 	     Hashtbl.iter 
 	       (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
-	       txn.entries;
+	       txn.entries;	     
+	     (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
 	     raise 
 	       (Txn_commit_failure 
 		  ("rollback failed", exn, 
