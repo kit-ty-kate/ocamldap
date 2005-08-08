@@ -451,9 +451,9 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#modify dn mods
 
-  method modrdn dn ?(deleteoldrdn = true) newrdn =
+  method modrdn dn ?(deleteoldrdn = true) ?(newsup=None) newrdn =
     if not (reconnect_successful && bound) then self#reconnect;
-    try modrdn_s con ~dn:dn ~newdn:newrdn ~deleteoldrdn:deleteoldrdn
+    try modrdn_s con ~dn ~newdn ~deleteoldrdn ~newsup
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#modrdn dn ~deleteoldrdn:deleteoldrdn newrdn
 
@@ -748,7 +748,22 @@ object (self)
 	(Hashtbl.fold
 	   (fun k (original_entry, modified_entry) successful_so_far ->
 	      try 
-		super#update_entry modified_entry;
+		(match modified_entry#changetype with
+		     `MODIFY -> super#update_entry modified_entry
+		   | `ADD -> super#add modified_entry
+		   | `DELETE -> super#delete modified_entry#dn
+		   | `MODRDN ->
+		       super#modrdn 
+			 original_entry#dn 
+			 ~newrdn:(Ldap_dn.to_string 
+				    (List.hd 
+				       (Ldap_dn.of_string modified_entry#dn)))
+		   | `MODDN ->
+		       let dn = Ldap_dn.of_string modified_entry#dn in
+			 super#modrdn
+			   original_entry#dn
+			   ~newrdn:(Ldap_dn.to_string (List.hd dn))
+			   ~newsup:(Ldap_dn.to_string (List.tl dn)));
 		(original_entry, modified_entry) :: successful_so_far
 	      with exn ->
 		raise (Rollback (exn, successful_so_far)))
@@ -759,7 +774,12 @@ object (self)
       (match
 	 ((Hashtbl.iter (* rollback everything in memory *)
 	     (fun k (original_entry, modified_entry) ->
-		modified_entry#modify (original_entry#diff modified_entry))
+		match modified_entry#changetype with
+		    `MODIFY -> modified_entry#modify (original_entry#diff modified_entry)
+		  | `ADD -> ()
+		  | `DELETE -> ()
+		  | `MODRDN -> modified_entry#set_dn original_entry#dn
+		  | `MODDN -> modified_entry#set_dn original_entry#dn)
 	     txn.entries);
 	  (List.fold_left (* rollback in the directory only what we commited *)
 	     (fun not_rolled_back (original_entry, modified_entry) ->

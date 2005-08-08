@@ -170,7 +170,7 @@ class ldapcon :
     method modify :
       string ->
       (Ldap_types.modify_optype * string * string list) list -> unit
-    method modrdn : string -> ?deleteoldrdn:bool -> string -> unit
+    method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
     method rawschema : ldapentry
     method schema : Ldap_schemaparser.schema
     method search :
@@ -252,7 +252,7 @@ exception Txn_rollback_failure of string * exn
     and unlocks all the objects in the transaction. After a
     transaction object has been commited or rolled back it is
     considered "dead", and cannot be used again. *)
-class ldaptxncon :
+class ldapadvisorytxcon :
   ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->
   ?version:int ->
@@ -279,8 +279,10 @@ class ldaptxncon :
     method unbind : unit
     method update_entry : ldapentry -> unit
     method begin_txn : txn
-    method associate_entry_with_txn : txn -> ldapentry_t -> unit
-    method disassociate_entry_from_txn : txn -> ldapentry_t -> unit
+    method associate_entry : txn -> ldapentry_t -> unit
+    method associate_entries : txn -> ldapentry_t list -> unit
+    method disassociate_entry : txn -> ldapentry_t -> unit
+    method disassociate_entries : txn -> ldapentry_t list -> unit
     method commit_txn : txn -> unit
     method rollback_txn : txn -> unit
   end
