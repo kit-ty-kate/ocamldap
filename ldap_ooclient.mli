@@ -170,7 +170,8 @@ class ldapcon :
     method modify :
       string ->
       (Ldap_types.modify_optype * string * string list) list -> unit
-    method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
+    method modrdn : string -> ?deleteoldrdn:bool -> 
+      ?newrdn:string -> ?newsup:string option -> string -> unit
     method rawschema : ldapentry
     method schema : Ldap_schemaparser.schema
     method search :
