@@ -193,12 +193,16 @@ class ldapcon :
     what failed. *)
 exception Ldap_mutex of string * exn
 
+(** the class type of a single mutex, used for performing
+    advisory locking of some action *)
 class type mutex_t =
 object
   method lock: unit
   method unlock: unit
 end
 
+(** the class type of an object lock table which allows for advisory
+    locking of objects by dn *)
 class type object_lock_table_t =
 object
   method lock: Ldap_types.dn -> unit
@@ -213,6 +217,14 @@ object
   (** unlock the mutex *)
   method unlock: unit
 end
+
+(** used to apply some function, first locking the mutex, unlocking it
+    only after the function has been applied. If the function
+    generates any exception, this wrapper catches that exception, and
+    unlocks the mutex before reraising the exception. Generally
+    garentees that the mutex will always be used consistantly when
+    performing an action. *)
+val apply_with_mutex: mutex -> (unit -> 'a) -> 'a
 
 (** new object_lock_table ldapurls binddn bindpw mutexdn *)
 class object_lock_table: string list -> string -> string -> string ->
@@ -234,24 +246,29 @@ exception Txn_commit_failure of string * exn * ldapentry_t list option
 (** raised when an explicit rollback fails *)
 exception Txn_rollback_failure of string * exn
 
-(** A subclass of ldapcon which implements an interface to
-    draft_zeilenga_ldap_txn. A draft standard for multi object
+(** A subclass of ldapcon which implements an experimental interface
+    to draft_zeilenga_ldap_txn. A draft standard for multi object
     transactions over the ldap protocol. This class can only implement
-    advisory transactions, because it is not the database, therefore
-    it must depend on the advisory locking mechanisms provided by the
-    database for the transactions to be consistant. You use this class
-    by calling begin_txn to get a transaction id, and then associating
-    a set of ldapentry objects with the transaction by calling
-    associate_entry_with_txn. You are then free to modify those
-    entries in any way you like, and when you are done, you can either
-    call commit_txn, or rollback_txn. Commit will commit the changes
-    of all the entries associated with the transaction to the
+    advisory transactions because it must depend on the advisory
+    locking mechanisms for the transactions to be consistant. You use
+    this class by calling begin_txn to get a transaction id, and then
+    associating a set of ldapentry objects with the transaction by
+    calling associate_entry_with_txn. You are then free to modify
+    those entries in any way you like, and when you are done, you can
+    either call commit_txn, or rollback_txn. Commit will commit the
+    changes of all the entries associated with the transaction to the
     database. For other writers which obey advisory locking the commit
-    operation is atomic. For readers the commit operation is not
-    atomic.  Rollback undoes all the changes you've made in memory,
-    and unlocks all the objects in the transaction. After a
-    transaction object has been commited or rolled back it is
-    considered "dead", and cannot be used again. *)
+    operation is atomic. For readers which are willing to obey
+    advisory locking is atomic. If the commit fails, a full rollback
+    occurrs, including all changes made to the directory. For example
+    in a set of N entries in a transaction, if the modificiation of
+    the nth entry fails to commit, then the modifications to all the
+    previous entries, which have already been made in the directory,
+    are undone. It is important to note that if advisory locking is
+    not obeyed, rollback may not be successful. Rollback undoes all
+    the changes you've made in memory, and unlocks all the objects in
+    the transaction. After a transaction object has been commited or
+    rolled back it is considered "dead", and cannot be used again. *)
 class ldapadvisorytxcon :
   ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->

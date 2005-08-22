@@ -12,7 +12,7 @@ ldif_changerec_parser.mly ldif_changerec_lexer.mll			\
 ldif_changerec_oo.mli ldif_changerec_oo.ml ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
-OCAMLFLAGS=-rectypes
+#OCAMLFLAGS=-rectypes
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.o *.cmx ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code

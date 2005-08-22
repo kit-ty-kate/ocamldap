@@ -650,6 +650,14 @@ object (self)
   method unlock = unlock ldap mutexdn [(`DELETE, "mutexlocked", [])]
 end
 
+let apply_with_mutex mutex f = 
+  mutex#lock;
+  try
+    let result = f () in
+      mutex#unlock;
+      result
+  with exn -> (try mutex#unlock with _ -> ());raise exn
+
 class object_lock_table ldapurls binddn bindpw mutextbldn =
 object (self)
   val ldap = 
