@@ -126,17 +126,16 @@ let format_entries lst =
 	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
 	     Format.print_cut ();
 	     i := !i + 1
-	   end
-	   else Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
+	   end else 
+	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
 	lst
     else
       List.iter
 	(fun e -> 
-	   if 0 < length - 1 then begin
+	   if !i < length - 1 then begin
 	     format_entry e;
 	     Format.print_break 1 0
-	   end
-	   else
+	   end else
 	     format_entry e)
 	lst;
     Format.print_string "]";
