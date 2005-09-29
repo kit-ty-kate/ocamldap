@@ -119,7 +119,7 @@ let format_entries lst =
   let i = ref 0 in
     Format.open_box 0;
     Format.print_string "[";
-    if length > 5 then
+    if length > 3 then
       List.iter
 	(fun e ->
 	   if !i < length - 1 then begin
@@ -130,14 +130,18 @@ let format_entries lst =
 	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
 	lst
     else
-      List.iter
-	(fun e -> 
-	   if !i < length - 1 then begin
-	     format_entry e;
-	     Format.print_break 1 0
-	   end else
-	     format_entry e)
-	lst;
+      (try
+	 List.iter
+	   (fun e -> 
+	      if !i >= 50 then failwith "limit";
+	      if !i < length - 1 then begin
+		format_entry e;
+		Format.print_break 1 0;
+		i := !i + 1
+	      end else
+		format_entry e)
+	   lst
+       with Failure "limit" -> ());
     Format.print_string "]";
     Format.close_box ()
 

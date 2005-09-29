@@ -10,6 +10,9 @@
 	* Applied a patch which makes the toplevel printers to pass all 
 	data through String.escaped, and which adds a close bracket which 
 	was missing in some cases.Thanks to Victor Seletsky for this patch.
+	* Changed the toplevel printer to print a max of 50 entries, to
+	avoid overwhelming emacs. At some point I want to make this
+	configurable.
 	* Added a function to return the canonical dn to Ldap_dn.
 	* Improved (drastically) the ldap_strerror, and ldap_perror functions,
 	they now print out something which looks exactly like the string 
