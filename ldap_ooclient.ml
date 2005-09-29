@@ -120,28 +120,28 @@ let format_entries lst =
     Format.open_box 0;
     Format.print_string "[";
     if length > 3 then
-      List.iter
-	(fun e ->
-	   if !i < length - 1 then begin
-	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
-	     Format.print_cut ();
-	     i := !i + 1
-	   end else 
-	     Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
-	lst
+      try
+	List.iter
+	  (fun e ->
+	     if !i > 49 then failwith "limit"
+	     else if !i < length - 1 then begin
+	       Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
+	       Format.print_cut ();
+	       i := !i + 1
+	     end else 
+	       Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
+	  lst
+      with Failure "limit" -> Format.print_string "..."
     else
-      (try
-	 List.iter
-	   (fun e -> 
-	      if !i >= 50 then failwith "limit";
-	      if !i < length - 1 then begin
-		format_entry e;
-		Format.print_break 1 0;
-		i := !i + 1
-	      end else
-		format_entry e)
-	   lst
-       with Failure "limit" -> ());
+      List.iter
+	(fun e -> 
+	   if !i < length - 1 then begin
+	     format_entry e;
+	     Format.print_break 1 0;
+	     i := !i + 1
+	   end else
+	     format_entry e)
+	lst;
     Format.print_string "]";
     Format.close_box ()
 
