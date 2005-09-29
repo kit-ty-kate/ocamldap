@@ -11,6 +11,10 @@
 	data through String.escaped, and which adds a close bracket which 
 	was missing in some cases.Thanks to Victor Seletsky for this patch.
 	* Added a function to return the canonical dn to Ldap_dn.
+	* Improved (drastically) the ldap_strerror, and ldap_perror functions,
+	they now print out something which looks exactly like the string 
+	representation of an LDAP_Failure exception in the toplevel. Avid users
+	of the toplevel will hopefully appreciate this as much as I do.
 2.1.4
 	* Changed the type of the result of the low level ldif parser
 	(Ldif_parser) to produce search_result_entry instead of its own

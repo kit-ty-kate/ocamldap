@@ -2,64 +2,59 @@ open Ldap_types
 
 let err2string code = 
   match code with
-      `SUCCESS -> "success"
-    | `OPERATIONS_ERROR -> "operations error"
-    | `PROTOCOL_ERROR -> "protocol error"
-    | `TIMELIMIT_EXCEEDED -> "time limit exceeded"
-    | `SIZELIMIT_EXCEEDED -> "size limit exceeded"
-    | `COMPARE_FALSE -> "compare false"
-    | `COMPARE_TRUE -> "compare true"
-    | `AUTH_METHOD_NOT_SUPPORTED -> "auth method not supported"
-    | `STRONG_AUTH_REQUIRED -> "strong auth required"
-    | `REFERRAL -> "referral"
-    | `ADMINLIMIT_EXCEEDED -> "admin limit exceeded"
-    | `UNAVAILABLE_CRITICAL_EXTENSION -> "unavilable critical extension"
-    | `CONFIDENTIALITY_REQUIRED -> "confidentiality required"
-    | `SASL_BIND_IN_PROGRESS -> "sasl bind in progress"
-    | `NO_SUCH_ATTRIBUTE -> "no such attribute"
-    | `UNDEFINED_TYPE -> "undefined type"
-    | `INAPPROPRIATE_MATCHING -> "inappropriate matching"
-    | `CONSTRAINT_VIOLATION -> "constraint violation"
-    | `TYPE_OR_VALUE_EXISTS -> "type or value exists"
-    | `INVALID_SYNTAX -> "invalid syntax"
-    | `NO_SUCH_OBJECT -> "no such object"
-    | `ALIAS_PROBLEM -> "alias problem"
-    | `INVALID_DN_SYNTAX -> "invalid dn syntax"
-    | `ALIAS_DEREF_PROBLEM -> "alias deref problem"
-    | `INAPPROPRIATE_AUTH -> "inappropriate auth"
-    | `INVALID_CREDENTIALS -> "invalid credentials"
-    | `INSUFFICIENT_ACCESS -> "insufficient access"
-    | `BUSY -> "busy"
-    | `UNAVAILABLE -> "unavailable"
-    | `UNWILLING_TO_PERFORM -> "unwilling to perform"
-    | `LOOP_DETECT -> "loop detected"
-    | `NAMING_VIOLATION -> "naming violation"
-    | `OBJECT_CLASS_VIOLATION -> "object class violation"
-    | `NOT_ALLOWED_ON_NONLEAF -> "not allowed on non leaf"
-    | `NOT_ALLOWED_ON_RDN -> "not allowed on rdn"
-    | `ALREADY_EXISTS -> "already exists"
-    | `NO_OBJECT_CLASS_MODS -> "no objectclass mods"
-    | `LOCAL_ERROR -> "local error"
-    | `SERVER_DOWN -> "server down"
-    | `OTHER -> "other"
+      `SUCCESS -> "`SUCCESS"
+    | `OPERATIONS_ERROR -> "`OPERATIONS_ERROR"
+    | `PROTOCOL_ERROR -> "`PROTOCOL_ERROR"
+    | `TIMELIMIT_EXCEEDED -> "`TIMELIMIT_EXCEEDED"
+    | `SIZELIMIT_EXCEEDED -> "`SIZELIMIT_EXCEEDED"
+    | `COMPARE_FALSE -> "`COMPARE_FALSE"
+    | `COMPARE_TRUE -> "`COMPARE_TRUE"
+    | `AUTH_METHOD_NOT_SUPPORTED -> "`AUTH_METHOD_NOT_SUPPORTED"
+    | `STRONG_AUTH_REQUIRED -> "`STRONG_AUTH_REQUIRED"
+    | `REFERRAL -> "`REFERRAL"
+    | `ADMINLIMIT_EXCEEDED -> "`ADMINLIMIT_EXCEEDED"
+    | `UNAVAILABLE_CRITICAL_EXTENSION -> "`UNAVAILABLE_CRITICAL_EXTENSION"
+    | `CONFIDENTIALITY_REQUIRED -> "`CONFIDENTIALITY_REQUIRED"
+    | `SASL_BIND_IN_PROGRESS -> "`SASL_BIND_IN_PROGRESS"
+    | `NO_SUCH_ATTRIBUTE -> "`NO_SUCH_ATTRIBUTE"
+    | `UNDEFINED_TYPE -> "`UNDEFINED_TYPE"
+    | `INAPPROPRIATE_MATCHING -> "`INAPPROPRIATE_MATCHING"
+    | `CONSTRAINT_VIOLATION -> "`CONSTRAINT_VIOLATION"
+    | `TYPE_OR_VALUE_EXISTS -> "`TYPE_OR_VALUE_EXISTS"
+    | `INVALID_SYNTAX -> "`INVALID_SYNTAX"
+    | `NO_SUCH_OBJECT -> "`NO_SUCH_OBJECT"
+    | `ALIAS_PROBLEM -> "`ALIAS_PROBLEM"
+    | `INVALID_DN_SYNTAX -> "`INVALID_DN_SYNTAX"
+    | `ALIAS_DEREF_PROBLEM -> "`ALIAS_DEREF_PROBLEM"
+    | `INAPPROPRIATE_AUTH -> "`INAPPROPRIATE_AUTH"
+    | `INVALID_CREDENTIALS -> "`INVALID_CREDENTIALS"
+    | `INSUFFICIENT_ACCESS -> "`INSUFFICIENT_ACCESS"
+    | `BUSY -> "`BUSY"
+    | `UNAVAILABLE -> "`UNAVAILABLE"
+    | `UNWILLING_TO_PERFORM -> "`UNWILLING_TO_PERFORM"
+    | `LOOP_DETECT -> "`LOOP_DETECT"
+    | `NAMING_VIOLATION -> "`NAMING_VIOLATION"
+    | `OBJECT_CLASS_VIOLATION -> "`OBJECT_CLASS_VIOLATION"
+    | `NOT_ALLOWED_ON_NONLEAF -> "`NOT_ALLOWED_ON_NONLEAF"
+    | `NOT_ALLOWED_ON_RDN -> "`NOT_ALLOWED_ON_RDN"
+    | `ALREADY_EXISTS -> "`ALREADY_EXISTS"
+    | `NO_OBJECT_CLASS_MODS -> "`NO_OBJECT_CLASS_MODS"
+    | `LOCAL_ERROR -> "`LOCAL_ERROR"
+    | `SERVER_DOWN -> "`SERVER_DOWN"
+    | `OTHER -> "`OTHER"
     | _ -> raise (LDAP_Decoder "invalid error code")
 
-let ldap_strerror error ldaperror = 
+let ldap_strerror msg ldaperror = 
   match ldaperror with
       LDAP_Failure (code, error, {ext_matched_dn=mdn;ext_referral=refs}) ->
-	("ldap error. code: " ^ (err2string code) ^ 
-	   ", error: " ^ error ^ 
-	   ", matched dn: " ^ mdn ^ 
-	   (match refs with
-		Some lst ->
-		  List.fold_left
-		    (fun s item -> 
-		       if s = "" then
-			 item
-		       else
-			 s ^ ", " ^ item)
-		    "" lst
-	      | None -> "") ^ ": " ^ error)
+	"LDAP_Failure (" ^
+	(String.concat ", "
+	   [(err2string code); 
+	    msg ^ ": " ^ error;
+	    "{ext_matched_dn = " ^ "\"" ^ mdn ^ "\"; ext_referral = [" ^
+	      (match refs with
+		   Some lst -> (String.concat "; " lst) ^ "]"
+		 | None -> "]") ^ "})"])
     | _ -> failwith "not an ldap error"
 
 let ldap_perror error ldaperror = 
