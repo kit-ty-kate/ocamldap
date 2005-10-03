@@ -161,31 +161,74 @@ val of_entry : ldapentry -> search_result_entry
     an instance will be connected to the server you specify and can be
     used to perform operations on that server. [new ldapcon
     ~connect_timeout:5 ~version:3
-    ["ldap://first.ldap.server";"ldap://second.ldap.server"]] In
-    addition to specifying multiple urls if DNS names are given, and
-    those names are bound to multiple addresses, then all possible
-    addresses will be tried. eg. [new ldapcon
-    ["ldaps://rrldap.csun.edu"]] is equivelant to [new ldapcon
+    ["ldap://first.ldap.server";"ldap://second.ldap.server"]]. 3 is
+    the default protcol version. In addition to specifying multiple
+    urls if DNS names are given, and those names are bound to multiple
+    addresses, then all possible addresses will be tried. eg. [new
+    ldapcon ["ldaps://rrldap.csun.edu"]] is equivelant to [new ldapcon
     ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
     This means that if any host in the rr fails, the ldapcon will
     transparently move on to the next host, and you will never know
-    the difference. *)
+    the difference. @param connect_timeout an integer which specifies
+    how long to wait for any given server in the list to respond
+    before trying the next one. After all the servers have been tried
+    for [connect_timeout] seconds [LDAP_Failure (`SERVER_DOWN, ...)]
+    will be raised. @param referral_policy In a future version of
+    ocamldap this will be used to specify what you would like to do in
+    the event of a referral. Currently it does nothing and is ignored
+    see {!Ldap_ooclient.referral_policy}. @param version The protocol
+    version to use, the default is 3, the other recognized value is
+    2. *)
 class ldapcon :
   ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->
   ?version:int ->
   string list ->
 object
+  (** add an entry to the database *)
   method add : ldapentry -> unit
+
+  (** bind to the database [#bind ~cred:"password" dn] using dn. To
+      bind anonymously, omit ~cred, and leave dn blank eg. [#bind
+      ""]. @param cred The credentials to provide for binding. @param
+      meth The method to use when binding See
+      {!Ldap_funclient.authmethod} the default is `SIMPLE. If `SASL is
+      used then the [dn] becomes the username, and [~cred] may or may
+      not be required. SASL binds have not been tested extensively. *)
   method bind :
     ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
+
+  (** Delete the object named by dn from the database [#delete dn] *)
   method delete : string -> unit
+
+  (** Modify the entry named by dn, applying mods eg. [#modify dn
+      [(`DELETE, "cn", ["foo";"bar"])]] *)
   method modify :
     string ->
     (Ldap_types.modify_optype * string * string list) list -> unit
+
+  (** Modify the rdn of the object named by dn, if the protocol
+      version is 3 you may additionally change the superior [#modrdn
+      ~deleteoldrdn:true ~newsup:(Some "o=csun") dn newrdn], the rdn
+      will be changed to the attribute represented (as a string) by
+      newrdn, (simple example ["cn=foo"], more complex example
+      ["uid=foo+bar+baz"]). @param deleteoldrdn Default true, delete
+      the old rdn value as part of the modrdn. @param newsup Default
+      None, only valid when the protocol version is 3, change the
+      object's location in the tree, making its superior equal to the
+      specified object. *)
   method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
+
+  (** Fetch the raw (unparsed) schema from the directory using the
+      standard mechanism (requires protocol version 3) *)
   method rawschema : ldapentry
+
+  (** Fetch and parse the schema from the directory via the standard
+      mechanism (requires version 3). Return a structured
+      representation of the schema indexed by canonical name, and oid. *)
   method schema : Ldap_schemaparser.schema
+
+  (** Search the directory for an entry. *)
   method search :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
