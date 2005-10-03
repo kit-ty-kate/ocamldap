@@ -475,24 +475,77 @@ class scldapentry :
 
     (** Same as {!Ldap_ooclient.ldapentry.add}, except that the schema
 	checker is run in [Pessimistic] mode after the operation is
-	complete. see {scflavor} *)
+	complete. see {!Ldap_ooclient.scflavor} *)
     method delete : op_lst -> unit
+
+    (** Same as {!Ldap_ooclient.ldapentry.dn} *)
     method dn : string
+
+    (** Same as {!Ldap_ooclient.ldapentry.exists} except that it
+	refrences attributes which may not yet exist. For example musts
+	which are not yet present. *)
     method exists : string -> bool
+
+    (** Same as {!Ldap_ooclient.ldapentry.flush_changes} *)
     method flush_changes : unit
+
+    (** Same as {!Ldap_ooclient.ldapentry.get_value}, except that
+	attributes which do not yet exists may be referenced. For example
+	a must which has not yet been satisfied will return [["required"]]
+	when [get_value] is called on it. *)
     method get_value : string -> string list
+
+    (** Same as {!Ldap_ooclient.ldapentry.diff} *)
     method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
+
+    (** Returns true if the attributed specified is allowed by the
+	current set of objectclasses present on the entry. *)
     method is_allowed : string -> bool
+
+    (** Returns true if the attribute specified is a must, but is not
+	currently present. *)
     method is_missing : string -> bool
+
+    (** Return a list of all attributes allowed on the entry (by oid) *)
     method list_allowed : Setstr.elt list
+
+    (** Return a list of all missing attributes (by oid) *)
     method list_missing : Setstr.elt list
+
+    (** Return a list of all present attributes. In contrast to the
+	[attributes] method, this method ignores missing required
+	attributes and just returns those attributes which are actually
+	present. *)
     method list_present : Setstr.elt list
+
+    (** Same as {!Ldap_ooclient.ldapentry.modify} except that the
+	schema checker is run in [Pessimistic] mode after the
+	modification is applied. see {!Ldap_ooclient.scflavor}. *)
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
+
+    (** Given an {!Ldap_ooclient.ldapentry} copy all of it's data into
+	the current object, and perform a schema check.
+
+	@param scflavor Default [Pessimistic] The schema checking
+	bias, see {!Ldap_ooclient.scflavor} *)
     method of_entry : ?scflavor:scflavor -> ldapentry -> unit
+
+    (** @deprecated Same as {!Ldap_ooclient.ldapentry.print}, except
+	that it prints attributes which may not yet be present on the
+	object. For example, if the object has unsatisfied musts, it will
+	print "attrname: required" for that attribute. *)
     method print : unit 
+
+    (** Same as {!Ldap_ooclient.ldapentry.replace} except that once
+	the replace has completed the schema checker is run again in
+	[Optimistic] mode. See {!Ldap_ooclient.scflavor} *)
     method replace : op_lst -> unit
+
+    (** Same as {!Ldap_ooclient.ldapentry.set_changetype} *)
     method set_changetype : changetype -> unit
+
+    (** Same as {!Ldap_ooclient.ldapentry.set_dn} *)
     method set_dn : string -> unit
   end
 
