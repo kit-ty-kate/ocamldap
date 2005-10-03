@@ -11,3 +11,7 @@
 * To uninstall the library
 
     make uninstall
+
+* To build Documentation
+
+    make htdoc
