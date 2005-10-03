@@ -1,0 +1,57 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Ldap_txooclient.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of class methods" rel=Appendix href="index_methods.html">
+<link title="Index of classes" rel=Appendix href="index_classes.html">
+<link title="Index of class types" rel=Appendix href="index_class_types.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Ldap_types" rel="Chapter" href="Ldap_types.html">
+<link title="Ldap_error" rel="Chapter" href="Ldap_error.html">
+<link title="Ldap_protocol" rel="Chapter" href="Ldap_protocol.html">
+<link title="Ldap_url" rel="Chapter" href="Ldap_url.html">
+<link title="Ldap_filter" rel="Chapter" href="Ldap_filter.html">
+<link title="Ldap_funclient" rel="Chapter" href="Ldap_funclient.html">
+<link title="Ldap_schemaparser" rel="Chapter" href="Ldap_schemaparser.html">
+<link title="Ldap_dn" rel="Chapter" href="Ldap_dn.html">
+<link title="Ldap_ooclient" rel="Chapter" href="Ldap_ooclient.html">
+<link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
+<link title="Ldap_txooclient" rel="Chapter" href="Ldap_txooclient.html">
+<link title="Ldif_oo" rel="Chapter" href="Ldif_oo.html">
+<link title="Ldap_funserver" rel="Chapter" href="Ldap_funserver.html">
+<link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html"><title>Ldap_txooclient.ldapadvisorytxcon</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a href="Ldap_txooclient.html">Up</a>
+&nbsp;</div>
+<center><h1>Class <a href="type_Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a></h1></center>
+<br>
+<pre><span class="keyword">class</span> <a name="TYPEldapadvisorytxcon"></a>ldapadvisorytxcon : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> string -> string -> string -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_txooclient.ldapadvisorytxcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>A subclass of ldapcon which implements an experimental interface
+    to draft_zeilenga_ldap_txn. A draft standard for multi object
+    transactions over the ldap protocol. This class can only implement
+    advisory transactions because it must depend on the advisory
+    locking mechanisms for the transactions to be consistant. You use
+    this class by calling begin_txn to get a transaction id, and then
+    associating a set of ldapentry objects with the transaction by
+    calling associate_entry_with_txn. You are then free to modify
+    those entries in any way you like, and when you are done, you can
+    either call commit_txn, or rollback_txn. Commit will commit the
+    changes of all the entries associated with the transaction to the
+    database. For other writers which obey advisory locking the commit
+    operation is atomic. For readers which are willing to obey
+    advisory locking is atomic. If the commit fails, a full rollback
+    occurrs, including all changes made to the directory. For example
+    in a set of N entries in a transaction, if the modificiation of
+    the nth entry fails to commit, then the modifications to all the
+    previous entries, which have already been made in the directory,
+    are undone. It is important to note that if advisory locking is
+    not obeyed, rollback may not be successful. Rollback undoes all
+    the changes you've made in memory, and unlocks all the objects in
+    the transaction. After a transaction object has been commited or
+    rolled back it is considered "dead", and cannot be used again.<br>
+<hr width="100%">
+<pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODbind"></a>bind : <code class="type">?cred:string -> ?meth:<a href="Ldap_funclient.html#TYPEauthmethod">Ldap_funclient.authmethod</a> -> string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODdelete"></a>delete : <code class="type">string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">string -> (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODmodrdn"></a>modrdn : <code class="type">string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODrawschema"></a>rawschema : <code class="type"><a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a></code></pre><pre><span class="keyword">method</span> <a name="METHODschema"></a>schema : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a></code></pre><pre><span class="keyword">method</span> <a name="METHODsearch"></a>search : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> ?base:string -> string -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> list</code></pre><pre><span class="keyword">method</span> <a name="METHODsearch_a"></a>search_a : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       ?base:string -> string -> ?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a></code></pre><pre><span class="keyword">method</span> <a name="METHODunbind"></a>unbind : <code class="type">unit</code></pre><pre><span class="keyword">method</span> <a name="METHODupdate_entry"></a>update_entry : <code class="type"><a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODbegin_txn"></a>begin_txn : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a></code></pre><pre><span class="keyword">method</span> <a name="METHODassociate_entry"></a>associate_entry : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> <a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODassociate_entries"></a>associate_entries : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> <a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a> list -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODdisassociate_entry"></a>disassociate_entry : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> <a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODdisassociate_entries"></a>disassociate_entries : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> <a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a> list -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODcommit_txn"></a>commit_txn : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODrollback_txn"></a>rollback_txn : <code class="type"><a href="Ldap_txooclient.html#TYPEtxn">txn</a> -> unit</code></pre></body></html>
