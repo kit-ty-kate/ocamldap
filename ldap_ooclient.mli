@@ -23,7 +23,7 @@
 
 open Ldap_types
 
-(** {0 Basic Data Types} *)
+(** {5 Basic Data Types} *)
 
 (** the type of an operation, eg. [("cn", ["foo";"bar"])] *)
 type op = string * string list
@@ -145,7 +145,7 @@ type changerec =
     | `Delete of string
     | `Modrdn of string * int * string]
 
-(** {1 Communication With {!Ldap_funclient}} *)
+(** {0 Communication With {!Ldap_funclient}} *)
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
@@ -158,32 +158,49 @@ val to_entry :
     ldap_funserver. *)
 val of_entry : ldapentry -> search_result_entry
 
-(** {0 Interacting with LDAP Servers} *)
+(** {5 Interacting with LDAP Servers} *)
 
 (** This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
-    used to perform operations on that server. [new ldapcon
-    ~connect_timeout:5 ~version:3
-    ["ldap://first.ldap.server";"ldap://second.ldap.server"]]. 3 is
-    the default protcol version. In addition to specifying multiple
-    urls if DNS names are given, and those names are bound to multiple
-    addresses, then all possible addresses will be tried. eg. [new
-    ldapcon ["ldaps://rrldap.csun.edu"]] is equivelant to [new ldapcon
-    ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
+    used to perform operations on that server. 
+
+    {0 Example} 
+
+    [new ldapcon ~connect_timeout:5 ~version:3
+    ["ldap://first.ldap.server";"ldap://second.ldap.server"]]. 
+
+    In addition to specifying multiple urls if DNS names are given,
+    and those names are bound to multiple addresses, then all possible
+    addresses will be tried.
+
+    {0 Example}
+
+    [new ldapcon ["ldaps://rrldap.csun.edu"]] 
+
+    is equivelant to 
+    
+    [new ldapcon ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
+
     This means that if any host in the rr fails, the ldapcon will
     transparently move on to the next host, and you will never know
-    the difference. @param connect_timeout Default [1], an integer
-    which specifies how long to wait for any given server in the list
-    to respond before trying the next one. After all the servers have
-    been tried for [connect_timeout] seconds [LDAP_Failure
-    (`SERVER_DOWN, ...)]  will be raised. @param referral_policy In a
-    future version of ocamldap this will be used to specify what you
-    would like to do in the event of a referral. Currently it does
-    nothing and is ignored see
-    {!Ldap_ooclient.referral_policy}. @param version The protocol
-    version to use, the default is [3], the other recognized value is
-    [2]. @raise Ldap_types.LDAP_Failure All methods raise LDAP_Failure
-    on error *)
+    the difference. 
+
+    @raise LDAP_Failure All methods raise {!Ldap_types.LDAP_Failure} on error
+
+    @param connect_timeout Default [1], an integer which specifies how
+    long to wait for any given server in the list to respond before
+    trying the next one. After all the servers have been tried for
+    [connect_timeout] seconds [LDAP_Failure (`SERVER_DOWN, ...)]  will
+    be raised.
+
+    @param referral_policy In a future version of ocamldap this will
+    be used to specify what you would like to do in the event of a
+    referral. Currently it does nothing and is ignored see
+    {!Ldap_ooclient.referral_policy}.
+
+    @param version The protocol version to use, the default is [3],
+    the other recognized value is [2].
+*)
 class ldapcon :
   ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->
@@ -193,13 +210,25 @@ object
   (** add an entry to the database *)
   method add : ldapentry -> unit
 
-  (** bind to the database [#bind ~cred:"password" dn] using dn. To
-      bind anonymously, omit ~cred, and leave dn blank eg. [#bind
-      ""]. @param cred The credentials to provide for binding. @param
-      meth The method to use when binding See
-      {!Ldap_funclient.authmethod} the default is [`SIMPLE]. If [`SASL] is
-      used then the [dn] becomes the username, and [~cred] may or may
-      not be required. SASL binds have not been tested extensively. *)
+  (** bind to the database using dn. 
+
+      {0 Example}
+
+      [ldap#bind ~cred:"password" "cn=foo,ou=people,ou=auth,o=bar"]
+
+      To bind anonymously, omit ~cred, and leave dn blank eg.
+
+      {0 Example}
+
+      [ldap#bind ""]
+
+      @param cred The credentials to provide for binding. Default [""]. 
+
+      @param meth The method to use when binding See
+      {!Ldap_funclient.authmethod} the default is [`SIMPLE]. If
+      [`SASL] is used then [dn] and [~cred] Are interperted according
+      to the chosen SASL mechanism. SASL binds have not been tested
+      extensively. *)
   method bind :
     ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
 
@@ -283,9 +312,9 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
-(** {0 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
+(** {5 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
 
-(** {1 Supporting Types} *)
+(** {0 Supporting Types} *)
 
 (** an ordered oid type, for placing oids in sets *)
 module OrdOid :

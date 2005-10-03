@@ -35,10 +35,10 @@
 <center><h1>Class <a href="type_Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a></h1></center>
 <br>
 <pre><span class="keyword">class</span> <a name="TYPEldapentry"></a>ldapentry : <code class="type"></code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>this object represents a remote object within local memory. It
-  records all local changes made to it (if it's changetype is set to
-  `MODIFY), and can commit them to the server at a later time. This
-  can significantly improve performance by reducing traffic to the
-  server.<br>
+    records all local changes made to it (if it's changetype is set to
+    `MODIFY), and can commit them to the server at a later time. This
+    can significantly improve performance by reducing traffic to the
+    server.<br>
 <hr width="100%">
 <pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.html#TYPEop_lst">op_lst</a> -> unit</code></pre><div class="info">
 add values to an attribute (or create a new attribute). Does
@@ -64,7 +64,9 @@ return the dn of the object<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODdiff"></a>diff : <code class="type"><a href="Ldap_ooclient.ldapentry_t.html">ldapentry_t</a> -><br>       (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list</code></pre><div class="info">
 given an ldapentry, return the differences between the current
-	entry and the specified entry<br>
+	entry and the specified entry in the form of a modify
+	operation which would make the specified entry the same as the
+	current entry.<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODexists"></a>exists : <code class="type">string -> bool</code></pre><div class="info">
 query whether the attribute type (name) exists in the object<br>
@@ -74,10 +76,12 @@ clear all accumulated changes<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODget_value"></a>get_value : <code class="type">string -> string list</code></pre><div class="info">
 get the value of an attribute<br>
+<b>Raises</b> <code>Not_found</code> If the
+	attribute does not exist.<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">(<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
 modify the object (same as modify_s), does not change the
-    database until you update<br>
+	database until you update<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODprint"></a>print : <code class="type">unit</code></pre><div class="info">
 print an ldif like representation of the object to stdout, see

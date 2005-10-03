@@ -41,7 +41,10 @@
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODadd">add</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODadd">add</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+add an entry to the database
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODadd">add</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 add values to an attribute (or create a new attribute).
@@ -73,7 +76,10 @@ return a list of the type (name) of all the attributes present
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODbind">bind</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODbind">bind</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+bind to the database using dn.
+</div>
+</td></tr>
 <tr><td align="left"><br>C</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODchanges">changes</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
@@ -110,7 +116,10 @@ return the changetype of the object
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Delete the object named by dn from the database <code class="code"><span class="keywordsign">#</span>delete dn</code>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 delete attributes from the object, does not change the
@@ -130,7 +139,9 @@ delete attributes from the object, does not change the
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODdiff">diff</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 given an ldapentry, return the differences between the current
-	entry and the specified entry
+	entry and the specified entry in the form of a modify
+	operation which would make the specified entry the same as the
+	current entry.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODdisassociate_entries">disassociate_entries</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
@@ -232,17 +243,28 @@ lock the mutex.
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Modify the entry named by dn, applying mods eg.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 modify the object (same as modify_s), does not change the
-    database until you update
+	database until you update
 </div>
 </td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODmodrdn">modrdn</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODmodrdn">modrdn</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Modify the rdn of the object named by dn, if the protocol
+      version is 3 you may additionally change the superior <code class="code"><span class="keywordsign">#</span>modrdn
+      ~deleteoldrdn:<span class="keyword">true</span> ~newsup:(<span class="constructor">Some</span> <span class="string">"o=csun"</span>) dn newrdn</code>, the rdn
+      will be changed to the attribute represented (as a string) by
+      newrdn, (simple example <code class="code"><span class="string">"cn=foo"</span></code>, more complex example
+      <code class="code"><span class="string">"uid=foo+bar+baz"</span></code>).
+</div>
+</td></tr>
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODof_entry">of_entry</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
@@ -269,7 +291,11 @@ print an ldif like representation of the object to stdout, see
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODrawschema">rawschema</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODrawschema">rawschema</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Fetch the raw (unparsed) schema from the directory using the
+      standard mechanism (requires protocol version 3)
+</div>
+</td></tr>
 <tr><td><a href="Ldif_changerec_oo.change.html#METHODread_changerec">read_changerec</a> [<a href="Ldif_changerec_oo.change.html">Ldif_changerec_oo.change</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldif_oo.ldif.html#METHODread_entry">read_entry</a> [<a href="Ldif_oo.ldif.html">Ldif_oo.ldif</a>]</td>
@@ -292,15 +318,27 @@ replace values in the object, does not change the database
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODschema">schema</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODschema">schema</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Fetch and parse the schema from the directory via the standard
+      mechanism (requires version 3).
+</div>
+</td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODsearch">search</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODsearch">search</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Search the directory syncronously for an entry which matches the
+      search criteria.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODsearch_a">search_a</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODsearch_a">search_a</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Search the directory asyncronously, otherwise the same as
+      search.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODservice_exists">service_exists</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODservices_present">services_present</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
@@ -336,7 +374,10 @@ set the dn of the object
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODunbind">unbind</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODunbind">unbind</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Close the connection to the directory
+</div>
+</td></tr>
 <tr><td><a href="Ldap_mutex.object_lock_table_t.html#METHODunlock">unlock</a> [<a href="Ldap_mutex.object_lock_table_t.html">Ldap_mutex.object_lock_table_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_mutex.mutex_t.html#METHODunlock">unlock</a> [<a href="Ldap_mutex.mutex_t.html">Ldap_mutex.mutex_t</a>]</td>
@@ -348,7 +389,11 @@ set the dn of the object
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODupdate_entry">update_entry</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODupdate_entry">update_entry</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Syncronize changes made locally to an ldapentry with the
+      directory.
+</div>
+</td></tr>
 <tr><td align="left"><br>W</td></tr>
 <tr><td><a href="Ldif_changerec_oo.change.html#METHODwrite_changerec">write_changerec</a> [<a href="Ldif_changerec_oo.change.html">Ldif_changerec_oo.change</a>]</td>
 <td></td></tr>

@@ -50,7 +50,8 @@ used to apply some function, first locking the mutex, unlocking it
 </td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALattrToOid">attrToOid</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
-given a name of an attribute, return its oid
+given a name of an attribute name (canonical or otherwise), return
+    its oid
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
@@ -227,9 +228,16 @@ given a source of ldapentry objects (unit -&gt; ldapentry), such as
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALfor_all">for_all</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALformat_entries">format_entries</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+format lists of entries, in this case only print the dn
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALformat_entry">format_entry</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+toplevel formatter for ldapentry, prints the whole entry with a
+    nice structure.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_schemaparser.html#VALformat_lcstring">format_lcstring</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_schemaparser.html#VALformat_oid">format_oid</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
@@ -243,12 +251,15 @@ A formatter for the schema, prints the structure, and expands the
 <tr><td align="left"><br>G</td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALgetAttr">getAttr</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
-get an attr structure by one of its names
+get an attr structure by one of its names (canonical or otherwise,
+    however getting it by canonical name is currently much faster)
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALgetOc">getOc</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
-get an objectclass structure by one of its names
+get an objectclass structure by one of its names (canonical or
+    otherwise, however getting it by canonical name is currently much
+    faster)
 </div>
 </td></tr>
 <tr><td><a href="Ldap_funclient.html#VALget_search_entry">get_search_entry</a> [<a href="Ldap_funclient.html">Ldap_funclient</a>]</td>
@@ -291,7 +302,7 @@ Ldif_oo.iter f ldif, iterate accross all ldif entries in the
 <tr><td><a href="Ldap_ooclient.html#VALiter">iter</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
 given a source of ldapentry objects (unit -&gt; ldapentry), such as
-    the return value of ldapcon#search_a apply f (first arg) to each entry
+    the return value of ldapcon#search_a, apply f (first arg) to each entry
     See List.iter
 </div>
 </td></tr>
@@ -346,7 +357,8 @@ change the rdn, and optionally the superior entry of dn
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALocToOid">ocToOid</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
-given a name of an objectclass, return its oid
+given a name of an objectclass (canonical or otherwise), return
+    its oid.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALof_entry">of_entry</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>

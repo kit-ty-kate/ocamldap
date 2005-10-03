@@ -36,5 +36,137 @@
 </div>
 <center><h1>Class <a href="type_Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a></h1></center>
 <br>
-<pre><span class="keyword">class</span> <a name="TYPEldapcon"></a>ldapcon : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
-<pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODbind"></a>bind : <code class="type">?cred:string -> ?meth:<a href="Ldap_funclient.html#TYPEauthmethod">Ldap_funclient.authmethod</a> -> string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODdelete"></a>delete : <code class="type">string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">string -> (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODmodrdn"></a>modrdn : <code class="type">string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit</code></pre><pre><span class="keyword">method</span> <a name="METHODrawschema"></a>rawschema : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><pre><span class="keyword">method</span> <a name="METHODschema"></a>schema : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a></code></pre><pre><span class="keyword">method</span> <a name="METHODsearch"></a>search : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> ?base:string -> string -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a> list</code></pre><pre><span class="keyword">method</span> <a name="METHODsearch_a"></a>search_a : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       ?base:string -> string -> ?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><pre><span class="keyword">method</span> <a name="METHODunbind"></a>unbind : <code class="type">unit</code></pre><pre><span class="keyword">method</span> <a name="METHODupdate_entry"></a>update_entry : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre></body></html>
+<pre><span class="keyword">class</span> <a name="TYPEldapcon"></a>ldapcon : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>This class abstracts a connection to an LDAP server (or servers),
+    an instance will be connected to the server you specify and can be
+    used to perform operations on that server. 
+<p>
+
+    <a name="0_Example"></a>
+<h0>Example</h0> 
+<p>
+
+    <code class="code"><span class="keyword">new</span> ldapcon ~connect_timeout:5 ~version:3
+    [<span class="string">"ldap://first.ldap.server"</span>;<span class="string">"ldap://second.ldap.server"</span>]</code>. 
+<p>
+
+    In addition to specifying multiple urls if DNS names are given,
+    and those names are bound to multiple addresses, then all possible
+    addresses will be tried.
+<p>
+
+    <a name="0_Example"></a>
+<h0>Example</h0>
+<p>
+
+    <code class="code"><span class="keyword">new</span> ldapcon [<span class="string">"ldaps://rrldap.csun.edu"</span>]</code> 
+<p>
+
+    is equivelant to 
+<p>
+
+    <code class="code"><span class="keyword">new</span> ldapcon [<span class="string">"ldap://130.166.1.30"</span>;<span class="string">"ldap://130.166.1.31"</span>;<span class="string">"ldap://130.166.1.32"</span>]</code>
+<p>
+
+    This means that if any host in the rr fails, the ldapcon will
+    transparently move on to the next host, and you will never know
+    the difference.<br>
+<b>Raises</b> <code>LDAP_Failure</code> All methods raise <a href="Ldap_types.html#EXCEPTIONLDAP_Failure"><code class="code"><span class="constructor">Ldap_types</span>.<span class="constructor">LDAP_Failure</span></code></a> on error<br>
+<div class="param_info"><code class="code">connect_timeout</code> : Default <code class="code">1</code>, an integer which specifies how
+    long to wait for any given server in the list to respond before
+    trying the next one. After all the servers have been tried for
+    <code class="code">connect_timeout</code> seconds <code class="code"><span class="constructor">LDAP_Failure</span> (<span class="keywordsign">`</span><span class="constructor">SERVER_DOWN</span>, ...)</code>  will
+    be raised.</div>
+<div class="param_info"><code class="code">referral_policy</code> : In a future version of ocamldap this will
+    be used to specify what you would like to do in the event of a
+    referral. Currently it does nothing and is ignored see
+    <a href="Ldap_ooclient.html#TYPEreferral_policy"><code class="code"><span class="constructor">Ldap_ooclient</span>.referral_policy</code></a>.</div>
+<div class="param_info"><code class="code">version</code> : The protocol version to use, the default is <code class="code">3</code>,
+    the other recognized value is <code class="code">2</code>.</div>
+<hr width="100%">
+<pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><div class="info">
+add an entry to the database<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODbind"></a>bind : <code class="type">?cred:string -> ?meth:<a href="Ldap_funclient.html#TYPEauthmethod">Ldap_funclient.authmethod</a> -> string -> unit</code></pre><div class="info">
+bind to the database using dn. 
+<p>
+
+      <a name="0_Example"></a>
+<h0>Example</h0>
+<p>
+
+      <code class="code">ldap<span class="keywordsign">#</span>bind ~cred:<span class="string">"password"</span> dn</code>
+<p>
+
+      To bind anonymously, omit ~cred, and leave dn blank eg.
+<p>
+
+      <a name="0_Example"></a>
+<h0>Example</h0>
+<p>
+
+      <code class="code">ldap<span class="keywordsign">#</span>bind <span class="string">""</span></code>.<br>
+</div>
+<div class="param_info"><code class="code">cred</code> : The credentials to provide for binding.</div>
+<div class="param_info"><code class="code">meth</code> : The method to use when binding See
+      <a href="Ldap_funclient.html#TYPEauthmethod"><code class="code"><span class="constructor">Ldap_funclient</span>.authmethod</code></a> the default is <code class="code"><span class="keywordsign">`</span><span class="constructor">SIMPLE</span></code>. If
+      <code class="code"><span class="keywordsign">`</span><span class="constructor">SASL</span></code> is used then the <code class="code">dn</code> becomes the username, and <code class="code">~cred</code>
+      may or may not be required. SASL binds have not been tested
+      extensively.</div>
+<pre><span class="keyword">method</span> <a name="METHODdelete"></a>delete : <code class="type">string -> unit</code></pre><div class="info">
+Delete the object named by dn from the database <code class="code"><span class="keywordsign">#</span>delete dn</code><br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">string -> (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
+Modify the entry named by dn, applying mods eg. <code class="code"><span class="keywordsign">#</span>modify dn
+      [(<span class="keywordsign">`</span><span class="constructor">DELETE</span>, <span class="string">"cn"</span>, [<span class="string">"foo"</span>;<span class="string">"bar"</span>])]</code><br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODmodrdn"></a>modrdn : <code class="type">string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit</code></pre><div class="info">
+Modify the rdn of the object named by dn, if the protocol
+      version is 3 you may additionally change the superior <code class="code"><span class="keywordsign">#</span>modrdn
+      ~deleteoldrdn:<span class="keyword">true</span> ~newsup:(<span class="constructor">Some</span> <span class="string">"o=csun"</span>) dn newrdn</code>, the rdn
+      will be changed to the attribute represented (as a string) by
+      newrdn, (simple example <code class="code"><span class="string">"cn=foo"</span></code>, more complex example
+      <code class="code"><span class="string">"uid=foo+bar+baz"</span></code>).<br>
+</div>
+<div class="param_info"><code class="code">deleteoldrdn</code> : Default <code class="code"><span class="keyword">true</span></code>, delete
+      the old rdn value as part of the modrdn.</div>
+<div class="param_info"><code class="code">newsup</code> : Default
+      <code class="code"><span class="constructor">None</span></code>, only valid when the protocol version is 3, change the
+      object's location in the tree, making its superior equal to the
+      specified object.</div>
+<pre><span class="keyword">method</span> <a name="METHODrawschema"></a>rawschema : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
+Fetch the raw (unparsed) schema from the directory using the
+      standard mechanism (requires protocol version 3)<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODschema"></a>schema : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a></code></pre><div class="info">
+Fetch and parse the schema from the directory via the standard
+      mechanism (requires version 3). Return a structured
+      representation of the schema indexed by canonical name, and oid.<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODsearch"></a>search : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> ?base:string -> string -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a> list</code></pre><div class="info">
+Search the directory syncronously for an entry which matches the
+      search criteria. <code class="code"><span class="keywordsign">#</span>search ~base ldapfilter</code>, eg. <code class="code"><span class="keywordsign">#</span>search
+      ~base:<span class="string">"dc=foo,dc=bar"</span> ~attrs:[<span class="string">"cn"</span>] <span class="string">"uid=*"</span></code><br>
+</div>
+<div class="param_info"><code class="code">scope</code> : Default <code class="code"><span class="keywordsign">`</span><span class="constructor">SUBTREE</span></code>, defines the scope of the search. see
+      <a href="Ldap_types.html#TYPEsearch_scope"><code class="code"><span class="constructor">Ldap_types</span>.search_scope</code></a></div>
+<div class="param_info"><code class="code">attrs</code> : Default <code class="code">[]</code> (means all
+      attributes)</div>
+<div class="param_info"><code class="code">attrsonly</code> : Default <code class="code"><span class="keyword">false</span></code> If true, asks the
+      server to return only the attribute names, not their
+      values.</div>
+<div class="param_info"><code class="code">base</code> : Default <code class="code"><span class="string">""</span></code>, The search base, which is the
+      dn of the object from which you want to start your search. Only
+      that object, and it's children will be included in the
+      search. Further controlled by <code class="code">~scope</code>.</div>
+<pre><span class="keyword">method</span> <a name="METHODsearch_a"></a>search_a : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       ?base:string -> string -> ?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
+Search the directory asyncronously, otherwise the same as
+      search.<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODunbind"></a>unbind : <code class="type">unit</code></pre><div class="info">
+Close the connection to the directory<br>
+</div>
+<pre><span class="keyword">method</span> <a name="METHODupdate_entry"></a>update_entry : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><div class="info">
+Syncronize changes made locally to an ldapentry with the
+      directory.<br>
+</div>
+</body></html>
