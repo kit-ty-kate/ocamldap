@@ -95,7 +95,14 @@ The exception raised to indicate all types of failure in the
 </td></tr>
 <tr><td><a href="Ldap_mutex.html#EXCEPTIONLdap_mutex">Ldap_mutex</a> </td>
 <td><div class="info">
-raised when a mutex operation fails.
+functions for implementing mutexes on top of LDAP's built in test
+    and set mechanism.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_ooclient.html#EXCEPTIONLdap_mutex">Ldap_mutex</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td><div class="info">
+functions for implementing mutexes on top of LDAP's built in test
+    and set mechanism.
 </div>
 </td></tr>
 <tr><td align="left"><br>N</td></tr>
@@ -128,6 +135,19 @@ raised whenever an error occurrs in the server
 <td></td></tr>
 <tr><td><a href="Ldap_schemaparser.html#EXCEPTIONSyntax_error_oc">Syntax_error_oc</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
 <td></td></tr>
+<tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Ldap_ooclient.html#EXCEPTIONTxn_commit_failure">Txn_commit_failure</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td><div class="info">
+raised when a commit fails, contains a list of entries which were
+    not rolled back successfully only if rollback failed as well,
+    otherwise None
+</div>
+</td></tr>
+<tr><td><a href="Ldap_ooclient.html#EXCEPTIONTxn_rollback_failure">Txn_rollback_failure</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td><div class="info">
+raised when an explicit rollback fails
+</div>
+</td></tr>
 </table><br>
 </body>
 </html>

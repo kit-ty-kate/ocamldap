@@ -41,24 +41,24 @@
 <pre><span class="keyword">val</span> <a name="VALldapsearch"></a>ldapsearch : <code class="type">?s:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?a:string list -><br>       ?b:string -><br>       ?d:string -> ?w:string -> h:string -> string -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> list</code></pre><div class="info">
 connect to the specified host and perform a search.<br>
 </div>
-<br><div class="info"><code class="code">s</code> : The scope of the search, default `SUBTREE</div>
-<div class="info"><code class="code">b</code> : The base of the search
+<div class="param_info"><code class="code">s</code> : The scope of the search, default `SUBTREE</div>
+<div class="param_info"><code class="code">b</code> : The base of the search
     The final argument is the search filter</div>
-<div class="info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
-<div class="info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous</div>
-<div class="info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
+<div class="param_info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
+<div class="param_info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous</div>
+<div class="param_info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
 <pre><span class="keyword">val</span> <a name="VALldapmodify"></a>ldapmodify : <code class="type">h:string -><br>       d:string -><br>       w:string -><br>       (string * (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list) list -><br>       unit</code></pre><div class="info">
 connect to the specified host and perform one or more modifications.<br>
 </div>
-<br><div class="info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
-<div class="info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
-<div class="info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous 
+<div class="param_info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
+<div class="param_info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
+<div class="param_info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous 
     The final argument is a list of (dn, modification) pairs which you want to apply</div>
 <pre><span class="keyword">val</span> <a name="VALldapadd"></a>ldapadd : <code class="type">h:string -> d:string -> w:string -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> list -> unit</code></pre><div class="info">
 connect to the specified host and add the specified objects.<br>
 </div>
-<br><div class="info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
-<div class="info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
-<div class="info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous 
+<div class="param_info"><code class="code">h</code> : The ldapurl which names the host and port to connect to</div>
+<div class="param_info"><code class="code">d</code> : The dn of the object you with to bind as, default anonymous</div>
+<div class="param_info"><code class="code">w</code> : The credentials of the object you wish to bind as, default anonymous 
     The final argument is a list of objects you wish to add</div>
 </body></html>

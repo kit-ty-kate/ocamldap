@@ -36,7 +36,8 @@ string&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;delete&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;modify&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Ldap_types</span>.modify_optype&nbsp;*&nbsp;string&nbsp;*&nbsp;string&nbsp;list)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;modrdn&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?deleteoldrdn:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">method</span>&nbsp;modrdn&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?deleteoldrdn:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?newsup:string&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;rawschema&nbsp;:&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;schema&nbsp;:&nbsp;<span class="constructor">Ldap_schemaparser</span>.schema<br>
 &nbsp;&nbsp;<span class="keyword">method</span>&nbsp;search&nbsp;:<br>

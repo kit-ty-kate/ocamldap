@@ -51,4 +51,10 @@ if you need a fast, low level interface to to_string, this
     true (defaul false) will write extended ldif. Extended ldif should
     be parsed using the Ldif_changerec_oo module.<br>
 </div>
+<pre><span class="keyword">val</span> <a name="VALread_ldif_file"></a>read_ldif_file : <code class="type">string -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> list</code></pre><div class="info">
+read all the entries in the named ldif file and return them in a list<br>
+</div>
+<pre><span class="keyword">val</span> <a name="VALwrite_ldif_file"></a>write_ldif_file : <code class="type">string -> <a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a> list -> unit</code></pre><div class="info">
+write all the entries in the given list to the named file in ldif format<br>
+</div>
 <pre><span class="keyword">class</span> <a name="TYPEldif"></a><a href="Ldif_oo.ldif.html">ldif</a> : <code class="type">?in_ch:Pervasives.in_channel -> ?out_ch:Pervasives.out_channel -> unit -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldif_oo.ldif.html">..</a> <code class="code"><span class="keyword">end</span></code></pre></body></html>

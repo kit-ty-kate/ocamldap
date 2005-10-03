@@ -14,4 +14,4 @@
 
 * To build Documentation
 
-    make htdoc
+    make documentation

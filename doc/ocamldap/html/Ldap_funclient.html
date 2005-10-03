@@ -67,7 +67,7 @@ Initializes the conn data structure, and opens a connection to the
   raise various lexer errors under the same conditions.</li>
 </ul>
 </div>
-<br><div class="info"><code class="code">version</code> : the protocol version to use to
+<div class="param_info"><code class="code">version</code> : the protocol version to use to
   connect, default is version 3. And actually, version 2 will probably
   not work correctly without some tweaking.</div>
 <pre><span class="keyword">val</span> <a name="VALunbind"></a>unbind : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -> unit</code></pre><div class="info">
@@ -84,12 +84,12 @@ authenticatite to the server. In this version only simple binds
 <li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
 </ul>
 </div>
-<br><div class="info"><code class="code">who</code> : the dn to bind as</div>
-<div class="info"><code class="code">cred</code> : the credentials to authenticate with. For `SIMPLE binds
+<div class="param_info"><code class="code">who</code> : the dn to bind as</div>
+<div class="param_info"><code class="code">cred</code> : the credentials to authenticate with. For `SIMPLE binds
   this is a password, but for `SASL binds it can be nearly
   anything. Perhaps a hash of the thumb print of your first born is
   sufficent.</div>
-<div class="info"><code class="code">auth_method</code> : either `SIMPLE (the default) or `SASL</div>
+<div class="param_info"><code class="code">auth_method</code> : either `SIMPLE (the default) or `SASL</div>
 <pre><span class="keyword">val</span> <a name="VALsearch"></a>search : <code class="type">?base:string -><br>       ?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?aliasderef:<a href="Ldap_types.html#TYPEalias_deref">Ldap_types.alias_deref</a> -><br>       ?sizelimit:int32 -><br>       ?timelimit:int32 -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> <a href="Ldap_funclient.html#TYPEconn">conn</a> -> string -> <a href="Ldap_funclient.html#TYPEmsgid">msgid</a></code></pre><div class="info">
 Search for the given entry with the specified base node and search
   scope, optionally limiting the returned attributes to those listed in
@@ -105,23 +105,23 @@ Search for the given entry with the specified base node and search
 <li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
 </ul>
 </div>
-<br><div class="info"><code class="code">base</code> : The dn of the object in the tree to use as the base
+<div class="param_info"><code class="code">base</code> : The dn of the object in the tree to use as the base
   object, the search will only cover children of this object, and will
   be further governed by scope.</div>
-<div class="info"><code class="code">scope</code> : The depth in the tree to look for the requested
+<div class="param_info"><code class="code">scope</code> : The depth in the tree to look for the requested
   object. There are three possible values, `BASE, `ONELEVEL, and
   `SUBTREE. `BASE means to only search the base object, the search
   will return exactly 1 or 0 objects. `ONELEVEL means to search one
   level under the base, only immediate children of the base object
   will be considered. `SUBTREE means to search the entire tree under
   the base object.</div>
-<div class="info"><code class="code">aliasderef</code> : Controls when aliases are dereferenced.</div>
-<div class="info"><code class="code">sizelimit</code> : The maximum number of objects to return</div>
-<div class="info"><code class="code">timelimit</code> : The maximum time, in seconds, that the search will
+<div class="param_info"><code class="code">aliasderef</code> : Controls when aliases are dereferenced.</div>
+<div class="param_info"><code class="code">sizelimit</code> : The maximum number of objects to return</div>
+<div class="param_info"><code class="code">timelimit</code> : The maximum time, in seconds, that the search will
   be allowed to run before terminateing.</div>
-<div class="info"><code class="code">attrs</code> : The list of attribute types (names) to include <code class="code">[]</code>
+<div class="param_info"><code class="code">attrs</code> : The list of attribute types (names) to include <code class="code">[]</code>
   (the default) means all.</div>
-<div class="info"><code class="code">attrsonly</code> : return only attribute types (names), not any of the
+<div class="param_info"><code class="code">attrsonly</code> : return only attribute types (names), not any of the
   values</div>
 <pre><span class="keyword">val</span> <a name="VALget_search_entry"></a>get_search_entry : <code class="type"><a href="Ldap_funclient.html#TYPEconn">conn</a> -><br>       <a href="Ldap_funclient.html#TYPEmsgid">msgid</a> -><br>       [> `Entry of <a href="Ldap_types.html#TYPEsearch_result_entry">Ldap_types.search_result_entry</a> | `Referral of string list ]</code></pre><div class="info">
 fetch a search entry from the wire using the given msgid. The
@@ -161,8 +161,8 @@ apply the list of modifications to the named entry<br>
 <li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
 </ul>
 </div>
-<br><div class="info"><code class="code">dn</code> : The dn of the object to modify</div>
-<div class="info"><code class="code">mods</code> : The list of modifications to apply</div>
+<div class="param_info"><code class="code">dn</code> : The dn of the object to modify</div>
+<div class="param_info"><code class="code">mods</code> : The list of modifications to apply</div>
 <pre><span class="keyword">val</span> <a name="VALmodrdn_s"></a>modrdn_s : <code class="type">?deleteoldrdn:bool -><br>       ?newsup:'a option -> <a href="Ldap_funclient.html#TYPEconn">conn</a> -> dn:string -> newdn:string -> unit</code></pre><div class="info">
 change the rdn, and optionally the superior entry of dn<br>
 <b>Raises</b><ul><li><code>LDAP_Failure</code> for all results other than `SUCCESS</li>
@@ -170,7 +170,7 @@ change the rdn, and optionally the superior entry of dn<br>
 <li><code>Encoding_error</code> for encoder errors (unlikely, probably a bug)</li>
 </ul>
 </div>
-<br><div class="info"><code class="code">deleteoldrdn</code> : Delete the old rdn value, (default true)</div>
-<div class="info"><code class="code">newsup</code> : The new superior dn of the object (default None)</div>
-<div class="info"><code class="code">dn</code> : The dn of the object to modify</div>
+<div class="param_info"><code class="code">deleteoldrdn</code> : Delete the old rdn value, (default true)</div>
+<div class="param_info"><code class="code">newsup</code> : The new superior dn of the object (default None)</div>
+<div class="param_info"><code class="code">dn</code> : The dn of the object to modify</div>
 </body></html>

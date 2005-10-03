@@ -56,13 +56,27 @@
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
+<code><span class="constructor">Peek_error</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span class="constructor">Request_too_large</span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
 <code><span class="constructor">Not_implemented</span></code></td>
 
 </tr></table>
 
 
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONReadbyte_error"></a>Readbyte_error <span class="keyword">of</span> <code class="type"><a href="Lber.html#TYPEreadbyte_error">readbyte_error</a></code></pre>
-<pre><span class="keyword">type</span> <a name="TYPEreadbyte"></a><code class="type"></code>readbyte = <code class="type">?peek:bool -> unit -> char</code> </pre>
+<pre><span class="keyword">type</span> <a name="TYPEreadbyte"></a><code class="type"></code>readbyte = <code class="type">?peek:bool -> int -> string</code> </pre>
 
 <pre><span class="keyword">type</span> <a name="TYPEwritebyte"></a><code class="type"></code>writebyte = <code class="type">char -> unit</code> </pre>
 
@@ -146,123 +160,16 @@
 }
 
 
-<br><code><span class="keyword">type</span> <a name="TYPEberval"></a><code class="type"></code>berval = </code><table class="typetable">
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Boolean</span> <span class="keyword">of</span> <code class="type">bool</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Int</span> <span class="keyword">of</span> <code class="type">Int32.t</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Bitstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Octetstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Null</span></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Oid</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Odt</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Real</span> <span class="keyword">of</span> <code class="type">float</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Enum</span> <span class="keyword">of</span> <code class="type">int32</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Utf8string</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">RelativeOid</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Sequence</span> <span class="keyword">of</span> <code class="type"><a href="Lber.html#TYPEberval">berval</a> list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Set</span> <span class="keyword">of</span> <code class="type"><a href="Lber.html#TYPEberval">berval</a> list</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Charstring</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr>
-<tr>
-<td align="left" valign="top" >
-<code><span class="keyword">|</span></code></td>
-<td align="left" valign="top" >
-<code><span class="constructor">Time</span> <span class="keyword">of</span> <code class="type">string</code></code></td>
-
-</tr></table>
-
-
 <pre><span class="keyword">val</span> <a name="VALreadbyte_of_string"></a>readbyte_of_string : <code class="type">string -> <a href="Lber.html#TYPEreadbyte">readbyte</a></code></pre><div class="info">
-return a readbyte function for a string<br>
+return a readbyte function for a string, currently not implemented<br>
 </div>
 <pre><span class="keyword">val</span> <a name="VALreadbyte_of_ber_element"></a>readbyte_of_ber_element : <code class="type"><a href="Lber.html#TYPEber_length">ber_length</a> -> <a href="Lber.html#TYPEreadbyte">readbyte</a> -> <a href="Lber.html#TYPEreadbyte">readbyte</a></code></pre><div class="info">
 return a readbyte implementation which uses another readbyte, but
     allows setting a read boundry. Useful for constructing views of the
     octet stream which end at the end of a ber structure. This is
-    essential for reading certian structures because lenght is only
-    encoded in the toplevel in order to save space.<br>
+    essential for reading certian structures because length is only
+    encoded in the toplevel in order to save space. Currently only
+    implemented for definite lengths.<br>
 <b>Raises</b> <code>Readbyte_error</code> in the event of a an io error, or the end of file<br>
 </div>
 <pre><span class="keyword">val</span> <a name="VALreadbyte_of_fd"></a>readbyte_of_fd : <code class="type">Unix.file_descr -> <a href="Lber.html#TYPEreadbyte">readbyte</a></code></pre><div class="info">

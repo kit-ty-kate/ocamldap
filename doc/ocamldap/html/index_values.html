@@ -41,6 +41,18 @@ abandon the async request attached to msgid.
 add entry to the directory
 </div>
 </td></tr>
+<tr><td><a href="Ldap_mutex.html#VALapply_with_mutex">apply_with_mutex</a> [<a href="Ldap_mutex.html">Ldap_mutex</a>]</td>
+<td><div class="info">
+used to apply some function, first locking the mutex, unlocking it
+    only after the function has been applied.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_ooclient.html#VALapply_with_mutex">apply_with_mutex</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td><div class="info">
+used to apply some function, first locking the mutex, unlocking it
+    only after the function has been applied.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.html#VALattrToOid">attrToOid</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td><div class="info">
 given a name of an attribute, return its oid
@@ -53,6 +65,11 @@ authenticatite to the server.
 </div>
 </td></tr>
 <tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Ldap_dn.html#VALcanonical_dn">canonical_dn</a> [<a href="Ldap_dn.html">Ldap_dn</a>]</td>
+<td><div class="info">
+returns the canonical dn.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALcardinal">cardinal</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALchoose">choose</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
@@ -391,6 +408,11 @@ readSchema attribute_list objectclass_list, parse the schema into
 reads the contents octets
 </div>
 </td></tr>
+<tr><td><a href="Ldif_oo.html#VALread_ldif_file">read_ldif_file</a> [<a href="Ldif_oo.html">Ldif_oo</a>]</td>
+<td><div class="info">
+read all the entries in the named ldif file and return them in a list
+</div>
+</td></tr>
 <tr><td><a href="Lber.html#VALreadbyte_of_ber_element">readbyte_of_ber_element</a> [<a href="Lber.html">Lber</a>]</td>
 <td><div class="info">
 return a readbyte implementation which uses another readbyte, but
@@ -409,7 +431,7 @@ a readbyte implementation which reads from an SSL socket.
 </td></tr>
 <tr><td><a href="Lber.html#VALreadbyte_of_string">readbyte_of_string</a> [<a href="Lber.html">Lber</a>]</td>
 <td><div class="info">
-return a readbyte function for a string
+return a readbyte function for a string, currently not implemented
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALremove">remove</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
@@ -488,6 +510,12 @@ close the connection to the server.
 </td></tr>
 <tr><td><a href="Ldap_ooclient.Setstr.html#VALunion">union</a> [<a href="Ldap_ooclient.Setstr.html">Ldap_ooclient.Setstr</a>]</td>
 <td></td></tr>
+<tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Ldif_oo.html#VALwrite_ldif_file">write_ldif_file</a> [<a href="Ldif_oo.html">Ldif_oo</a>]</td>
+<td><div class="info">
+write all the entries in the given list to the named file in ldif format
+</div>
+</td></tr>
 </table><br>
 </body>
 </html>

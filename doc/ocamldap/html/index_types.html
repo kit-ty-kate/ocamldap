@@ -56,8 +56,6 @@ This structure is the guts of the ldap server.
 <td></td></tr>
 <tr><td><a href="Lber.html#TYPEber_val_header">ber_val_header</a> [<a href="Lber.html">Lber</a>]</td>
 <td></td></tr>
-<tr><td><a href="Lber.html#TYPEberval">berval</a> [<a href="Lber.html">Lber</a>]</td>
-<td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEbind_request">bind_request</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_types.html#TYPEbind_response">bind_response</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
@@ -104,6 +102,19 @@ This structure is the guts of the ldap server.
 <td><div class="info">
 extended information to return with the LDAP_Failure
   exception.
+</div>
+</td></tr>
+<tr><td><a href="Ldap_types.html#TYPEldap_grouping_cookie">ldap_grouping_cookie</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
+<td><div class="info">
+a cookie that is sent with every ldap operation which is part of a
+    group
+</div>
+</td></tr>
+<tr><td><a href="Ldap_types.html#TYPEldap_grouping_type">ldap_grouping_type</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
+<td><div class="info">
+see draft-zeilenga-ldap-grouping-xx Ldap grouping is a way of
+    telling the server that a set of ldap operations is related, its most
+    interesting application is transactions across multiple objects.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_types.html#TYPEldap_message">ldap_message</a> [<a href="Ldap_types.html">Ldap_types</a>]</td>
@@ -196,6 +207,11 @@ a type defining the scope of a search filter
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.OrdOid.html#TYPEt">t</a> [<a href="Ldap_ooclient.OrdOid.html">Ldap_ooclient.OrdOid</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ldap_ooclient.html#TYPEtxn">txn</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
+<td><div class="info">
+the abstract type of a transaction
+</div>
+</td></tr>
 <tr><td align="left"><br>W</td></tr>
 <tr><td><a href="Lber.html#TYPEwritebyte">writebyte</a> [<a href="Lber.html">Lber</a>]</td>
 <td></td></tr>

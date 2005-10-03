@@ -78,7 +78,57 @@ given a source of ldapentry objects (unit -&gt; ldapentry), such as
   the return value of ldapcon#search_a compute (f eN ... (f e2 (f e1
   intial))) see List.fold_right.<br>
 </div>
-<pre><span class="keyword">class</span> <a name="TYPEldapcon"></a><a href="Ldap_ooclient.ldapcon.html">ldapcon</a> : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">module</span> <a href="Ldap_ooclient.OrdOid.html">OrdOid</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.OrdOid.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">module</span> <a href="Ldap_ooclient.Setstr.html">Setstr</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.Setstr.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br><code><span class="keyword">type</span> <a name="TYPEscflavor"></a><code class="type"></code>scflavor = </code><table class="typetable">
+<pre><span class="keyword">class</span> <a name="TYPEldapcon"></a><a href="Ldap_ooclient.ldapcon.html">ldapcon</a> : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">exception</span> <a name="EXCEPTIONLdap_mutex"></a>Ldap_mutex <span class="keyword">of</span> <code class="type">string * exn</code></pre>
+<div class="info">
+functions for implementing mutexes on top of LDAP's built in test
+    and set mechanism. In order to use this module you must load
+    mutex.schema, which is an rfc2252 format schema file.  raised when
+    a mutex operation fails. The string argument contains the name of
+    the method which failed, and the exception contains details about
+    what failed.<br>
+</div>
+<pre><span class="keyword">class type</span> <a name="TYPEmutex_t"></a><a href="Ldap_ooclient.mutex_t.html">mutex_t</a> = <code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.mutex_t.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+the class type of a single mutex, used for performing
+    advisory locking of some action
+</div>
+<pre><span class="keyword">class type</span> <a name="TYPEobject_lock_table_t"></a><a href="Ldap_ooclient.object_lock_table_t.html">object_lock_table_t</a> = <code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.object_lock_table_t.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+the class type of an object lock table which allows for advisory
+    locking of objects by dn
+</div>
+<pre><span class="keyword">class</span> <a name="TYPEmutex"></a><a href="Ldap_ooclient.mutex.html">mutex</a> : <code class="type">string list -> string -> string -> string -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.mutex.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+new mutex ldapurls binddn bindpw mutexdn
+</div>
+<pre><span class="keyword">val</span> <a name="VALapply_with_mutex"></a>apply_with_mutex : <code class="type"><a href="Ldap_ooclient.mutex.html">mutex</a> -> (unit -> 'a) -> 'a</code></pre><div class="info">
+used to apply some function, first locking the mutex, unlocking it
+    only after the function has been applied. If the function
+    generates any exception, this wrapper catches that exception, and
+    unlocks the mutex before reraising the exception. Generally
+    garentees that the mutex will always be used consistantly when
+    performing an action.<br>
+</div>
+<pre><span class="keyword">class</span> <a name="TYPEobject_lock_table"></a><a href="Ldap_ooclient.object_lock_table.html">object_lock_table</a> : <code class="type">string list -> string -> string -> string -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.object_lock_table.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+new object_lock_table ldapurls binddn bindpw mutexdn
+</div>
+<pre><span class="keyword">type</span> <a name="TYPEtxn"></a><code class="type"></code>txn </pre>
+<div class="info">
+the abstract type of a transaction<br>
+</div>
+
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONTxn_commit_failure"></a>Txn_commit_failure <span class="keyword">of</span> <code class="type">string * exn * <a href="Ldap_ooclient.ldapentry_t.html">ldapentry_t</a> list option</code></pre>
+<div class="info">
+raised when a commit fails, contains a list of entries which were
+    not rolled back successfully only if rollback failed as well,
+    otherwise None<br>
+</div>
+<pre><span class="keyword">exception</span> <a name="EXCEPTIONTxn_rollback_failure"></a>Txn_rollback_failure <span class="keyword">of</span> <code class="type">string * exn</code></pre>
+<div class="info">
+raised when an explicit rollback fails<br>
+</div>
+<pre><span class="keyword">class</span> <a name="TYPEldapadvisorytxcon"></a><a href="Ldap_ooclient.ldapadvisorytxcon.html">ldapadvisorytxcon</a> : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> string -> string -> string -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapadvisorytxcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
+A subclass of ldapcon which implements an experimental interface
+    to draft_zeilenga_ldap_txn.
+</div>
+<pre><span class="keyword">module</span> <a href="Ldap_ooclient.OrdOid.html">OrdOid</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.OrdOid.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><pre><span class="keyword">module</span> <a href="Ldap_ooclient.Setstr.html">Setstr</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.Setstr.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br><code><span class="keyword">type</span> <a name="TYPEscflavor"></a><code class="type"></code>scflavor = </code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>

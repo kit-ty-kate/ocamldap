@@ -34,6 +34,8 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&lt;&nbsp;attributes&nbsp;:&nbsp;string&nbsp;list;&nbsp;dn&nbsp;:&nbsp;string;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get_value&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string&nbsp;list;&nbsp;..&nbsp;&gt;&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Buffer</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;read_ldif_file&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;write_ldif_file&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Ldap_ooclient</span>.ldapentry&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 &nbsp;&nbsp;<span class="keyword">class</span>&nbsp;ldif&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?in_ch:<span class="constructor">Pervasives</span>.in_channel&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;?out_ch:<span class="constructor">Pervasives</span>.out_channel&nbsp;<span class="keywordsign">-&gt;</span><br>
