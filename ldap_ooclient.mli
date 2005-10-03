@@ -23,46 +23,46 @@
 
 open Ldap_types
 
+(** {1 Basic Data Types} *)
+
+(** the type of an operation, eg. [("cn", ["foo";"bar"])] *)
 type op = string * string list
 type op_lst = op list
+
+(** The policy the client should take when it encounteres a
+    referral. This is currently not used *)
 type referral_policy = [ `FOLLOW | `RETURN ]
+
+(** The change type of an ldapentry. This controls some aspects of
+    it's behavior *)
 type changetype = [ `ADD | `DELETE | `MODDN | `MODIFY | `MODRDN ]
 
+(** The base type of an ldap entry represented in memory. *)
 class type ldapentry_t =
-  object
-    method add : op_lst -> unit
-    method attributes : string list
-    method changes : (Ldap_types.modify_optype * string * string list) list
-    method changetype : changetype
-    method delete : op_lst -> unit
-    method dn : string
-    method diff : ldapentry_t -> (modify_optype * string * string list) list
-    method exists : string -> bool
-    method flush_changes : unit
-    method get_value : string -> string list
-    method modify :
-      (Ldap_types.modify_optype * string * string list) list -> unit
-    method print : unit
-    method replace : op_lst -> unit
-    method set_changetype : changetype -> unit
-    method set_dn : string -> unit
-  end
-
-val format_entry :
-    < attributes : string list; dn : string;
-      get_value : string -> string list; .. > ->
-    unit
-
-val format_entries :
-    < attributes : string list; dn : string;
-      get_value : string -> string list; .. > list ->
-    unit
+object
+  method add : op_lst -> unit
+  method attributes : string list
+  method changes : (Ldap_types.modify_optype * string * string list) list
+  method changetype : changetype
+  method delete : op_lst -> unit
+  method dn : string
+  method diff : ldapentry_t -> (modify_optype * string * string list) list
+  method exists : string -> bool
+  method flush_changes : unit
+  method get_value : string -> string list
+  method modify :
+    (Ldap_types.modify_optype * string * string list) list -> unit
+  method print : unit
+  method replace : op_lst -> unit
+  method set_changetype : changetype -> unit
+  method set_dn : string -> unit
+end
 
 (** this object represents a remote object within local memory. It
-  records all local changes made to it (if it's changetype is set to
-  `MODIFY), and can commit them to the server at a later time. This
-  can significantly improve performance by reducing traffic to the
-  server. *)
+    records all local changes made to it (if it's changetype is set to
+    `MODIFY), and can commit them to the server at a later time. This
+    can significantly improve performance by reducing traffic to the
+    server. *)
 class ldapentry :
   object
     (** add values to an attribute (or create a new attribute). Does
@@ -121,11 +121,28 @@ class ldapentry :
     method set_dn : string -> unit
   end
 
+(** toplevel formatter for ldapentry, prints the whole entry with a
+    nice structure. Each attribute is in the correct syntax to be
+    copied and pasted into a modify operation. *)
+val format_entry :
+  < attributes : string list; dn : string;
+ get_value : string -> string list; .. > ->
+   unit
+
+(** format lists of entries, in this case only print the dn *)
+val format_entries :
+  < attributes : string list; dn : string;
+ get_value : string -> string list; .. > list ->
+   unit
+
+(** The type of an ldap change record, used by extended LDIF *)
 type changerec = 
     [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
     | `Addition of ldapentry
     | `Delete of string
     | `Modrdn of string * int * string]
+
+(** {2 Communication With {!Ldap_funclient}} *)
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
@@ -137,6 +154,49 @@ val to_entry :
     produce a search_result_entry suitable for ldap_funclient, or
     ldap_funserver. *)
 val of_entry : ldapentry -> search_result_entry
+
+(** {1 Interacting with LDAP Servers} *)
+
+(** This class abstracts a connection to an LDAP server (or servers),
+    an instance will be connected to the server you specify and can be
+    used to perform operations on that server. [new ldapcon
+    ~connect_timeout:5 ~version:3
+    ["ldap://first.ldap.server";"ldap://second.ldap.server"]] In
+    addition to specifying multiple urls if DNS names are given, and
+    those names are bound to multiple addresses, then all possible
+    addresses will be tried. eg. [new ldapcon
+    ["ldaps://rrldap.csun.edu"]] is equivelant to [new ldapcon
+    ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
+    This means that if any host in the rr fails, the ldapcon will
+    transparently move on to the next host, and you will never know
+    the difference. *)
+class ldapcon :
+  ?connect_timeout:int ->
+  ?referral_policy:[> `RETURN ] ->
+  ?version:int ->
+  string list ->
+object
+  method add : ldapentry -> unit
+  method bind :
+    ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
+  method delete : string -> unit
+  method modify :
+    string ->
+    (Ldap_types.modify_optype * string * string list) list -> unit
+  method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
+  method rawschema : ldapentry
+  method schema : Ldap_schemaparser.schema
+  method search :
+    ?scope:Ldap_types.search_scope ->
+    ?attrs:string list ->
+    ?attrsonly:bool -> ?base:string -> string -> ldapentry list
+  method search_a :
+    ?scope:Ldap_types.search_scope ->
+    ?attrs:string list ->
+    ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
+  method unbind : unit
+  method update_entry : ldapentry -> unit
+end
 
 (** given a source of ldapentry objects (unit -> ldapentry), such as
     the return value of ldapcon#search_a apply f (first arg) to each entry
@@ -156,34 +216,6 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   the return value of ldapcon#search_a compute (f eN ... (f e2 (f e1
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
-
-class ldapcon :
-  ?connect_timeout:int ->
-  ?referral_policy:[> `RETURN ] ->
-  ?version:int ->
-  string list ->
-  object
-    method add : ldapentry -> unit
-    method bind :
-      ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
-    method delete : string -> unit
-    method modify :
-      string ->
-      (Ldap_types.modify_optype * string * string list) list -> unit
-    method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
-    method rawschema : ldapentry
-    method schema : Ldap_schemaparser.schema
-    method search :
-      ?scope:Ldap_types.search_scope ->
-      ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> string -> ldapentry list
-    method search_a :
-      ?scope:Ldap_types.search_scope ->
-      ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
-    method unbind : unit
-    method update_entry : ldapentry -> unit
-  end
 
 module OrdOid :
 sig
