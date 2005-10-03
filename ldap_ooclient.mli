@@ -212,7 +212,7 @@ object
 
   (** bind to the database using dn. 
 
-      {0 Example}
+      {0 Simple Bind Example}
 
       [ldap#bind ~cred:"password" "cn=foo,ou=people,ou=auth,o=bar"]
 
@@ -232,25 +232,36 @@ object
   method bind :
     ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
 
-  (** Delete the object named by dn from the database [#delete dn] *)
+  (** Delete the object named by dn from the database *)
   method delete : string -> unit
 
-  (** Modify the entry named by dn, applying mods eg. [#modify dn
-      [(`DELETE, "cn", ["foo";"bar"])]] *)
+  (** Modify the entry named by dn, applying mods 
+
+      {0 Example}
+
+      [ldap#modify "uid=foo,ou=people,dc=bar,dc=baz" [(`DELETE, "cn", ["foo";"bar"])]]
+  *)
   method modify :
     string ->
     (Ldap_types.modify_optype * string * string list) list -> unit
 
   (** Modify the rdn of the object named by dn, if the protocol
-      version is 3 you may additionally change the superior [#modrdn
-      ~deleteoldrdn:true ~newsup:(Some "o=csun") dn newrdn], the rdn
+      version is 3 you may additionally change the superior, the rdn
       will be changed to the attribute represented (as a string) by
-      newrdn, (simple example ["cn=foo"], more complex example
-      ["uid=foo+bar+baz"]). @param deleteoldrdn Default [true], delete
-      the old rdn value as part of the modrdn. @param newsup Default
-      [None], only valid when the protocol version is 3, change the
-      object's location in the tree, making its superior equal to the
-      specified object. *)
+      newrdn, 
+
+      {0 Example With New Superior}
+
+      [ldap#modrdn ~newsup:(Some "o=csun") "cn=bob,ou=people,o=org" "uid=bperson"]
+
+      After this example "cn=bob,ou=people,o=org" will end up as "uid=bperson,o=csun".
+
+      @param deleteoldrdn Default [true], delete
+      the old rdn value as part of the modrdn. 
+
+      @param newsup Default [None], only valid when the protocol
+      version is 3, change the object's location in the tree, making
+      its superior equal to the specified object. *)
   method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
 
   (** Fetch the raw (unparsed) schema from the directory using the
@@ -263,15 +274,23 @@ object
   method schema : Ldap_schemaparser.schema
 
   (** Search the directory syncronously for an entry which matches the
-      search criteria. [#search ~base ldapfilter], eg. [#search
-      ~base:"dc=foo,dc=bar" ~attrs:["cn"] "uid=*"] @param scope
-      Default [`SUBTREE], defines the scope of the search. see
-      {!Ldap_types.search_scope} @param attrs Default [[]] (means all
-      attributes) @param attrsonly Default [false] If true, asks the
-      server to return only the attribute names, not their
-      values. @param base Default [""], The search base, which is the
-      dn of the object from which you want to start your search. Only
-      that object, and it's children will be included in the
+      search criteria.
+
+      {0 Example}
+
+      [ldap#search ~base:"dc=foo,dc=bar" ~attrs:["cn"] "uid=*"]
+
+      @param scope Default [`SUBTREE], defines the scope of the
+      search. see {!Ldap_types.search_scope} 
+
+      @param attrs Default [[]] (means all attributes) 
+
+      @param attrsonly Default [false] If true, asks the server to return
+      only the attribute names, not their values. 
+
+      @param base Default [""], The search base, which is the dn of the
+      object from which you want to start your search. Only that
+      object, and it's children will be included in the
       search. Further controlled by [~scope]. *)
   method search :
     ?scope:Ldap_types.search_scope ->
