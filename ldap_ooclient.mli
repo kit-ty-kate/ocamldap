@@ -23,7 +23,7 @@
 
 open Ldap_types
 
-(** {1 Basic Data Types} *)
+(** {0 Basic Data Types} *)
 
 (** the type of an operation, eg. [("cn", ["foo";"bar"])] *)
 type op = string * string list
@@ -88,7 +88,9 @@ class ldapentry :
     method dn : string
 
     (** given an ldapentry, return the differences between the current
-	entry and the specified entry *)
+	entry and the specified entry in the form of a modify
+	operation which would make the specified entry the same as the
+	current entry. *)
     method diff : ldapentry_t -> (modify_optype * string * string list) list
 
     (** query whether the attribute type (name) exists in the object *)
@@ -97,11 +99,12 @@ class ldapentry :
     (** clear all accumulated changes *)
     method flush_changes : unit
 
-    (** get the value of an attribute *)
+    (** get the value of an attribute @raise Not_found If the
+	attribute does not exist. *)
     method get_value : string -> string list
 
     (** modify the object (same as modify_s), does not change the
-    database until you update *)
+	database until you update *)
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
 
@@ -142,7 +145,7 @@ type changerec =
     | `Delete of string
     | `Modrdn of string * int * string]
 
-(** {2 Communication With {!Ldap_funclient}} *)
+(** {1 Communication With {!Ldap_funclient}} *)
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
@@ -155,7 +158,7 @@ val to_entry :
     ldap_funserver. *)
 val of_entry : ldapentry -> search_result_entry
 
-(** {1 Interacting with LDAP Servers} *)
+(** {0 Interacting with LDAP Servers} *)
 
 (** This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
@@ -169,16 +172,18 @@ val of_entry : ldapentry -> search_result_entry
     ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
     This means that if any host in the rr fails, the ldapcon will
     transparently move on to the next host, and you will never know
-    the difference. @param connect_timeout an integer which specifies
-    how long to wait for any given server in the list to respond
-    before trying the next one. After all the servers have been tried
-    for [connect_timeout] seconds [LDAP_Failure (`SERVER_DOWN, ...)]
-    will be raised. @param referral_policy In a future version of
-    ocamldap this will be used to specify what you would like to do in
-    the event of a referral. Currently it does nothing and is ignored
-    see {!Ldap_ooclient.referral_policy}. @param version The protocol
-    version to use, the default is 3, the other recognized value is
-    2. *)
+    the difference. @param connect_timeout Default [1], an integer
+    which specifies how long to wait for any given server in the list
+    to respond before trying the next one. After all the servers have
+    been tried for [connect_timeout] seconds [LDAP_Failure
+    (`SERVER_DOWN, ...)]  will be raised. @param referral_policy In a
+    future version of ocamldap this will be used to specify what you
+    would like to do in the event of a referral. Currently it does
+    nothing and is ignored see
+    {!Ldap_ooclient.referral_policy}. @param version The protocol
+    version to use, the default is [3], the other recognized value is
+    [2]. @raise Ldap_types.LDAP_Failure All methods raise LDAP_Failure
+    on error *)
 class ldapcon :
   ?connect_timeout:int ->
   ?referral_policy:[> `RETURN ] ->
@@ -192,7 +197,7 @@ object
       bind anonymously, omit ~cred, and leave dn blank eg. [#bind
       ""]. @param cred The credentials to provide for binding. @param
       meth The method to use when binding See
-      {!Ldap_funclient.authmethod} the default is `SIMPLE. If `SASL is
+      {!Ldap_funclient.authmethod} the default is [`SIMPLE]. If [`SASL] is
       used then the [dn] becomes the username, and [~cred] may or may
       not be required. SASL binds have not been tested extensively. *)
   method bind :
@@ -212,9 +217,9 @@ object
       ~deleteoldrdn:true ~newsup:(Some "o=csun") dn newrdn], the rdn
       will be changed to the attribute represented (as a string) by
       newrdn, (simple example ["cn=foo"], more complex example
-      ["uid=foo+bar+baz"]). @param deleteoldrdn Default true, delete
+      ["uid=foo+bar+baz"]). @param deleteoldrdn Default [true], delete
       the old rdn value as part of the modrdn. @param newsup Default
-      None, only valid when the protocol version is 3, change the
+      [None], only valid when the protocol version is 3, change the
       object's location in the tree, making its superior equal to the
       specified object. *)
   method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
@@ -228,21 +233,39 @@ object
       representation of the schema indexed by canonical name, and oid. *)
   method schema : Ldap_schemaparser.schema
 
-  (** Search the directory for an entry. *)
+  (** Search the directory syncronously for an entry which matches the
+      search criteria. [#search ~base ldapfilter], eg. [#search
+      ~base:"dc=foo,dc=bar" ~attrs:["cn"] "uid=*"] @param scope
+      Default [`SUBTREE], defines the scope of the search. see
+      {!Ldap_types.search_scope} @param attrs Default [[]] (means all
+      attributes) @param attrsonly Default [false] If true, asks the
+      server to return only the attribute names, not their
+      values. @param base Default [""], The search base, which is the
+      dn of the object from which you want to start your search. Only
+      that object, and it's children will be included in the
+      search. Further controlled by [~scope]. *)
   method search :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string -> string -> ldapentry list
+
+  (** Search the directory asyncronously, otherwise the same as
+      search. *)
   method search_a :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
+
+  (** Close the connection to the directory *)
   method unbind : unit
+
+  (** Syncronize changes made locally to an ldapentry with the
+      directory. *)
   method update_entry : ldapentry -> unit
 end
 
 (** given a source of ldapentry objects (unit -> ldapentry), such as
-    the return value of ldapcon#search_a apply f (first arg) to each entry
+    the return value of ldapcon#search_a, apply f (first arg) to each entry
     See List.iter *)
 val iter : (ldapentry -> unit) -> (?abandon:bool -> unit -> ldapentry) -> unit
 
@@ -260,73 +283,101 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
+(** {0 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
+
+(** {1 Supporting Types} *)
+
+(** an ordered oid type, for placing oids in sets *)
 module OrdOid :
 sig
   type t = Ldap_schemaparser.Oid.t
   val compare : t -> t -> int
 end
 
+(** A set of Oids, @deprecated the name is historical, and may be changed *)
 module Setstr :
-  sig
-    type elt = OrdOid.t
-    type t = Set.Make(OrdOid).t
-    val empty : t
-    val is_empty : t -> bool
-    val mem : elt -> t -> bool
-    val add : elt -> t -> t
-    val singleton : elt -> t
-    val remove : elt -> t -> t
-    val union : t -> t -> t
-    val inter : t -> t -> t
-    val diff : t -> t -> t
-    val compare : t -> t -> int
-    val equal : t -> t -> bool
-    val subset : t -> t -> bool
-    val iter : (elt -> unit) -> t -> unit
-    val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
-    val for_all : (elt -> bool) -> t -> bool
-    val exists : (elt -> bool) -> t -> bool
-    val filter : (elt -> bool) -> t -> t
-    val partition : (elt -> bool) -> t -> t * t
-    val cardinal : t -> int
-    val elements : t -> elt list
-    val min_elt : t -> elt
-    val max_elt : t -> elt
-    val choose : t -> elt
-    val split : elt -> t -> t * bool * t
-  end
+sig
+  type elt = OrdOid.t
+  type t = Set.Make(OrdOid).t
+  val empty : t
+  val is_empty : t -> bool
+  val mem : elt -> t -> bool
+  val add : elt -> t -> t
+  val singleton : elt -> t
+  val remove : elt -> t -> t
+  val union : t -> t -> t
+  val inter : t -> t -> t
+  val diff : t -> t -> t
+  val compare : t -> t -> int
+  val equal : t -> t -> bool
+  val subset : t -> t -> bool
+  val iter : (elt -> unit) -> t -> unit
+  val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+  val for_all : (elt -> bool) -> t -> bool
+  val exists : (elt -> bool) -> t -> bool
+  val filter : (elt -> bool) -> t -> t
+  val partition : (elt -> bool) -> t -> t * t
+  val cardinal : t -> int
+  val elements : t -> elt list
+  val min_elt : t -> elt
+  val max_elt : t -> elt
+  val choose : t -> elt
+  val split : elt -> t -> t * bool * t
+end
 
-type scflavor = Optimistic | Pessimistic
+(** The type of schema checking to perform in
+    {!Ldap_ooclient.scldapentry}. *)
+type scflavor = 
+    Optimistic 
+      (** Add missing attributes to make the object consistant, or add
+	  objectclasses in order to make illegal attribues legal *)
+  | Pessimistic
+      (** Delete objectclasses which must attributes which are
+	  missing, and delete illegal attributes. *)
 
-(** given a name of an attribute, return its oid *)
+(** given a name of an attribute name (canonical or otherwise), return
+    its oid @raise Invalid_attribute If the attribute is not found in the schema. *)
 val attrToOid :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t
 
-(** given the oid of an attribute, return its canonical name *)
+(** given the oid of an attribute, return its canonical name @raise
+    Invalid_attribute If the attribute is not found in the schema. *)
 val oidToAttr : Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string
 
-(** given a name of an objectclass, return its oid *)
+(** given a name of an objectclass (canonical or otherwise), return
+    its oid. @raise Invalid_objectclass If the objectclass is not
+    found in the schema. *)
 val ocToOid :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t
 
-(** given the oid of an objectclass, return its canonical name *)
+(** given the oid of an objectclass, return its canonical name @raise
+    Invalid_objectclass If the objectclass is not found in the
+    schema. *)
 val oidToOc : Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string
 
-(** get an objectclass structure by one of its names *)
+(** get an objectclass structure by one of its names (canonical or
+    otherwise, however getting it by canonical name is currently much
+    faster) @raise Invalid_objectclass If the objectclass is not found
+    in the schema. *)
 val getOc :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.objectclass
 
-(** get an attr structure by one of its names *)
+(** get an attr structure by one of its names (canonical or otherwise,
+    however getting it by canonical name is currently much faster)
+    @raise Invalid_attribute If the attribute is not found in the
+    schema. @raise Invalid_objectclass If the objectclass is not found
+    in the schema. *)
 val getAttr :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.attribute
 
-(** equate attributes by oid. This allows aliases to be handled
-  correctly, for example "uid" and "userID" are actually the same
-  attribute. *)
+(** equate attributes by oid. This allows non canonical names to be
+    handled correctly, for example "uid" and "userID" are actually the
+    same attribute. @raise Invalid_attribute If either attribute is
+    not found in the schema. *)
 val equateAttrs :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Lcstring.t -> bool
