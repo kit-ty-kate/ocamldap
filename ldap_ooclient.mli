@@ -454,10 +454,28 @@ exception Objectclass_is_required
 class scldapentry :
   Ldap_schemaparser.schema ->
   object
+    (** Add values to the entry, just as
+	{!Ldap_ooclient.ldapentry.add}, However, after the add is
+	complete the schema checker is run in [Optimistic] mode. see
+	{!Ldap_ooclient.scflavor} *)
     method add : op_lst -> unit
+
+    (** Same as {!Ldap_ooclient.ldapentry.attributes}, except that the
+	returned list contains attributes which may not yet exist on
+	the entry. For example musts which are not yet present will be
+	listed. *)
     method attributes : string list
+
+    (** Same as {!Ldap_ooclient.ldapentry.changes} except that changes
+	made by the schema checker may also be listed. *)
     method changes : (Ldap_types.modify_optype * string * string list) list
+
+    (** Same as {!Ldap_ooclient.ldapentry.changetype} *)
     method changetype : changetype
+
+    (** Same as {!Ldap_ooclient.ldapentry.add}, except that the schema
+	checker is run in [Pessimistic] mode after the operation is
+	complete. see {scflavor} *)
     method delete : op_lst -> unit
     method dn : string
     method exists : string -> bool
