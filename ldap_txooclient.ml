@@ -6,9 +6,11 @@ type txn = {
   mutable dead: bool;
   entries: (string, (ldapentry_t * ldapentry_t)) Hashtbl.t
 }
+
 exception Rollback of exn * ((ldapentry_t * ldapentry_t) list)
 exception Txn_commit_failure of string * exn * ldapentry_t list option
 exception Txn_rollback_failure of string * exn
+
 class ldapadvisorytxcon 
   ?(connect_timeout=1) 
   ?(referral_policy=`RETURN) 
