@@ -3,7 +3,7 @@ Synopsis
 ---------------------------------------------------------------------------
 
 Ocamldap is an ldap toolkit.  It can be used by ocaml programs to
-communicate with ldap servers, and to build your own ldap servers
+communicate with ldap servers, and to build your own ldap servers.
 
 ---------------------------------------------------------------------------
 Contents
@@ -30,9 +30,9 @@ Features
   Such as, nice data structures for local ldap entries which
   record local modifications and can sync them with the server, fewer
   arguments needed to perform simple tasks, and transparent reconnection
-  of dropped connections. see ooldap.mli
+  of dropped connections.
 * Ocamldap includes an ldif parser, which allows you to read ldif files into
-  entry objects. (ldif content files only). see ooldif.mli
+  entry objects. It also supports ldif change records.
 * Ocamldap has a method call to grab the schema of an ldapv3 server
 * Basic ldap server functionality (ldap_funserver) allows you to easily
   construct your own ldap servers. Perfect for meta directories, 
