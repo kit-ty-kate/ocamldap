@@ -23,7 +23,7 @@
 
 open Ldap_types
 
-(** {5 Basic Data Types} *)
+(** {2 Basic Data Types} *)
 
 (** the type of an operation, eg. [("cn", ["foo";"bar"])] *)
 type op = string * string list
@@ -36,6 +36,8 @@ type referral_policy = [ `FOLLOW | `RETURN ]
 (** The change type of an ldapentry. This controls some aspects of
     it's behavior *)
 type changetype = [ `ADD | `DELETE | `MODDN | `MODIFY | `MODRDN ]
+
+(** {2 Local Representation of LDAP Objects} *)
 
 (** The base type of an ldap entry represented in memory. *)
 class type ldapentry_t =
@@ -60,12 +62,11 @@ end
 
 (** this object represents a remote object within local memory. It
     records all local changes made to it (if it's changetype is set to
-    `MODIFY), and can commit them to the server at a later time. This
-    can significantly improve performance by reducing traffic to the
-    server. *)
+    `MODIFY), and can commit them to the server at a later time via
+    {!Ldap_ooclient.ldapcon.update_entry}. *)
 class ldapentry :
-  object
-    (** add values to an attribute (or create a new attribute). Does
+object
+  (** add values to an attribute (or create a new attribute). Does
       not change the server until you update *)
     method add : op_lst -> unit
 
@@ -73,8 +74,10 @@ class ldapentry :
     on the object *)
     method attributes : string list
 
-    (** return a list of changes made to the object in a format suitable for
-      sending directly to modify_s *)
+    (** return a list of changes made to the object in a the format of
+	a modify operation. For example, you can apply the changes to another
+	ldapentry object using the {!Ldap_ooclient.ldapentry.modify}
+	method *)
     method changes : (Ldap_types.modify_optype * string * string list) list
 
     (** return the changetype of the object *)
@@ -103,14 +106,15 @@ class ldapentry :
 	attribute does not exist. *)
     method get_value : string -> string list
 
-    (** modify the object (same as modify_s), does not change the
-	database until you update *)
+    (** Apply modifications to object in memory, does not change the
+	database until you update using
+	{!Ldap_ooclient.ldapcon.update_entry} *)
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
 
-    (** print an ldif like representation of the object to stdout, see
-      Ldif_oo for standards compliant ldif. Usefull for toplevel
-      sessions. DEPRECATED. *)
+    (** @deprecated print an ldif like representation of the object to stdout, see
+	Ldif_oo for standards compliant ldif. Usefull for toplevel
+	sessions. *)
     method print : unit
 
     (** replace values in the object, does not change the database
@@ -123,6 +127,8 @@ class ldapentry :
     (** set the dn of the object *)
     method set_dn : string -> unit
   end
+
+(** {1 Miscallaneous} *)
 
 (** toplevel formatter for ldapentry, prints the whole entry with a
     nice structure. Each attribute is in the correct syntax to be
@@ -158,7 +164,7 @@ val to_entry :
     ldap_funserver. *)
 val of_entry : ldapentry -> search_result_entry
 
-(** {5 Interacting with LDAP Servers} *)
+(** {2 Interacting with LDAP Servers} *)
 
 (** This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
@@ -312,6 +318,8 @@ object
   method update_entry : ldapentry -> unit
 end
 
+(** {2 Iterators Over Streams of ldapentry Objects} *)
+
 (** given a source of ldapentry objects (unit -> ldapentry), such as
     the return value of ldapcon#search_a, apply f (first arg) to each entry
     See List.iter *)
@@ -331,7 +339,7 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
-(** {5 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
+(** {2 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
 
 (** {0 Supporting Types} *)
 
@@ -342,7 +350,7 @@ sig
   val compare : t -> t -> int
 end
 
-(** A set of Oids, @deprecated the name is historical, and may be changed *)
+(** A set of Oids @deprecated the name is historical, and may be changed *)
 module Setstr :
 sig
   type elt = OrdOid.t
@@ -374,7 +382,8 @@ sig
 end
 
 (** The type of schema checking to perform in
-    {!Ldap_ooclient.scldapentry}. *)
+    {!Ldap_ooclient.scldapentry}. Normally this is picked
+    automatically, however it can be overridden in some cases. *)
 type scflavor = 
     Optimistic 
       (** Add missing attributes to make the object consistant, or add
@@ -416,8 +425,7 @@ val getOc :
 (** get an attr structure by one of its names (canonical or otherwise,
     however getting it by canonical name is currently much faster)
     @raise Invalid_attribute If the attribute is not found in the
-    schema. @raise Invalid_objectclass If the objectclass is not found
-    in the schema. *)
+    schema. *)
 val getAttr :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.attribute
@@ -435,6 +443,14 @@ exception Invalid_attribute of string
 exception Single_value of string
 exception Objectclass_is_required
 
+(** A schema aware derivative of {!Ldap_ooclient.ldapentry}. It
+    contains an rfc2252 schema checker, and given the database schema,
+    it can be used to garentee that operations performed in memory are
+    valid against a standards compliant database. It has numerious
+    uses beyond validation, translation between two databases with
+    different schemas is another example of where it finds natural
+    usage. For an example application @see
+    <http://tdir.sourceforge.net> tdir *)
 class scldapentry :
   Ldap_schemaparser.schema ->
   object
