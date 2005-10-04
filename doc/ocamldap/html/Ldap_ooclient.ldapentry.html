@@ -36,9 +36,8 @@
 <br>
 <pre><span class="keyword">class</span> <a name="TYPEldapentry"></a>ldapentry : <code class="type"></code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>this object represents a remote object within local memory. It
     records all local changes made to it (if it's changetype is set to
-    `MODIFY), and can commit them to the server at a later time. This
-    can significantly improve performance by reducing traffic to the
-    server.<br>
+    `MODIFY), and can commit them to the server at a later time via
+    <a href="Ldap_ooclient.ldapcon.html#METHODupdate_entry"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapcon.update_entry</code></a>.<br>
 <hr width="100%">
 <pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.html#TYPEop_lst">op_lst</a> -> unit</code></pre><div class="info">
 add values to an attribute (or create a new attribute). Does
@@ -49,8 +48,10 @@ return a list of the type (name) of all the attributes present
     on the object<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODchanges"></a>changes : <code class="type">(<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list</code></pre><div class="info">
-return a list of changes made to the object in a format suitable for
-      sending directly to modify_s<br>
+return a list of changes made to the object in a the format of
+	a modify operation. For example, you can apply the changes to another
+	ldapentry object using the <a href="Ldap_ooclient.ldapentry.html#METHODmodify"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.modify</code></a>
+	method<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODchangetype"></a>changetype : <code class="type"><a href="Ldap_ooclient.html#TYPEchangetype">changetype</a></code></pre><div class="info">
 return the changetype of the object<br>
@@ -80,13 +81,14 @@ get the value of an attribute<br>
 	attribute does not exist.<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">(<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
-modify the object (same as modify_s), does not change the
-	database until you update<br>
+Apply modifications to object in memory, does not change the
+	database until you update using
+	<a href="Ldap_ooclient.ldapcon.html#METHODupdate_entry"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapcon.update_entry</code></a><br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODprint"></a>print : <code class="type">unit</code></pre><div class="info">
-print an ldif like representation of the object to stdout, see
-      Ldif_oo for standards compliant ldif. Usefull for toplevel
-      sessions. DEPRECATED.<br>
+<span class="warning">Deprecated.</span>print an ldif like representation of the object to stdout, see
+	Ldif_oo for standards compliant ldif. Usefull for toplevel
+	sessions.<br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODreplace"></a>replace : <code class="type"><a href="Ldap_ooclient.html#TYPEop_lst">op_lst</a> -> unit</code></pre><div class="info">
 replace values in the object, does not change the database

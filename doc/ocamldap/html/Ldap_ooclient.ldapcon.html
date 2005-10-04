@@ -27,7 +27,10 @@
 <link title="Ldap_toplevel" rel="Chapter" href="Ldap_toplevel.html">
 <link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
 <link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html">
-<link title="Ldap_txooclient" rel="Chapter" href="Ldap_txooclient.html"><title>Ldap_ooclient.ldapcon</title>
+<link title="Ldap_txooclient" rel="Chapter" href="Ldap_txooclient.html"><link title="Authentication" rel="Section" href="#2_Authentication">
+<link title="Searching" rel="Section" href="#2_Searching">
+<link title="Making Modifications" rel="Section" href="#2_MakingModifications">
+<title>Ldap_ooclient.ldapcon</title>
 </head>
 <body>
 <div class="navbar"><a href="Ldap_ooclient.ldapentry.html">Previous</a>
@@ -49,7 +52,7 @@
     [<span class="string">"ldap://first.ldap.server"</span>;<span class="string">"ldap://second.ldap.server"</span>]</code>. 
 <p>
 
-    In addition to specifying multiple urls if DNS names are given,
+    In addition to specifying multiple urls, if DNS names are given,
     and those names are bound to multiple addresses, then all possible
     addresses will be tried.
 <p>
@@ -83,18 +86,16 @@
 <div class="param_info"><code class="code">version</code> : The protocol version to use, the default is <code class="code">3</code>,
     the other recognized value is <code class="code">2</code>.</div>
 <hr width="100%">
-<pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><div class="info">
-add an entry to the database<br>
-</div>
-<pre><span class="keyword">method</span> <a name="METHODbind"></a>bind : <code class="type">?cred:string -> ?meth:<a href="Ldap_funclient.html#TYPEauthmethod">Ldap_funclient.authmethod</a> -> string -> unit</code></pre><div class="info">
+<a name="2_Authentication"></a>
+<h2>Authentication</h2><pre><span class="keyword">method</span> <a name="METHODbind"></a>bind : <code class="type">?cred:string -> ?meth:<a href="Ldap_funclient.html#TYPEauthmethod">Ldap_funclient.authmethod</a> -> string -> unit</code></pre><div class="info">
 bind to the database using dn. 
 <p>
 
-      <a name="0_Example"></a>
-<h0>Example</h0>
+      <a name="0_SimpleBindExample"></a>
+<h0>Simple Bind Example</h0>
 <p>
 
-      <code class="code">ldap<span class="keywordsign">#</span>bind ~cred:<span class="string">"password"</span> dn</code>
+      <code class="code">ldap<span class="keywordsign">#</span>bind ~cred:<span class="string">"password"</span> <span class="string">"cn=foo,ou=people,ou=auth,o=bar"</span></code>
 <p>
 
       To bind anonymously, omit ~cred, and leave dn blank eg.
@@ -104,35 +105,42 @@ bind to the database using dn.
 <h0>Example</h0>
 <p>
 
-      <code class="code">ldap<span class="keywordsign">#</span>bind <span class="string">""</span></code>.<br>
+      <code class="code">ldap<span class="keywordsign">#</span>bind <span class="string">""</span></code><br>
 </div>
-<div class="param_info"><code class="code">cred</code> : The credentials to provide for binding.</div>
+<div class="param_info"><code class="code">cred</code> : The credentials to provide for binding. Default <code class="code"><span class="string">""</span></code>.</div>
 <div class="param_info"><code class="code">meth</code> : The method to use when binding See
       <a href="Ldap_funclient.html#TYPEauthmethod"><code class="code"><span class="constructor">Ldap_funclient</span>.authmethod</code></a> the default is <code class="code"><span class="keywordsign">`</span><span class="constructor">SIMPLE</span></code>. If
-      <code class="code"><span class="keywordsign">`</span><span class="constructor">SASL</span></code> is used then the <code class="code">dn</code> becomes the username, and <code class="code">~cred</code>
-      may or may not be required. SASL binds have not been tested
+      <code class="code"><span class="keywordsign">`</span><span class="constructor">SASL</span></code> is used then <code class="code">dn</code> and <code class="code">~cred</code> Are interperted according
+      to the chosen SASL mechanism. SASL binds have not been tested
       extensively.</div>
-<pre><span class="keyword">method</span> <a name="METHODdelete"></a>delete : <code class="type">string -> unit</code></pre><div class="info">
-Delete the object named by dn from the database <code class="code"><span class="keywordsign">#</span>delete dn</code><br>
+<pre><span class="keyword">method</span> <a name="METHODunbind"></a>unbind : <code class="type">unit</code></pre><div class="info">
+Deauthenticate and close the connection to the server<br>
 </div>
-<pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">string -> (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
-Modify the entry named by dn, applying mods eg. <code class="code"><span class="keywordsign">#</span>modify dn
-      [(<span class="keywordsign">`</span><span class="constructor">DELETE</span>, <span class="string">"cn"</span>, [<span class="string">"foo"</span>;<span class="string">"bar"</span>])]</code><br>
+<a name="2_Searching"></a>
+<h2>Searching</h2><pre><span class="keyword">method</span> <a name="METHODsearch"></a>search : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> ?base:string -> string -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a> list</code></pre><div class="info">
+Search the directory syncronously for an entry which matches the
+      search criteria.
+<p>
+
+      <a name="0_Example"></a>
+<h0>Example</h0>
+<p>
+
+      <code class="code">ldap<span class="keywordsign">#</span>search ~base:<span class="string">"dc=foo,dc=bar"</span> ~attrs:[<span class="string">"cn"</span>] <span class="string">"uid=*"</span></code><br>
 </div>
-<pre><span class="keyword">method</span> <a name="METHODmodrdn"></a>modrdn : <code class="type">string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit</code></pre><div class="info">
-Modify the rdn of the object named by dn, if the protocol
-      version is 3 you may additionally change the superior <code class="code"><span class="keywordsign">#</span>modrdn
-      ~deleteoldrdn:<span class="keyword">true</span> ~newsup:(<span class="constructor">Some</span> <span class="string">"o=csun"</span>) dn newrdn</code>, the rdn
-      will be changed to the attribute represented (as a string) by
-      newrdn, (simple example <code class="code"><span class="string">"cn=foo"</span></code>, more complex example
-      <code class="code"><span class="string">"uid=foo+bar+baz"</span></code>).<br>
+<div class="param_info"><code class="code">scope</code> : Default <code class="code"><span class="keywordsign">`</span><span class="constructor">SUBTREE</span></code>, defines the scope of the
+      search. see <a href="Ldap_types.html#TYPEsearch_scope"><code class="code"><span class="constructor">Ldap_types</span>.search_scope</code></a></div>
+<div class="param_info"><code class="code">attrs</code> : Default <code class="code">[]</code> (means all attributes)</div>
+<div class="param_info"><code class="code">attrsonly</code> : Default <code class="code"><span class="keyword">false</span></code> If true, asks the server to return
+      only the attribute names, not their values.</div>
+<div class="param_info"><code class="code">base</code> : Default <code class="code"><span class="string">""</span></code>, The search base, which is the dn of the
+      object from which you want to start your search. Only that
+      object, and it's children will be included in the
+      search. Further controlled by <code class="code">~scope</code>.</div>
+<pre><span class="keyword">method</span> <a name="METHODsearch_a"></a>search_a : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       ?base:string -> string -> ?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
+Search the directory asyncronously, otherwise the same as
+      search.<br>
 </div>
-<div class="param_info"><code class="code">deleteoldrdn</code> : Default <code class="code"><span class="keyword">true</span></code>, delete
-      the old rdn value as part of the modrdn.</div>
-<div class="param_info"><code class="code">newsup</code> : Default
-      <code class="code"><span class="constructor">None</span></code>, only valid when the protocol version is 3, change the
-      object's location in the tree, making its superior equal to the
-      specified object.</div>
 <pre><span class="keyword">method</span> <a name="METHODrawschema"></a>rawschema : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
 Fetch the raw (unparsed) schema from the directory using the
       standard mechanism (requires protocol version 3)<br>
@@ -142,31 +150,46 @@ Fetch and parse the schema from the directory via the standard
       mechanism (requires version 3). Return a structured
       representation of the schema indexed by canonical name, and oid.<br>
 </div>
-<pre><span class="keyword">method</span> <a name="METHODsearch"></a>search : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -> ?base:string -> string -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a> list</code></pre><div class="info">
-Search the directory syncronously for an entry which matches the
-      search criteria. <code class="code"><span class="keywordsign">#</span>search ~base ldapfilter</code>, eg. <code class="code"><span class="keywordsign">#</span>search
-      ~base:<span class="string">"dc=foo,dc=bar"</span> ~attrs:[<span class="string">"cn"</span>] <span class="string">"uid=*"</span></code><br>
+<a name="2_MakingModifications"></a>
+<h2>Making Modifications</h2><pre><span class="keyword">method</span> <a name="METHODadd"></a>add : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><div class="info">
+add an entry to the database<br>
 </div>
-<div class="param_info"><code class="code">scope</code> : Default <code class="code"><span class="keywordsign">`</span><span class="constructor">SUBTREE</span></code>, defines the scope of the search. see
-      <a href="Ldap_types.html#TYPEsearch_scope"><code class="code"><span class="constructor">Ldap_types</span>.search_scope</code></a></div>
-<div class="param_info"><code class="code">attrs</code> : Default <code class="code">[]</code> (means all
-      attributes)</div>
-<div class="param_info"><code class="code">attrsonly</code> : Default <code class="code"><span class="keyword">false</span></code> If true, asks the
-      server to return only the attribute names, not their
-      values.</div>
-<div class="param_info"><code class="code">base</code> : Default <code class="code"><span class="string">""</span></code>, The search base, which is the
-      dn of the object from which you want to start your search. Only
-      that object, and it's children will be included in the
-      search. Further controlled by <code class="code">~scope</code>.</div>
-<pre><span class="keyword">method</span> <a name="METHODsearch_a"></a>search_a : <code class="type">?scope:<a href="Ldap_types.html#TYPEsearch_scope">Ldap_types.search_scope</a> -><br>       ?attrs:string list -><br>       ?attrsonly:bool -><br>       ?base:string -> string -> ?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a></code></pre><div class="info">
-Search the directory asyncronously, otherwise the same as
-      search.<br>
+<pre><span class="keyword">method</span> <a name="METHODdelete"></a>delete : <code class="type">string -> unit</code></pre><div class="info">
+Delete the object named by dn from the database<br>
 </div>
-<pre><span class="keyword">method</span> <a name="METHODunbind"></a>unbind : <code class="type">unit</code></pre><div class="info">
-Close the connection to the directory<br>
+<pre><span class="keyword">method</span> <a name="METHODmodify"></a>modify : <code class="type">string -> (<a href="Ldap_types.html#TYPEmodify_optype">Ldap_types.modify_optype</a> * string * string list) list -> unit</code></pre><div class="info">
+Modify the entry named by dn, applying mods 
+<p>
+
+      <a name="0_Example"></a>
+<h0>Example</h0>
+<p>
+
+      <code class="code">ldap<span class="keywordsign">#</span>modify <span class="string">"uid=foo,ou=people,dc=bar,dc=baz"</span> [(<span class="keywordsign">`</span><span class="constructor">DELETE</span>, <span class="string">"cn"</span>, [<span class="string">"foo"</span>;<span class="string">"bar"</span>])]</code><br>
 </div>
 <pre><span class="keyword">method</span> <a name="METHODupdate_entry"></a>update_entry : <code class="type"><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit</code></pre><div class="info">
 Syncronize changes made locally to an ldapentry with the
       directory.<br>
 </div>
+<pre><span class="keyword">method</span> <a name="METHODmodrdn"></a>modrdn : <code class="type">string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit</code></pre><div class="info">
+Modify the rdn of the object named by dn, if the protocol
+      version is 3 you may additionally change the superior, the rdn
+      will be changed to the attribute represented (as a string) by
+      newrdn, 
+<p>
+
+      <a name="0_ExampleWithNewSuperior"></a>
+<h0>Example With New Superior</h0>
+<p>
+
+      <code class="code">ldap<span class="keywordsign">#</span>modrdn ~newsup:(<span class="constructor">Some</span> <span class="string">"o=csun"</span>) <span class="string">"cn=bob,ou=people,o=org"</span> <span class="string">"uid=bperson"</span></code>
+<p>
+
+      After this example "cn=bob,ou=people,o=org" will end up as "uid=bperson,o=csun".<br>
+</div>
+<div class="param_info"><code class="code">deleteoldrdn</code> : Default <code class="code"><span class="keyword">true</span></code>, delete
+      the old rdn value as part of the modrdn.</div>
+<div class="param_info"><code class="code">newsup</code> : Default <code class="code"><span class="constructor">None</span></code>, only valid when the protocol
+      version is 3, change the object's location in the tree, making
+      its superior equal to the specified object.</div>
 </body></html>

@@ -31,15 +31,27 @@
 <table>
 <tr><td align="left"><br>A</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODadapt_service">adapt_service</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Run service through the delta engine to find out what changes
+      would actually be applied to this object
+</div>
+</td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODadd">add</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODadd">add</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODadd">add</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Missing attributes may be marked for generation.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODadd">add</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Add values to the entry, just as
+      <a href="Ldap_ooclient.ldapentry.html#METHODadd"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.add</code></a>, However, after the add is
+      complete the schema checker is run in <code class="code"><span class="constructor">Optimistic</span></code> mode.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODadd">add</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
 <td><div class="info">
 add an entry to the database
@@ -51,9 +63,16 @@ add values to an attribute (or create a new attribute).
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODadd_generate">add_generate</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+add the named attribute to the list of attributes to be generated
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODadd_service">add_service</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+add the named service to the object, this also adds all the
+      services depended upon by the named service.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODassociate_entries">associate_entries</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODassociate_entry">associate_entry</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
@@ -63,7 +82,12 @@ add values to an attribute (or create a new attribute).
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODattributes">attributes</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODattributes">attributes</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODattributes"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.attributes</code></a>, except that the
+      returned list contains attributes which may not yet exist on
+      the entry.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODattributes">attributes</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 return a list of the type (name) of all the attributes present
@@ -86,11 +110,15 @@ bind to the database using dn.
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODchanges">changes</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODchanges">changes</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODchanges"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.changes</code></a> except that changes
+      made by the schema checker may also be listed.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODchanges">changes</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
-return a list of changes made to the object in a format suitable for
-      sending directly to modify_s
+return a list of changes made to the object in a the format of
+	a modify operation.
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODchangetype">changetype</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
@@ -98,7 +126,10 @@ return a list of changes made to the object in a format suitable for
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODchangetype">changetype</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODchangetype">changetype</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODchangetype"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.changetype</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODchangetype">changetype</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 return the changetype of the object
@@ -114,10 +145,15 @@ return the changetype of the object
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODadd"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.add</code></a>, except that the schema
+      checker is run in <code class="code"><span class="constructor">Pessimistic</span></code> mode after the operation is
+      complete.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
 <td><div class="info">
-Delete the object named by dn from the database <code class="code"><span class="keywordsign">#</span>delete dn</code>
+Delete the object named by dn from the database
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODdelete">delete</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
@@ -127,15 +163,24 @@ delete attributes from the object, does not change the
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODdelete_generate">delete_generate</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Delete the named attribute from the list of attributes to generate
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODdelete_service">delete_service</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Delete the named service.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODdiff">diff</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODdiff">diff</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODdiff">diff</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODdiff"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.diff</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODdiff">diff</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 given an ldapentry, return the differences between the current
@@ -153,7 +198,10 @@ given an ldapentry, return the differences between the current
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODdn">dn</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODdn">dn</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODdn"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.dn</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODdn">dn</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 return the dn of the object
@@ -165,7 +213,11 @@ return the dn of the object
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODexists">exists</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODexists">exists</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODexists"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.exists</code></a> except that it
+      refrences attributes which may not yet exist.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODexists">exists</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 query whether the attribute type (name) exists in the object
@@ -177,7 +229,10 @@ query whether the attribute type (name) exists in the object
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODflush_changes">flush_changes</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODflush_changes">flush_changes</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODflush_changes"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.flush_changes</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODflush_changes">flush_changes</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 clear all accumulated changes
@@ -185,13 +240,25 @@ clear all accumulated changes
 </td></tr>
 <tr><td align="left"><br>G</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODgenerate">generate</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Run the generation functions on the list of attributes to be
+      generated, saving the results in the entry.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODget_value">get_value</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODget_value">get_value</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+If a missing attribute is marked for generation its value will
+      be <code class="code"><span class="string">"generate"</span></code> instead of <code class="code"><span class="string">"required"</span></code>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODget_value">get_value</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODget_value"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.get_value</code></a>, except that
+      attributes which do not yet exists may be referenced.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODget_value">get_value</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 get the value of an attribute
@@ -201,24 +268,41 @@ get the value of an attribute
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODis_allowed">is_allowed</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODis_allowed">is_allowed</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Returns true if the attributed specified is allowed by the
+      current set of objectclasses present on the entry.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODis_missing">is_missing</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODis_missing">is_missing</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Returns true if the attribute specified is a must, but is not
+      currently present.
+</div>
+</td></tr>
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODlist_allowed">list_allowed</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODlist_allowed">list_allowed</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Return a list of all attributes allowed on the entry (by oid)
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODlist_missing">list_missing</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODlist_missing">list_missing</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Return a list of all missing attributes (by oid)
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODlist_present">list_present</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODlist_present">list_present</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Return a list of all present attributes.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_mutex.object_lock_table_t.html#METHODlock">lock</a> [<a href="Ldap_mutex.object_lock_table_t.html">Ldap_mutex.object_lock_table_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_mutex.mutex_t.html#METHODlock">lock</a> [<a href="Ldap_mutex.mutex_t.html">Ldap_mutex.mutex_t</a>]</td>
@@ -241,16 +325,22 @@ lock the mutex.
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODmodify"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.modify</code></a> except that the
+      schema checker is run in <code class="code"><span class="constructor">Pessimistic</span></code> mode after the
+      modification is applied.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
 <td><div class="info">
-Modify the entry named by dn, applying mods eg.
+Modify the entry named by dn, applying mods 
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODmodify">modify</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
-modify the object (same as modify_s), does not change the
-	database until you update
+Apply modifications to object in memory, does not change the
+	database until you update using
+	<a href="Ldap_ooclient.ldapcon.html#METHODupdate_entry"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapcon.update_entry</code></a>
 </div>
 </td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODmodrdn">modrdn</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
@@ -258,18 +348,20 @@ modify the object (same as modify_s), does not change the
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODmodrdn">modrdn</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
 <td><div class="info">
 Modify the rdn of the object named by dn, if the protocol
-      version is 3 you may additionally change the superior <code class="code"><span class="keywordsign">#</span>modrdn
-      ~deleteoldrdn:<span class="keyword">true</span> ~newsup:(<span class="constructor">Some</span> <span class="string">"o=csun"</span>) dn newrdn</code>, the rdn
+      version is 3 you may additionally change the superior, the rdn
       will be changed to the attribute represented (as a string) by
-      newrdn, (simple example <code class="code"><span class="string">"cn=foo"</span></code>, more complex example
-      <code class="code"><span class="string">"uid=foo+bar+baz"</span></code>).
+      newrdn, 
 </div>
 </td></tr>
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODof_entry">of_entry</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODof_entry">of_entry</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Given an <a href="Ldap_ooclient.ldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry</code></a> copy all of it's data into
+      the current object, and perform a schema check.
+</div>
+</td></tr>
 <tr><td><a href="Ldif_changerec_oo.change.html#METHODof_string">of_string</a> [<a href="Ldif_changerec_oo.change.html">Ldif_changerec_oo.change</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldif_oo.ldif.html#METHODof_string">of_string</a> [<a href="Ldif_oo.ldif.html">Ldif_oo.ldif</a>]</td>
@@ -278,14 +370,16 @@ Modify the rdn of the object named by dn, if the protocol
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODprint">print</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODprint">print</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<font color="#CCCCCC"></font></div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODprint">print</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<font color="#CCCCCC"></font></div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODprint">print</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
-print an ldif like representation of the object to stdout, see
-      Ldif_oo for standards compliant ldif.
-</div>
+<font color="#CCCCCC"></font></div>
 </td></tr>
 <tr><td align="left"><br>R</td></tr>
 <tr><td><a href="Ldap_txooclient.ldapadvisorytxcon.html#METHODrawschema">rawschema</a> [<a href="Ldap_txooclient.ldapadvisorytxcon.html">Ldap_txooclient.ldapadvisorytxcon</a>]</td>
@@ -305,7 +399,12 @@ Fetch the raw (unparsed) schema from the directory using the
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODreplace">replace</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODreplace">replace</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODreplace"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.replace</code></a> except that once
+      the replace has completed the schema checker is run again in
+      <code class="code"><span class="constructor">Optimistic</span></code> mode.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODreplace">replace</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 replace values in the object, does not change the database
@@ -340,15 +439,26 @@ Search the directory asyncronously, otherwise the same as
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODservice_exists">service_exists</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Tests whether the named service is satisfied by the current
+      entry.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODservices_present">services_present</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Return a list of all the named services which are satisfied by
+      the current entry.
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry_t.html#METHODset_changetype">set_changetype</a> [<a href="Ldap_ooclient.ldapentry_t.html">Ldap_ooclient.ldapentry_t</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODset_changetype">set_changetype</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODset_changetype">set_changetype</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODset_changetype"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.set_changetype</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODset_changetype">set_changetype</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 set the changetype of the object
@@ -359,7 +469,10 @@ set the changetype of the object
 <tr><td><a href="Ldap_ooclient.ldapaccount.html#METHODset_dn">set_dn</a> [<a href="Ldap_ooclient.ldapaccount.html">Ldap_ooclient.ldapaccount</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.scldapentry.html#METHODset_dn">set_dn</a> [<a href="Ldap_ooclient.scldapentry.html">Ldap_ooclient.scldapentry</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Same as <a href="Ldap_ooclient.ldapentry.html#METHODset_dn"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry.set_dn</code></a>
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.ldapentry.html#METHODset_dn">set_dn</a> [<a href="Ldap_ooclient.ldapentry.html">Ldap_ooclient.ldapentry</a>]</td>
 <td><div class="info">
 set the dn of the object
@@ -375,7 +488,7 @@ set the dn of the object
 <td></td></tr>
 <tr><td><a href="Ldap_ooclient.ldapcon.html#METHODunbind">unbind</a> [<a href="Ldap_ooclient.ldapcon.html">Ldap_ooclient.ldapcon</a>]</td>
 <td><div class="info">
-Close the connection to the directory
+Deauthenticate and close the connection to the server
 </div>
 </td></tr>
 <tr><td><a href="Ldap_mutex.object_lock_table_t.html#METHODunlock">unlock</a> [<a href="Ldap_mutex.object_lock_table_t.html">Ldap_mutex.object_lock_table_t</a>]</td>

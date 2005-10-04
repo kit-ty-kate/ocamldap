@@ -282,7 +282,7 @@ object
       representation of the schema indexed by canonical name, and oid. *)
   method schema : Ldap_schemaparser.schema
 
-  (** {2 Making Modifications to the Database} *)
+  (** {2 Making Modifications} *)
 
   (** add an entry to the database *)
   method add : ldapentry -> unit

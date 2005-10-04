@@ -28,10 +28,10 @@
 <link title="Ldap_mutex" rel="Chapter" href="Ldap_mutex.html">
 <link title="Ldif_changerec_oo" rel="Chapter" href="Ldif_changerec_oo.html">
 <link title="Ldap_txooclient" rel="Chapter" href="Ldap_txooclient.html"><link title="Communication With Ldap_funclient" rel="Section" href="#0_CommunicationWithLdapfunclient">
-<link title="Supporting Types" rel="Section" href="#0_SupportingTypes">
-<link title="Basic Data Types" rel="Subsection" href="#5_BasicDataTypes">
-<link title="Interacting with LDAP Servers" rel="Subsection" href="#5_InteractingwithLDAPServers">
-<link title="Schema Aware Ldap_ooclient.ldapentry Derivatives" rel="Subsection" href="#5_SchemaAwareLdapooclientldapentryDerivatives">
+<link title="Miscallaneous" rel="Subsection" href="#1_Miscallaneous">
+<link title="Iterators Over Streams of ldapentry Objects" rel="Subsection" href="#1_IteratorsOverStreamsofldapentryObjects">
+<link title="General Schema Aware Entry" rel="Subsection" href="#1_GeneralSchemaAwareEntry">
+<link title="Schema Aware Entry for Account Managment" rel="Subsection" href="#1_SchemaAwareEntryforAccountManagment">
 <title>Ldap_ooclient</title>
 </head>
 <body>
@@ -44,8 +44,8 @@
 <pre><span class="keyword">module</span> Ldap_ooclient: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>an object oriented ldap client interface<br>
 <hr width="100%">
 <br>
-<a name="5_BasicDataTypes"></a>
-<h5>Basic Data Types</h5><br>
+<a name="2_BasicDataTypes"></a>
+<h2>Basic Data Types</h2><br>
 <pre><span class="keyword">type</span> <a name="TYPEop"></a><code class="type"></code>op = <code class="type">string * string list</code> </pre>
 <div class="info">
 the type of an operation, eg. <code class="code">(<span class="string">"cn"</span>, [<span class="string">"foo"</span>;<span class="string">"bar"</span>])</code><br>
@@ -65,12 +65,18 @@ The change type of an ldapentry. This controls some aspects of
     it's behavior<br>
 </div>
 
+<br>
+<a name="2_LocalRepresentationofLDAPObjects"></a>
+<h2>Local Representation of LDAP Objects</h2><br>
 <pre><span class="keyword">class type</span> <a name="TYPEldapentry_t"></a><a href="Ldap_ooclient.ldapentry_t.html">ldapentry_t</a> = <code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry_t.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
 The base type of an ldap entry represented in memory.
 </div>
 <pre><span class="keyword">class</span> <a name="TYPEldapentry"></a><a href="Ldap_ooclient.ldapentry.html">ldapentry</a> : <code class="type"></code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
 this object represents a remote object within local memory.
 </div>
+<br>
+<a name="1_Miscallaneous"></a>
+<h1>Miscallaneous</h1><br>
 <pre><span class="keyword">val</span> <a name="VALformat_entry"></a>format_entry : <code class="type">< attributes : string list; dn : string; get_value : string -> string list;<br>         .. > -><br>       unit</code></pre><div class="info">
 toplevel formatter for ldapentry, prints the whole entry with a
     nice structure. Each attribute is in the correct syntax to be
@@ -97,13 +103,16 @@ given an ldapentry as returned by ldapcon, or constructed manually,
     ldap_funserver.<br>
 </div>
 <br>
-<a name="5_InteractingwithLDAPServers"></a>
-<h5>Interacting with LDAP Servers</h5><br>
+<a name="2_InteractingwithLDAPServers"></a>
+<h2>Interacting with LDAP Servers</h2><br>
 <pre><span class="keyword">class</span> <a name="TYPEldapcon"></a><a href="Ldap_ooclient.ldapcon.html">ldapcon</a> : <code class="type">?connect_timeout:int -> ?referral_policy:[> `RETURN ] -> ?version:int -> string list -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapcon.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
 This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
     used to perform operations on that server.
 </div>
+<br>
+<a name="1_IteratorsOverStreamsofldapentryObjects"></a>
+<h1>Iterators Over Streams of ldapentry Objects</h1><br>
 <pre><span class="keyword">val</span> <a name="VALiter"></a>iter : <code class="type">(<a href="Ldap_ooclient.ldapentry.html">ldapentry</a> -> unit) -><br>       (?abandon:bool -> unit -> <a href="Ldap_ooclient.ldapentry.html">ldapentry</a>) -> unit</code></pre><div class="info">
 given a source of ldapentry objects (unit -&gt; ldapentry), such as
     the return value of ldapcon#search_a, apply f (first arg) to each entry
@@ -124,16 +133,23 @@ given a source of ldapentry objects (unit -&gt; ldapentry), such as
   intial))) see List.fold_right.<br>
 </div>
 <br>
-<a name="5_SchemaAwareLdapooclientldapentryDerivatives"></a>
-<h5>Schema Aware <a href="Ldap_ooclient.ldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry</code></a> Derivatives</h5><br>
+<a name="2_SchemaAwareldapentryDerivatives"></a>
+<h2>Schema Aware ldapentry Derivatives</h2><br>
 <br>
-<a name="0_SupportingTypes"></a>
-<h0>Supporting Types</h0><br>
+<a name="1_GeneralSchemaAwareEntry"></a>
+<h1>General Schema Aware Entry</h1> <a href="Ldap_ooclient.scldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.scldapentry</code></a>, A
+    schema aware derivative of <a href="Ldap_ooclient.ldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.ldapentry</code></a>. It contains
+    an rfc2252 schema checker, and given the database schema, it can
+    be used to garentee that operations performed in memory are valid
+    against a standards compliant database. It has numerious uses,
+    translation between two databases with different schemas an
+    example of where it finds natural usage. For an example
+    application<br>
 <pre><span class="keyword">module</span> <a href="Ldap_ooclient.OrdOid.html">OrdOid</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.OrdOid.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
 an ordered oid type, for placing oids in sets
 </div>
 <pre><span class="keyword">module</span> <a href="Ldap_ooclient.Setstr.html">Setstr</a>: <code class="code"><span class="keyword">sig</span></code> <a href="Ldap_ooclient.Setstr.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info">
-<font color="#CCCCCC">A set of Oids,
+<font color="#CCCCCC">A set of Oids
 </font></div>
 <br><code><span class="keyword">type</span> <a name="TYPEscflavor"></a><code class="type"></code>scflavor = </code><table class="typetable">
 <tr>
@@ -155,7 +171,8 @@ an ordered oid type, for placing oids in sets
 
 <div class="info">
 The type of schema checking to perform in
-    <a href="Ldap_ooclient.scldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.scldapentry</code></a>.<br>
+    <a href="Ldap_ooclient.scldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.scldapentry</code></a>. Normally this is picked
+    automatically, however it can be overridden in some cases.<br>
 </div>
 
 <pre><span class="keyword">val</span> <a name="VALattrToOid"></a>attrToOid : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -><br>       <a href="Ldap_schemaparser.Lcstring.html#TYPEt">Ldap_schemaparser.Lcstring.t</a> -> <a href="Ldap_schemaparser.Oid.html#TYPEt">Ldap_schemaparser.Oid.t</a></code></pre><div class="info">
@@ -188,11 +205,8 @@ get an objectclass structure by one of its names (canonical or
 <pre><span class="keyword">val</span> <a name="VALgetAttr"></a>getAttr : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -><br>       <a href="Ldap_schemaparser.Lcstring.html#TYPEt">Ldap_schemaparser.Lcstring.t</a> -> <a href="Ldap_schemaparser.html#TYPEattribute">Ldap_schemaparser.attribute</a></code></pre><div class="info">
 get an attr structure by one of its names (canonical or otherwise,
     however getting it by canonical name is currently much faster)<br>
-<b>Raises</b><ul><li><code>Invalid_attribute</code> If the attribute is not found in the
-    schema.</li>
-<li><code>Invalid_objectclass</code> If the objectclass is not found
-    in the schema.</li>
-</ul>
+<b>Raises</b> <code>Invalid_attribute</code> If the attribute is not found in the
+    schema.<br>
 </div>
 <pre><span class="keyword">val</span> <a name="VALequateAttrs"></a>equateAttrs : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -><br>       <a href="Ldap_schemaparser.Lcstring.html#TYPEt">Ldap_schemaparser.Lcstring.t</a> -> <a href="Ldap_schemaparser.Lcstring.html#TYPEt">Ldap_schemaparser.Lcstring.t</a> -> bool</code></pre><div class="info">
 equate attributes by oid. This allows non canonical names to be
@@ -205,7 +219,40 @@ equate attributes by oid. This allows non canonical names to be
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONInvalid_attribute"></a>Invalid_attribute <span class="keyword">of</span> <code class="type">string</code></pre>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONSingle_value"></a>Single_value <span class="keyword">of</span> <code class="type">string</code></pre>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONObjectclass_is_required"></a>Objectclass_is_required</pre>
-<pre><span class="keyword">class</span> <a name="TYPEscldapentry"></a><a href="Ldap_ooclient.scldapentry.html">scldapentry</a> : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.scldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br><code><span class="keyword">type</span> <a name="TYPEgenerator"></a><code class="type"></code>generator = {</code><table class="typetable">
+<pre><span class="keyword">class</span> <a name="TYPEscldapentry"></a><a href="Ldap_ooclient.scldapentry.html">scldapentry</a> : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.scldapentry.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><br>
+<a name="1_SchemaAwareEntryforAccountManagment"></a>
+<h1>Schema Aware Entry for Account Managment</h1> A derivative of
+    <a href="Ldap_ooclient.scldapentry.html"><code class="code"><span class="constructor">Ldap_ooclient</span>.scldapentry</code></a> which includes abstractions for
+    managing user accounts in the directory. This class is
+    experimantal, and may be drastically changed in the next version. 
+    As with all experimental code, use with caution. A few of its features.
+<p>
+
+    <ul>
+<li>Loosely dependant attributes: Many attributes are derived
+    from others via a function. ldapaccount allows you to codify
+    that relationship by providing an attribute generator
+    (<a href="Ldap_ooclient.html#TYPEgenerator"><code class="code"><span class="constructor">Ldap_ooclient</span>.generator</code></a>) for the attribute, which will
+    be used to derive it's value except in the case that it is
+    specified explicitly</li>
+<li>Attribute and Generator Grouping: via the service abstraction.
+    Allows you to group attributes together with generators and
+    default values in interesting ways. You can then assign the
+    whole grouping a name, and refer to it by that name. See 
+    <a href="Ldap_ooclient.html#TYPEservice"><code class="code"><span class="constructor">Ldap_ooclient</span>.service</code></a></li>
+<li>Difference Based: Service operations are difference based,
+    all applications of service operations compute the delta between
+    the current object, and what the service requires. The minumum set
+    of changes necessary to satisfy the service are applied to the object.</li>
+<li>Idempotentcy: As a result of being difference based, 
+    Service operations are itempotent. For example, 
+    adding a service twice has no effect on the object. It will 
+    not queue changes for modification to the directory, and it 
+    will not change the object in memory. Deleting a service
+    twice has no effect...etc</li>
+</ul>
+<br>
+<br><code><span class="keyword">type</span> <a name="TYPEgenerator"></a><code class="type"></code>generator = {</code><table class="typetable">
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
@@ -229,6 +276,9 @@ equate attributes by oid. This allows non canonical names to be
 </tr></table>
 }
 
+<div class="info">
+The structure of a generator<br>
+</div>
 
 <br><code><span class="keyword">type</span> <a name="TYPEservice"></a><code class="type"></code>service = {</code><table class="typetable">
 <tr>
@@ -261,6 +311,9 @@ equate attributes by oid. This allows non canonical names to be
 </tr></table>
 }
 
+<div class="info">
+The structure of a service<br>
+</div>
 
 <br><code><span class="keyword">type</span> <a name="TYPEgeneration_error"></a><code class="type"></code>generation_error = </code><table class="typetable">
 <tr>
@@ -278,11 +331,33 @@ equate attributes by oid. This allows non canonical names to be
 
 </tr></table>
 
+<div class="info">
+The type of error raised by attribute generators<br>
+</div>
 
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONNo_generator"></a>No_generator <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+You've asked it to generate an attribute (in a service) which
+    doesn't have a generator<br>
+</div>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONGeneration_failed"></a>Generation_failed <span class="keyword">of</span> <code class="type"><a href="Ldap_ooclient.html#TYPEgeneration_error">generation_error</a></code></pre>
+<div class="info">
+Generator has failed because of some kind of error<br>
+</div>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONNo_service"></a>No_service <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+The service you're talking about doesn't exist<br>
+</div>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONService_dep_unsatisfiable"></a>Service_dep_unsatisfiable <span class="keyword">of</span> <code class="type">string</code></pre>
+<div class="info">
+A service which the one you tried to add depends on doesn't exists<br>
+</div>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONGenerator_dep_unsatisfiable"></a>Generator_dep_unsatisfiable <span class="keyword">of</span> <code class="type">string * string</code></pre>
+<div class="info">
+Your generator depends on an attribute which isn't in the schema<br>
+</div>
 <pre><span class="keyword">exception</span> <a name="EXCEPTIONCannot_sort_dependancies"></a>Cannot_sort_dependancies <span class="keyword">of</span> <code class="type">string list</code></pre>
+<div class="info">
+You have detached cycles in your generator dependancy lists<br>
+</div>
 <pre><span class="keyword">class</span> <a name="TYPEldapaccount"></a><a href="Ldap_ooclient.ldapaccount.html">ldapaccount</a> : <code class="type"><a href="Ldap_schemaparser.html#TYPEschema">Ldap_schemaparser.schema</a> -> (string, <a href="Ldap_ooclient.html#TYPEgenerator">generator</a>) Hashtbl.t -> (string, <a href="Ldap_ooclient.html#TYPEservice">service</a>) Hashtbl.t -> </code><code class="code"><span class="keyword">object</span></code> <a href="Ldap_ooclient.ldapaccount.html">..</a> <code class="code"><span class="keyword">end</span></code></pre></body></html>

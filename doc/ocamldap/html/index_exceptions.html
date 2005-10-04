@@ -31,7 +31,10 @@
 <table>
 <tr><td align="left"><br>C</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONCannot_sort_dependancies">Cannot_sort_dependancies</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+You have detached cycles in your generator dependancy lists
+</div>
+</td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Lber.html#EXCEPTIONDecoding_error">Decoding_error</a> [<a href="Lber.html">Lber</a>]</td>
 <td></td></tr>
@@ -45,9 +48,15 @@ raised at the end of the change records
 </td></tr>
 <tr><td align="left"><br>G</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONGeneration_failed">Generation_failed</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Generator has failed because of some kind of error
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONGenerator_dep_unsatisfiable">Generator_dep_unsatisfiable</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Your generator depends on an attribute which isn't in the schema
+</div>
+</td></tr>
 <tr><td align="left"><br>I</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONInvalid_attribute">Invalid_attribute</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
@@ -102,9 +111,16 @@ functions for implementing mutexes on top of LDAP's built in test
 </td></tr>
 <tr><td align="left"><br>N</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONNo_generator">No_generator</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+You've asked it to generate an attribute (in a service) which
+    doesn't have a generator
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONNo_service">No_service</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+The service you're talking about doesn't exist
+</div>
+</td></tr>
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONObjectclass_is_required">Objectclass_is_required</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
@@ -123,7 +139,10 @@ raised whenever an error occurrs in the server
 </div>
 </td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONService_dep_unsatisfiable">Service_dep_unsatisfiable</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
-<td></td></tr>
+<td><div class="info">
+A service which the one you tried to add depends on doesn't exists
+</div>
+</td></tr>
 <tr><td><a href="Ldap_ooclient.html#EXCEPTIONSingle_value">Single_value</a> [<a href="Ldap_ooclient.html">Ldap_ooclient</a>]</td>
 <td></td></tr>
 <tr><td><a href="Ldap_schemaparser.html#EXCEPTIONSyntax_error_at">Syntax_error_at</a> [<a href="Ldap_schemaparser.html">Ldap_schemaparser</a>]</td>
