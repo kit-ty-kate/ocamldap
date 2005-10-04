@@ -175,7 +175,7 @@ val of_entry : ldapentry -> search_result_entry
     [new ldapcon ~connect_timeout:5 ~version:3
     ["ldap://first.ldap.server";"ldap://second.ldap.server"]]. 
 
-    In addition to specifying multiple urls if DNS names are given,
+    In addition to specifying multiple urls, if DNS names are given,
     and those names are bound to multiple addresses, then all possible
     addresses will be tried.
 
@@ -213,8 +213,7 @@ class ldapcon :
   ?version:int ->
   string list ->
 object
-  (** add an entry to the database *)
-  method add : ldapentry -> unit
+  (** {2 Authentication} *)
 
   (** bind to the database using dn. 
 
@@ -238,46 +237,10 @@ object
   method bind :
     ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
 
-  (** Delete the object named by dn from the database *)
-  method delete : string -> unit
+  (** Deauthenticate and close the connection to the server *)
+  method unbind : unit
 
-  (** Modify the entry named by dn, applying mods 
-
-      {0 Example}
-
-      [ldap#modify "uid=foo,ou=people,dc=bar,dc=baz" [(`DELETE, "cn", ["foo";"bar"])]]
-  *)
-  method modify :
-    string ->
-    (Ldap_types.modify_optype * string * string list) list -> unit
-
-  (** Modify the rdn of the object named by dn, if the protocol
-      version is 3 you may additionally change the superior, the rdn
-      will be changed to the attribute represented (as a string) by
-      newrdn, 
-
-      {0 Example With New Superior}
-
-      [ldap#modrdn ~newsup:(Some "o=csun") "cn=bob,ou=people,o=org" "uid=bperson"]
-
-      After this example "cn=bob,ou=people,o=org" will end up as "uid=bperson,o=csun".
-
-      @param deleteoldrdn Default [true], delete
-      the old rdn value as part of the modrdn. 
-
-      @param newsup Default [None], only valid when the protocol
-      version is 3, change the object's location in the tree, making
-      its superior equal to the specified object. *)
-  method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
-
-  (** Fetch the raw (unparsed) schema from the directory using the
-      standard mechanism (requires protocol version 3) *)
-  method rawschema : ldapentry
-
-  (** Fetch and parse the schema from the directory via the standard
-      mechanism (requires version 3). Return a structured
-      representation of the schema indexed by canonical name, and oid. *)
-  method schema : Ldap_schemaparser.schema
+  (** {2 Searching} *)
 
   (** Search the directory syncronously for an entry which matches the
       search criteria.
@@ -310,12 +273,55 @@ object
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
 
-  (** Close the connection to the directory *)
-  method unbind : unit
+  (** Fetch the raw (unparsed) schema from the directory using the
+      standard mechanism (requires protocol version 3) *)
+  method rawschema : ldapentry
+
+  (** Fetch and parse the schema from the directory via the standard
+      mechanism (requires version 3). Return a structured
+      representation of the schema indexed by canonical name, and oid. *)
+  method schema : Ldap_schemaparser.schema
+
+  (** {2 Making Modifications to the Database} *)
+
+  (** add an entry to the database *)
+  method add : ldapentry -> unit
+
+  (** Delete the object named by dn from the database *)
+  method delete : string -> unit
+
+  (** Modify the entry named by dn, applying mods 
+
+      {0 Example}
+
+      [ldap#modify "uid=foo,ou=people,dc=bar,dc=baz" [(`DELETE, "cn", ["foo";"bar"])]]
+  *)
+  method modify :
+    string ->
+    (Ldap_types.modify_optype * string * string list) list -> unit
 
   (** Syncronize changes made locally to an ldapentry with the
       directory. *)
   method update_entry : ldapentry -> unit
+
+  (** Modify the rdn of the object named by dn, if the protocol
+      version is 3 you may additionally change the superior, the rdn
+      will be changed to the attribute represented (as a string) by
+      newrdn, 
+
+      {0 Example With New Superior}
+
+      [ldap#modrdn ~newsup:(Some "o=csun") "cn=bob,ou=people,o=org" "uid=bperson"]
+
+      After this example "cn=bob,ou=people,o=org" will end up as "uid=bperson,o=csun".
+
+      @param deleteoldrdn Default [true], delete
+      the old rdn value as part of the modrdn. 
+
+      @param newsup Default [None], only valid when the protocol
+      version is 3, change the object's location in the tree, making
+      its superior equal to the specified object. *)
+  method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
 end
 
 (** {1 Iterators Over Streams of ldapentry Objects} *)
@@ -453,100 +459,104 @@ exception Objectclass_is_required
 class scldapentry :
   Ldap_schemaparser.schema ->
 object
+  (** {2 New Methods} *)
+
+  (** Returns true if the attributed specified is allowed by the
+      current set of objectclasses present on the entry. *)
+  method is_allowed : string -> bool
+
+  (** Returns true if the attribute specified is a must, but is not
+      currently present. *)
+  method is_missing : string -> bool
+
+  (** Return a list of all attributes allowed on the entry (by oid) *)
+  method list_allowed : Setstr.elt list
+
+  (** Return a list of all missing attributes (by oid) *)
+  method list_missing : Setstr.elt list
+
+  (** Return a list of all present attributes. In contrast to the
+      [attributes] method, this method ignores missing required
+      attributes and just returns those attributes which are actually
+      present. *)
+  method list_present : Setstr.elt list
+
+  (** Given an {!Ldap_ooclient.ldapentry} copy all of it's data into
+      the current object, and perform a schema check.
+
+      @param scflavor Default [Pessimistic] The schema checking
+      bias, see {!Ldap_ooclient.scflavor} *)
+  method of_entry : ?scflavor:scflavor -> ldapentry -> unit
+
+  (** {2 Inherited Methods} *)
+
   (** Add values to the entry, just as
       {!Ldap_ooclient.ldapentry.add}, However, after the add is
       complete the schema checker is run in [Optimistic] mode. see
       {!Ldap_ooclient.scflavor} *)
-    method add : op_lst -> unit
+  method add : op_lst -> unit
 
-    (** Same as {!Ldap_ooclient.ldapentry.attributes}, except that the
-	returned list contains attributes which may not yet exist on
-	the entry. For example musts which are not yet present will be
-	listed. *)
-    method attributes : string list
+  (** Same as {!Ldap_ooclient.ldapentry.add}, except that the schema
+      checker is run in [Pessimistic] mode after the operation is
+      complete. see {!Ldap_ooclient.scflavor} *)
+  method delete : op_lst -> unit
 
-    (** Same as {!Ldap_ooclient.ldapentry.changes} except that changes
-	made by the schema checker may also be listed. *)
-    method changes : (Ldap_types.modify_optype * string * string list) list
+  (** Same as {!Ldap_ooclient.ldapentry.replace} except that once
+      the replace has completed the schema checker is run again in
+      [Optimistic] mode. See {!Ldap_ooclient.scflavor} *)
+  method replace : op_lst -> unit
 
-    (** Same as {!Ldap_ooclient.ldapentry.changetype} *)
-    method changetype : changetype
+  (** Same as {!Ldap_ooclient.ldapentry.attributes}, except that the
+      returned list contains attributes which may not yet exist on
+      the entry. For example musts which are not yet present will be
+      listed. *)
+  method attributes : string list
 
-    (** Same as {!Ldap_ooclient.ldapentry.add}, except that the schema
-	checker is run in [Pessimistic] mode after the operation is
-	complete. see {!Ldap_ooclient.scflavor} *)
-    method delete : op_lst -> unit
+  (** Same as {!Ldap_ooclient.ldapentry.exists} except that it
+      refrences attributes which may not yet exist. For example musts
+      which are not yet present. *)
+  method exists : string -> bool
 
-    (** Same as {!Ldap_ooclient.ldapentry.dn} *)
-    method dn : string
+  (** Same as {!Ldap_ooclient.ldapentry.get_value}, except that
+      attributes which do not yet exists may be referenced. For example
+      a must which has not yet been satisfied will return [["required"]]
+      when [get_value] is called on it. *)
+  method get_value : string -> string list
 
-    (** Same as {!Ldap_ooclient.ldapentry.exists} except that it
-	refrences attributes which may not yet exist. For example musts
-	which are not yet present. *)
-    method exists : string -> bool
+  (** Same as {!Ldap_ooclient.ldapentry.modify} except that the
+      schema checker is run in [Pessimistic] mode after the
+      modification is applied. see {!Ldap_ooclient.scflavor}. *)
+  method modify :
+    (Ldap_types.modify_optype * string * string list) list -> unit
 
-    (** Same as {!Ldap_ooclient.ldapentry.flush_changes} *)
-    method flush_changes : unit
+  (** Same as {!Ldap_ooclient.ldapentry.changes} except that changes
+      made by the schema checker may also be listed. *)
+  method changes : (Ldap_types.modify_optype * string * string list) list
 
-    (** Same as {!Ldap_ooclient.ldapentry.get_value}, except that
-	attributes which do not yet exists may be referenced. For example
-	a must which has not yet been satisfied will return [["required"]]
-	when [get_value] is called on it. *)
-    method get_value : string -> string list
+  (** Same as {!Ldap_ooclient.ldapentry.changetype} *)
+  method changetype : changetype
 
-    (** Same as {!Ldap_ooclient.ldapentry.diff} *)
-    method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
+  (** Same as {!Ldap_ooclient.ldapentry.dn} *)
+  method dn : string
 
-    (** Returns true if the attributed specified is allowed by the
-	current set of objectclasses present on the entry. *)
-    method is_allowed : string -> bool
+  (** Same as {!Ldap_ooclient.ldapentry.flush_changes} *)
+  method flush_changes : unit
 
-    (** Returns true if the attribute specified is a must, but is not
-	currently present. *)
-    method is_missing : string -> bool
+  (** Same as {!Ldap_ooclient.ldapentry.diff} *)
+  method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
 
-    (** Return a list of all attributes allowed on the entry (by oid) *)
-    method list_allowed : Setstr.elt list
+  (** @deprecated Same as {!Ldap_ooclient.ldapentry.print}, except
+      that it prints attributes which may not yet be present on the
+      object. For example, if the object has unsatisfied musts, it will
+      print "attrname: required" for that attribute. *)
+  method print : unit 
 
-    (** Return a list of all missing attributes (by oid) *)
-    method list_missing : Setstr.elt list
+  (** Same as {!Ldap_ooclient.ldapentry.set_changetype} *)
+  method set_changetype : changetype -> unit
 
-    (** Return a list of all present attributes. In contrast to the
-	[attributes] method, this method ignores missing required
-	attributes and just returns those attributes which are actually
-	present. *)
-    method list_present : Setstr.elt list
-
-    (** Same as {!Ldap_ooclient.ldapentry.modify} except that the
-	schema checker is run in [Pessimistic] mode after the
-	modification is applied. see {!Ldap_ooclient.scflavor}. *)
-    method modify :
-      (Ldap_types.modify_optype * string * string list) list -> unit
-
-    (** Given an {!Ldap_ooclient.ldapentry} copy all of it's data into
-	the current object, and perform a schema check.
-
-	@param scflavor Default [Pessimistic] The schema checking
-	bias, see {!Ldap_ooclient.scflavor} *)
-    method of_entry : ?scflavor:scflavor -> ldapentry -> unit
-
-    (** @deprecated Same as {!Ldap_ooclient.ldapentry.print}, except
-	that it prints attributes which may not yet be present on the
-	object. For example, if the object has unsatisfied musts, it will
-	print "attrname: required" for that attribute. *)
-    method print : unit 
-
-    (** Same as {!Ldap_ooclient.ldapentry.replace} except that once
-	the replace has completed the schema checker is run again in
-	[Optimistic] mode. See {!Ldap_ooclient.scflavor} *)
-    method replace : op_lst -> unit
-
-    (** Same as {!Ldap_ooclient.ldapentry.set_changetype} *)
-    method set_changetype : changetype -> unit
-
-    (** Same as {!Ldap_ooclient.ldapentry.set_dn} *)
-    method set_dn : string -> unit
-  end
+  (** Same as {!Ldap_ooclient.ldapentry.set_dn} *)
+  method set_dn : string -> unit
+end
 
 (** {1 Schema Aware Entry for Account Managment} A derivative of
     {!Ldap_ooclient.scldapentry} which includes abstractions for
@@ -555,27 +565,27 @@ object
     As with all experimental code, use with caution. A few of its features.
 
     {ul 
-      {- Loosely dependant attributes: Many attributes are derived
-         from others via a function. ldapaccount allows you to codify
-         that relationship by providing an attribute generator
-         ({!Ldap_ooclient.generator}) for the attribute, which will
-         be used to derive it's value except in the case that it is
-         specified explicitly}
-      {- Attribute and Generator Grouping: via the service abstraction.
-         Allows you to group attributes together with generators and
-         default values in interesting ways. You can then assign the
-         whole grouping a name, and refer to it by that name. See 
-         {!Ldap_ooclient.service}}
-      {- Difference Based: Service operations are difference based,
-         all applications of service operations compute the delta between
-         the current object, and what the service requires. The minumum set
-         of changes necessary to satisfy the service are applied to the object.}
-      {- Idempotentcy: As a result of being difference based, 
-         Service operations are itempotent. For example, 
-         adding a service twice has no effect on the object. It will 
-         not queue changes for modification to the directory, and it 
-         will not change the object in memory. Deleting a service
-         twice has no effect...etc}}
+    {- Loosely dependant attributes: Many attributes are derived
+    from others via a function. ldapaccount allows you to codify
+    that relationship by providing an attribute generator
+    ({!Ldap_ooclient.generator}) for the attribute, which will
+    be used to derive it's value except in the case that it is
+    specified explicitly}
+    {- Attribute and Generator Grouping: via the service abstraction.
+    Allows you to group attributes together with generators and
+    default values in interesting ways. You can then assign the
+    whole grouping a name, and refer to it by that name. See 
+    {!Ldap_ooclient.service}}
+    {- Difference Based: Service operations are difference based,
+    all applications of service operations compute the delta between
+    the current object, and what the service requires. The minumum set
+    of changes necessary to satisfy the service are applied to the object.}
+    {- Idempotentcy: As a result of being difference based, 
+    Service operations are itempotent. For example, 
+    adding a service twice has no effect on the object. It will 
+    not queue changes for modification to the directory, and it 
+    will not change the object in memory. Deleting a service
+    twice has no effect...etc}}
 
 *)
 
@@ -635,39 +645,75 @@ exception Cannot_sort_dependancies of string list
 
 class ldapaccount :
   Ldap_schemaparser.schema ->
-  (string, generator) Hashtbl.t ->
-  (string, service) Hashtbl.t ->
-  object
-    (** Run service through the delta engine to find out what changes
-	would actually be applied to this object *)
-    method adapt_service : service -> service
-    method add : op_lst -> unit
-    method add_generate : string -> unit
-    method add_service : string -> unit
-    method attributes : string list
-    method changes : (Ldap_types.modify_optype * string * string list) list
-    method changetype : changetype
-    method delete : op_lst -> unit
-    method delete_generate : string -> unit
-    method delete_service : string -> unit
-    method dn : string
-    method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
-    method exists : string -> bool
-    method flush_changes : unit
-    method generate : unit
-    method get_value : string -> string list
-    method is_allowed : string -> bool
-    method is_missing : string -> bool
-    method list_allowed : Setstr.elt list
-    method list_missing : Setstr.elt list
-    method list_present : Setstr.elt list
-    method modify :
-      (Ldap_types.modify_optype * string * string list) list -> unit
-    method of_entry : ?scflavor:scflavor -> ldapentry -> unit
-    method print : unit
-    method replace : op_lst -> unit
-    method service_exists : string -> bool
-    method services_present : string list
-    method set_changetype : changetype -> unit
-    method set_dn : string -> unit
-  end
+    (string, generator) Hashtbl.t ->
+    (string, service) Hashtbl.t ->
+object
+
+  (** {2 Account Manipulation Methods} *)
+
+  (** add the named service to the object, this also adds all the
+      services depended upon by the named service. *)
+  method add_service : string -> unit
+
+  (** Delete the named service. This will also delete all services
+      which depend on it, either directly or indirectly *)
+  method delete_service : string -> unit
+
+  (** Run service through the delta engine to find out what changes
+      would actually be applied to this object *)
+  method adapt_service : service -> service
+
+  (** Tests whether the named service is satisfied by the current
+      entry. A service is satisfied if no changes would result from
+      adding it to the entry. *)
+  method service_exists : string -> bool
+
+  (** Return a list of all the named services which are satisfied by
+      the current entry. *)
+  method services_present : string list
+
+  (** add the named attribute to the list of attributes to be generated *)
+  method add_generate : string -> unit
+
+  (** Delete the named attribute from the list of attributes to generate *)
+  method delete_generate : string -> unit
+
+  (** Run the generation functions on the list of attributes to be
+      generated, saving the results in the entry. You must run this
+      method in order to run any generators at all.  *)
+  method generate : unit
+
+  (** {2 Inherited Methods} Unless explicitly stated, these methods
+      do exactly the same thing as in {!Ldap_ooclient.scldapentry} *)
+
+  (** Missing attributes may be marked for generation. *)
+  method add : op_lst -> unit
+  method attributes : string list
+  method changes : (Ldap_types.modify_optype * string * string list) list
+  method changetype : changetype
+  method delete : op_lst -> unit
+  method dn : string
+  method diff : ldapentry_t -> (Ldap_types.modify_optype * string * string list) list
+  method exists : string -> bool
+  method flush_changes : unit
+
+  (** If a missing attribute is marked for generation its value will
+      be ["generate"] instead of ["required"] *)
+  method get_value : string -> string list
+  method is_allowed : string -> bool
+  method is_missing : string -> bool
+  method list_allowed : Setstr.elt list
+  method list_missing : Setstr.elt list
+  method list_present : Setstr.elt list
+  method modify :
+    (Ldap_types.modify_optype * string * string list) list -> unit
+  method of_entry : ?scflavor:scflavor -> ldapentry -> unit
+
+  (** @deprecated Missing required attributes which will be
+      generated are shown as "attrname: generate" instead of
+      "attrname: required" *)
+  method print : unit
+  method replace : op_lst -> unit
+  method set_changetype : changetype -> unit
+  method set_dn : string -> unit      
+end
