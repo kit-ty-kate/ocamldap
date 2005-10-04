@@ -318,7 +318,7 @@ object
   method update_entry : ldapentry -> unit
 end
 
-(** {2 Iterators Over Streams of ldapentry Objects} *)
+(** {1 Iterators Over Streams of ldapentry Objects} *)
 
 (** given a source of ldapentry objects (unit -> ldapentry), such as
     the return value of ldapcon#search_a, apply f (first arg) to each entry
@@ -339,9 +339,16 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
-(** {2 Schema Aware {!Ldap_ooclient.ldapentry} Derivatives} *)
+(** {2 Schema Aware ldapentry Derivatives} *)
 
-(** {0 Supporting Types} *)
+(** {1 General Schema Aware Entry} {!Ldap_ooclient.scldapentry}, A
+    schema aware derivative of {!Ldap_ooclient.ldapentry}. It contains
+    an rfc2252 schema checker, and given the database schema, it can
+    be used to garentee that operations performed in memory are valid
+    against a standards compliant database. It has numerious uses,
+    translation between two databases with different schemas an
+    example of where it finds natural usage. For an example
+    application @see <http://tdir.sourceforge.net> tdir *)
 
 (** an ordered oid type, for placing oids in sets *)
 module OrdOid :
@@ -443,21 +450,13 @@ exception Invalid_attribute of string
 exception Single_value of string
 exception Objectclass_is_required
 
-(** A schema aware derivative of {!Ldap_ooclient.ldapentry}. It
-    contains an rfc2252 schema checker, and given the database schema,
-    it can be used to garentee that operations performed in memory are
-    valid against a standards compliant database. It has numerious
-    uses beyond validation, translation between two databases with
-    different schemas is another example of where it finds natural
-    usage. For an example application @see
-    <http://tdir.sourceforge.net> tdir *)
 class scldapentry :
   Ldap_schemaparser.schema ->
-  object
-    (** Add values to the entry, just as
-	{!Ldap_ooclient.ldapentry.add}, However, after the add is
-	complete the schema checker is run in [Optimistic] mode. see
-	{!Ldap_ooclient.scflavor} *)
+object
+  (** Add values to the entry, just as
+      {!Ldap_ooclient.ldapentry.add}, However, after the add is
+      complete the schema checker is run in [Optimistic] mode. see
+      {!Ldap_ooclient.scflavor} *)
     method add : op_lst -> unit
 
     (** Same as {!Ldap_ooclient.ldapentry.attributes}, except that the
@@ -549,27 +548,78 @@ class scldapentry :
     method set_dn : string -> unit
   end
 
+(** {1 Schema Aware Entry for Account Managment} A derivative of
+    {!Ldap_ooclient.scldapentry} which includes abstractions for
+    managing user accounts in the directory. This class is
+    experimantal, and may be drastically changed in the next version. 
+    As with all experimental code, use with caution. A few of its features.
+
+    {ul 
+      {- Loosely dependant attributes. Many attributes are derived
+         from others via a function. ldapaccount allows you to codify
+         that relationship by providing an attribute generator
+         ({!Ldap_ooclient.generator}) for the attribute, which will
+         be used to derive it's value except in the case that it is
+         specified explicitly}
+      {- Attribute and generator grouping via the service abstraction.
+         Allows you to group attributes together with generators and
+         default values in interesting ways. You can then assign the
+         whole grouping a name, and refer to it by that name. See 
+         {!Ldap_ooclient.service}}}
+*)
+
+(** The structure of a generator *)
 type generator = {
-  gen_name : string;
+  (** The name of the generator, this should also be its key in the hashtbl *)
+  gen_name : string; 
+
+  (** A list of names of attributes which are required by this
+      generator. The names need not be canonical. *)
   required : string list;
+
+  (** A function which returns a list of values for the attribute,
+      given the entire object. *)
   genfun : ldapentry_t -> string list;
 }
 
+(** The structure of a service *)
 type service = {
+  (** The name of the service, should also be its key in the hashtbl. *)
   svc_name : string;
+
+  (** A list of attributes and values which must be present for the
+      service to be satisfied. *)
   static_attrs : (string * string list) list;
+
+  (** A list of attributes to generate. *)
   generate_attrs : string list;
+
+  (** A list of services on which this service depends. *)
   depends : string list;
 }
+
+(** The type of error raised by attribute generators *)
 type generation_error =
     Missing_required of string list
   | Generator_error of string
 
+(** You've asked it to generate an attribute (in a service) which
+    doesn't have a generator *)
 exception No_generator of string
+
+(** Generator has failed because of some kind of error *)
 exception Generation_failed of generation_error
+
+(** The service you're talking about doesn't exist *)
 exception No_service of string
+
+(** A service which the one you tried to add depends on doesn't exists *)
 exception Service_dep_unsatisfiable of string
+
+(** Your generator depends on an attribute which isn't in the schema *)
 exception Generator_dep_unsatisfiable of string * string
+
+(** You have detached cycles in your generator dependancy lists *)
 exception Cannot_sort_dependancies of string list
 
 class ldapaccount :
