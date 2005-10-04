@@ -555,17 +555,28 @@ object
     As with all experimental code, use with caution. A few of its features.
 
     {ul 
-      {- Loosely dependant attributes. Many attributes are derived
+      {- Loosely dependant attributes: Many attributes are derived
          from others via a function. ldapaccount allows you to codify
          that relationship by providing an attribute generator
          ({!Ldap_ooclient.generator}) for the attribute, which will
          be used to derive it's value except in the case that it is
          specified explicitly}
-      {- Attribute and generator grouping via the service abstraction.
+      {- Attribute and Generator Grouping: via the service abstraction.
          Allows you to group attributes together with generators and
          default values in interesting ways. You can then assign the
          whole grouping a name, and refer to it by that name. See 
-         {!Ldap_ooclient.service}}}
+         {!Ldap_ooclient.service}}
+      {- Difference Based: Service operations are difference based,
+         all applications of service operations compute the delta between
+         the current object, and what the service requires. The minumum set
+         of changes necessary to satisfy the service are applied to the object.}
+      {- Idempotentcy: As a result of being difference based, 
+         Service operations are itempotent. For example, 
+         adding a service twice has no effect on the object. It will 
+         not queue changes for modification to the directory, and it 
+         will not change the object in memory. Deleting a service
+         twice has no effect...etc}}
+
 *)
 
 (** The structure of a generator *)
@@ -627,6 +638,8 @@ class ldapaccount :
   (string, generator) Hashtbl.t ->
   (string, service) Hashtbl.t ->
   object
+    (** Run service through the delta engine to find out what changes
+	would actually be applied to this object *)
     method adapt_service : service -> service
     method add : op_lst -> unit
     method add_generate : string -> unit
