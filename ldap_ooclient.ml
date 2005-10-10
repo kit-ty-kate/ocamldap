@@ -477,34 +477,49 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#search ~scope: scope ~attrs: attrs
 	~attrsonly: attrsonly ~base: base filter
-
+	
   method search_a
     ?(scope = `SUBTREE)
     ?(attrs = [])
     ?(attrsonly = false)
     ?(base = "")
     filter =
-      let fetch_result con (msgid:msgid) ?(abandon=false) () = 
-	if abandon then
-	  (Ldap_funclient.abandon con msgid;
-	   to_entry (`Entry {sr_dn="";sr_attributes=[]}))
-	else
-	  to_entry (get_search_entry con msgid)
-      in
-	if not (reconnect_successful && bound) then self#reconnect;
-	try 
-	  fetch_result con
-	    (search
-	       ~scope: scope
-	       ~base: base
-	       ~attrs: attrs
-	       ~attrsonly: attrsonly
-	       con
-	       filter)
-	with LDAP_Failure(`SERVER_DOWN, _, _) ->
-	  self#reconnect;self#search_a ~scope: scope ~attrs: attrs
-	    ~attrsonly: attrsonly ~base: base filter
 
+    (* a function which is returned by search_a, calling it will give
+       the next entry due from the async search. The first_entry
+       argument is there to maintain the semantics of ldapcon's
+       transparent reconnection system. When search_a is called, we
+       fetch the first entry, and pass it in to this function. We do
+       this because, we will not know if the server actually recieved
+       our search until we read the first entry. *)
+    let fetch_result con (msgid:msgid) first_entry ?(abandon=false) () = 
+      if abandon then
+	(Ldap_funclient.abandon con msgid;
+	 self#reconnect;
+	 to_entry (`Entry {sr_dn="";sr_attributes=[]}))
+      else
+	match !first_entry with
+	    None -> to_entry (get_search_entry con msgid)
+	  | Some e ->
+	      first_entry := None;
+	      to_entry e
+    in
+      if not (reconnect_successful && bound) then self#reconnect;
+      try 
+	let first_entry = ref None in
+	let msgid = 
+	  search
+	    ~scope: scope ~base: base
+	    ~attrs: attrs ~attrsonly: attrsonly
+	    con filter
+	in
+	  (* make sure the server is really still there *)
+	  first_entry := Some (get_search_entry con msgid);
+	  fetch_result con msgid first_entry
+      with LDAP_Failure(`SERVER_DOWN, _, _) ->
+	self#reconnect;self#search_a ~scope: scope ~attrs: attrs
+	  ~attrsonly: attrsonly ~base: base filter
+	  
   method schema = 
     if not (reconnect_successful && bound) then self#reconnect;
     try 
