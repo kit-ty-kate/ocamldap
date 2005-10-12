@@ -1,3 +1,21 @@
+2.1.6
+	* Ldap_ooclient.fold now runs in constant stack space 
+	in the presence of arbitrarially complex exception 
+	handlers.
+	* Ldap_ooclient.ldapcon.search_a makes an effort to 
+	detect if the server is really still there before 
+	returning the cursor function.
+	It does this by trying to download the first object.
+	This should eliminate errors when starting an async 
+	search with a connection which has timed out (it 
+	will now reconnect automatically).
+	* Ldap_ooclient.ldapcon.search_a, the cursor now does a 
+	reconnect when the operation is abandoned. This clears 
+	a lot of common problems, however one gotcha is that 
+	all currently active async operations will be ended if 
+	one of them abandons. This is usually not a problem 
+	however, since an abandon is almost always caused 
+	by a serious error.
 2.1.5
 	* Fixed a bug in the delete method of ldapentry, it would not 
 	correctly process a list of deleteions in a certian case

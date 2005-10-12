@@ -260,18 +260,29 @@ object
       @param base Default [""], The search base, which is the dn of the
       object from which you want to start your search. Only that
       object, and it's children will be included in the
-      search. Further controlled by [~scope]. *)
+      search. Further controlled by [~scope]. 
+
+      @param timelimit The time limit (in seconds) to allow the search
+      to run for. Default [0l], which means there is no user specified
+      time limit, the server may still impose one.
+
+      @param sizelimit The max number of entries to return from the
+      search (in number of entries) *)
   method search :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> ldapentry list
+    ?attrsonly:bool -> ?base:string -> 
+    ?sizelimit:Int32.t -> ?timelimit:Int32.t -> 
+    string -> ldapentry list
 
   (** Search the directory asyncronously, otherwise the same as
       search. *)
   method search_a :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
+    ?attrsonly:bool -> ?base:string -> 
+    ?sizelimit:Int32.t -> ?timelimit:Int32.t -> 
+    string -> (?abandon:bool -> unit -> ldapentry)
 
   (** Fetch the raw (unparsed) schema from the directory using the
       standard mechanism (requires protocol version 3) *)

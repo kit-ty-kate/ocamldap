@@ -391,14 +391,16 @@ let map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
   List.rev (rev_map f res)
 
 let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapentry) =
-  let rec apply f v =
-      try let e = res () in
-	apply f (f e v)
-      with
-	  LDAP_Failure (`SUCCESS, _, _) -> v
-	| exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
-    in
-      apply f v
+  let value = ref v in
+    try
+      while true
+      do
+	value := (f (res ()) !value)
+      done;
+      !value
+    with 
+	LDAP_Failure (`SUCCESS, _, _) -> !value
+      | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
 
 (* a connection to an ldap server *)
 class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts = 
@@ -463,26 +465,29 @@ object (self)
     ?(attrs = [])
     ?(attrsonly = false)
     ?(base = "")
+    ?(sizelimit = 0l)
+    ?(timelimit = 0l)
     filter =
     if not (reconnect_successful && bound) then self#reconnect;
     try 
       List.rev_map to_entry 
 	(search_s 
-	   ~scope: scope
-	   ~base: base
-	   ~attrs: attrs
-	   ~attrsonly: attrsonly
-	   con
-	   filter)
+	   ~scope ~base ~attrs
+	   ~attrsonly ~sizelimit
+	   ~timelimit con filter)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;self#search ~scope: scope ~attrs: attrs
-	~attrsonly: attrsonly ~base: base filter
+      self#reconnect;
+      self#search 
+	~scope ~attrs ~attrsonly 
+	~base ~sizelimit ~timelimit filter
 	
   method search_a
     ?(scope = `SUBTREE)
     ?(attrs = [])
     ?(attrsonly = false)
     ?(base = "")
+    ?(sizelimit = 0l)
+    ?(timelimit = 0l)
     filter =
 
     (* a function which is returned by search_a, calling it will give
@@ -509,16 +514,18 @@ object (self)
 	let first_entry = ref None in
 	let msgid = 
 	  search
-	    ~scope: scope ~base: base
-	    ~attrs: attrs ~attrsonly: attrsonly
+	    ~scope ~base ~attrs ~attrsonly
+	    ~sizelimit ~timelimit
 	    con filter
 	in
 	  (* make sure the server is really still there *)
 	  first_entry := Some (get_search_entry con msgid);
 	  fetch_result con msgid first_entry
       with LDAP_Failure(`SERVER_DOWN, _, _) ->
-	self#reconnect;self#search_a ~scope: scope ~attrs: attrs
-	  ~attrsonly: attrsonly ~base: base filter
+	self#reconnect;
+	self#search_a 
+	  ~scope ~attrs ~attrsonly ~base
+	  ~sizelimit ~timelimit filter
 	  
   method schema = 
     if not (reconnect_successful && bound) then self#reconnect;

@@ -53,11 +53,15 @@ class ldapadvisorytxcon :
     method search :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> string -> ldapentry list
+      ?attrsonly:bool -> ?base:string -> 
+      ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
+      string -> ldapentry list
     method search_a :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry)
+      ?attrsonly:bool -> ?base:string ->
+      ?sizelimit:Int32.t ->  ?timelimit:Int32.t ->
+      string -> (?abandon:bool -> unit -> ldapentry)
     method unbind : unit
     method update_entry : ldapentry -> unit
     method begin_txn : txn
