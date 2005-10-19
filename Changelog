@@ -1,4 +1,5 @@
 2.1.6
+	* fixed several bugs in the output of ldif change records
 	* Ldap_ooclient.fold now runs in constant stack space 
 	in the presence of arbitrarially complex exception 
 	handlers.
