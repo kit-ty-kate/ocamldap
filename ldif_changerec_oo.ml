@@ -49,7 +49,7 @@ let insert_change buf cr =
 	     (match op with
 		  `ADD -> Buffer.add_string buf ("add: " ^ attr ^ "\n")
 		| `DELETE -> Buffer.add_string buf ("delete: " ^ attr ^ "\n")
-		| `REPLACE -> Buffer.add_string buf ("replace:" ^ attr ^ "\n"));
+		| `REPLACE -> Buffer.add_string buf ("replace: " ^ attr ^ "\n"));
 	     List.iter
 	       (fun valu -> Buffer.add_string buf (attr ^ ": " ^ valu ^ "\n"))
 	       vals;

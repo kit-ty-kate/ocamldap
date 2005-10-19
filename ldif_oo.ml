@@ -63,7 +63,7 @@ let safe_attr_val buf a v =
 let entry2ldif ?(ext=false) outbuf e = 
   Buffer.add_string outbuf "dn";
   safe_val outbuf e#dn;
-  if ext then Buffer.add_string outbuf "changetype: add\n";
+  if ext then Buffer.add_string outbuf "\nchangetype: add\n";
   Buffer.add_char outbuf '\n';
   (List.iter
      (fun attr ->
