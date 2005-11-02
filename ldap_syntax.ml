@@ -70,3 +70,27 @@ let object_class_description_syntax v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.38 DESC 'OID' *)
 let oid_syntax v = ()
 
+(* 1.3.6.1.4.1.1466.115.121.1.39 DESC 'Other Mailbox' *)
+let other_mailbox_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.41 DESC 'Postal Address' *)
+let postal_address_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.43 DESC 'Presentation Address' *)
+let presentation_address_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.44 DESC 'Printable String' *)
+let printable_string_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.50 DESC 'Telephone Number' *)
+let telephone_number_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.53 DESC 'UTC Time' *)
+let utc_time_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.54 DESC 'LDAP Syntax Description' *)
+let ldap_syntax_description v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.17 DESC 'DIT Structure Rule Description' *)
+let dit_structure_rule_description_syntax v = ()
+
