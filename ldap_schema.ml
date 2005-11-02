@@ -434,3 +434,9 @@ let name_form_description_syntax v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.36 DESC 'Numeric String' *)
 let numeric_string_syntax v = ()
 
+(* 1.3.6.1.4.1.1466.115.121.1.37 DESC 'Object Class Description' *)
+let object_class_description_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.38 DESC 'OID' *)
+let oid_syntax v = ()
+
