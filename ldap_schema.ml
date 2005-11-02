@@ -322,3 +322,61 @@ let rec readSchema oclst attrlst =
     readAttrs attrlst schema;
     readOcs oclst schema;
     schema;;
+
+exception Invalid_objectclass of string
+exception Invalid_attribute of string
+
+(* lookup functions *)
+let attrToOid schema (attr:Lcstring.t) =
+  try (Hashtbl.find schema.attributes attr).at_oid (* try canonical name first *)
+  with Not_found ->
+    (match (Hashtbl.fold
+	      (fun k v matches ->
+		 if (List.exists 
+		       (fun n -> attr = (Lcstring.of_string n))
+		       v.at_name) 
+		 then
+		   v.at_oid :: matches
+		 else matches)
+	      schema.attributes [])
+     with
+         [] -> raise (Invalid_attribute (Lcstring.to_string attr))
+       | [oid] -> oid
+       | _ -> raise (Invalid_attribute 
+		       ("this attribute mapps to multiple oids: " ^ 
+			(Lcstring.to_string attr))));;
+
+let oidToAttr schema (attr:Oid.t) = 
+  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name;;
+
+let ocToOid schema (oc:Lcstring.t) =
+  try (Hashtbl.find schema.objectclasses oc).oc_oid
+  with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
+
+let oidToOc schema (oc:Oid.t) =
+  List.hd (Hashtbl.find schema.objectclasses_byoid oc).oc_name
+
+let getOc schema (oc:Lcstring.t) =
+  try Hashtbl.find schema.objectclasses oc
+  with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
+
+let getAttr schema (attr:Lcstring.t) =
+  try Hashtbl.find schema.attributes attr
+  with Not_found -> raise (Invalid_attribute (Lcstring.to_string attr));;
+
+let equateAttrs schema a1 a2 = (attrToOid schema a1) = (attrToOid schema a2)
+
+(* syntaxes and matching rules *)
+
+(* 1.3.6.1.4.1.1466.115.121.1.3 DESC 'Attribute Type Description' *)
+let attribute_type_description_syntax v = ()
+  
+(* 1.3.6.1.4.1.1466.115.121.1.5 DESC 'Binary' *)
+let binary_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.6 DESC 'Bit String' *)
+let bitstring_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.7 DESC 'Boolean' *)
+let boolean_syntax v = ()
+
