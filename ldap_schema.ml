@@ -27,7 +27,10 @@ module Oid =
      type t = string
      let of_string s = s
      let to_string oid = oid
-     let compare x y = String.compare (to_string x) (to_string y)
+     let compare x y = 
+       String.compare 
+	 (String.lowercase (to_string x))
+	 (String.lowercase (to_string y))
    end
      :
    sig
@@ -36,6 +39,8 @@ module Oid =
      val to_string: t -> string
      val compare: t -> t -> int
    end);;
+
+module Oidmap = Map.Make(Oid)
 
 let format_oid id = 
   Format.open_box 0;

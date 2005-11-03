@@ -86,39 +86,46 @@ let telephone_number_substrings_match subs v = false
 let numeric_string_substrings_match subs v = false
 
 let equality_matching_rules = 
-  let t = Hashtbl.create 15 in
-    Hashtbl.add t (Oid.of_string "2.5.13.0") object_identifier_equality_match;
-    Hashtbl.add t (Oid.of_string "objectidentifiermatch") object_identifier_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.1") distinguished_name_equality_match;
-    Hashtbl.add t (Oid.of_string "distinguishednamematch") distinguished_name_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.8") numeric_string_equality_match;
-    Hashtbl.add t (Oid.of_string "numericstringmatch") numeric_string_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.14") integer_equality_match;
-    Hashtbl.add t (Oid.of_string "integermatch") integer_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.16") bit_string_equality_match;
-    Hashtbl.add t (Oid.of_string "bitstringmatch") bit_string_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.22") presentation_address_equality_match;
-    Hashtbl.add t (Oid.of_string "presentationaddressmatch") presentation_address_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.23") unique_member_equality_match;
-    Hashtbl.add t (Oid.of_string "uniquemembermatch") unique_member_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.24") protocol_information_equality_match;
-    Hashtbl.add t (Oid.of_string "protocolinformationmatch") protocol_information_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.27") generalized_time_equality_match;
-    Hashtbl.add t (Oid.of_string "generalizedtimematch") generalized_time_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.2") case_ignore_equality_match;
-    Hashtbl.add t (Oid.of_string "caseignorematch") case_ignore_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.11") case_ignore_list_equality_match;
-    Hashtbl.add t (Oid.of_string "caseignorelistmatch") case_ignore_list_equality_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.20") telephonenumber_equality_match;
-    Hashtbl.add t (Oid.of_string "1.3.6.1.4.1.1466.109.114.1") case_exact_ia5_equality_match;
-    Hashtbl.add t (Oid.of_string "1.3.6.1.4.1.1466.109.114.2") case_ignore_ia5_equality_match;
-    t
+  List.fold_left
+    (fun m (key, value) -> Oidmap.add key value m)
+    Oidmap.empty
+    [(Oid.of_string "2.5.13.0", object_identifier_equality_match);
+     (Oid.of_string "objectidentifiermatch", object_identifier_equality_match);
+     (Oid.of_string "2.5.13.1", distinguished_name_equality_match);
+     (Oid.of_string "distinguishednamematch", distinguished_name_equality_match);
+     (Oid.of_string "2.5.13.8", numeric_string_equality_match);
+     (Oid.of_string "numericstringmatch", numeric_string_equality_match);
+     (Oid.of_string "2.5.13.14", integer_equality_match);
+     (Oid.of_string "integermatch", integer_equality_match);
+     (Oid.of_string "2.5.13.16", bit_string_equality_match);
+     (Oid.of_string "bitstringmatch", bit_string_equality_match);
+     (Oid.of_string "2.5.13.22", presentation_address_equality_match);
+     (Oid.of_string "presentationaddressmatch", presentation_address_equality_match);
+     (Oid.of_string "2.5.13.23", unique_member_equality_match);
+     (Oid.of_string "uniquemembermatch", unique_member_equality_match);
+     (Oid.of_string "2.5.13.24", protocol_information_equality_match);
+     (Oid.of_string "protocolinformationmatch", protocol_information_equality_match);
+     (Oid.of_string "2.5.13.27", generalized_time_equality_match);
+     (Oid.of_string "generalizedtimematch", generalized_time_equality_match);
+     (Oid.of_string "2.5.13.2", case_ignore_equality_match);
+     (Oid.of_string "caseignorematch", case_ignore_equality_match);
+     (Oid.of_string "2.5.13.11", case_ignore_list_equality_match);
+     (Oid.of_string "caseignorelistmatch", case_ignore_list_equality_match);
+     (Oid.of_string "2.5.13.20", telephonenumber_equality_match);
+     (Oid.of_string "telephonenumbermatch", telephonenumber_equality_match);
+     (Oid.of_string "1.3.6.1.4.1.1466.109.114.1", case_exact_ia5_equality_match);
+     (Oid.of_string "caseexactia5match", case_exact_ia5_equality_match);
+     (Oid.of_string "1.3.6.1.4.1.1466.109.114.2", case_ignore_ia5_equality_match);
+     (Oid.of_string "caseignoreia5match", case_ignore_ia5_equality_match)]
 
 let ordering_matching_rules =
-  let t = Hashtbl.create 5 in
-    Hashtbl.add t (Oid.of_string "2.5.13.28") generalized_time_ordering_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.3") case_ignore_ordering_match;
-    t
+  List.fold_left
+    (fun m (key, value) -> Oidmap.add key value m)
+    Oidmap.empty
+    [(Oid.of_string "2.5.13.28", generalized_time_ordering_match);
+     (Oid.of_string "generalizedtimeorderingmatch", generalized_time_ordering_match);
+     (Oid.of_string "2.5.13.3", case_ignore_ordering_match);
+     (Oid.of_string "caseignoreorderingmatch", case_ignore_ordering_match)]
 
 let substring_matching_rules = 
   let t = Hashtbl.create 5 in
