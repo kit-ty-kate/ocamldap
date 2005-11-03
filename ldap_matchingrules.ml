@@ -1,3 +1,5 @@
+open Ldap_types
+
 (* equality matching rules *)
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
@@ -59,3 +61,27 @@ let case_ignore_ia5_equality_match v1 v2 =
   String.compare 
     (String.lowercase (collapse_whitespace v1))
     (String.lowercase (collapse_whitespace v2))
+
+(* ordering matching rules used in inequality filters *)
+
+(* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
+let generalized_time_ordering_match v1 v2 = String.compare v1 v2
+
+(* 2.5.13.3 NAME 'caseIgnoreOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let case_ignore_ordering_match v1 v2 = 
+  String.compare
+    (String.lowercase (collapse_whitespace v1))
+    (String.lowercase (collapse_whitespace v2))
+
+
+(* substring matching rules, these are different beasts *)
+
+(* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+let case_ignore_substrings_match subs v = false
+
+(* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+let telephone_number_substrings_match subs v = false
+
+(* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+let numeric_string_substrings_match subs v = false
+
