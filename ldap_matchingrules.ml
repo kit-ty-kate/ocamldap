@@ -128,8 +128,12 @@ let ordering_matching_rules =
      (Oid.of_string "caseignoreorderingmatch", case_ignore_ordering_match)]
 
 let substring_matching_rules = 
-  let t = Hashtbl.create 5 in
-    Hashtbl.add t (Oid.of_string "2.5.13.4") case_ignore_substrings_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.21") telephone_number_substring_match;
-    Hashtbl.add t (Oid.of_string "2.5.13.10") numeric_string_substrings_match;
-    t
+  List.fold_left
+    (fun m (key, value) -> Oidmap.add key value m)
+    Oidmap.empty
+    [(Oid.of_string "2.5.13.4", case_ignore_substrings_match);
+     (Oid.of_string "caseignoresubstringsmatch", case_ignore_substrings_match);
+     (Oid.of_string "2.5.13.21", telephone_number_substring_match);
+     (Oid.of_string "telephonenumbersubstringsmatch", telephone_number_substring_match);
+     (Oid.of_string "2.5.13.10", numeric_string_substrings_match);
+     (Oid.of_string "numericstringsubstringsmatch", numeric_string_substrings_match)]
