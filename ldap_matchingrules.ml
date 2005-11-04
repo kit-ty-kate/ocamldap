@@ -9,11 +9,10 @@ class ['a] attribute
   (mem: string -> 'a -> bool)
   (remove: string -> 'a -> 'a)
   (empty: 'a)
-  (elements: 'a -> string list)
-  (exists: string -> 'a -> bool) =
+  (elements: 'a -> string list) =
 object
   val mutable store = empty
-  method add ?(idempotent=true) v =
+  method add ?(idempotent=false) v =
     if idempotent then
       store <- add v store
     else if mem v store then
@@ -21,7 +20,7 @@ object
     else
       store <- add v store
 
-  method delete ?(idempotent=true) v =
+  method delete ?(idempotent=false) v =
     if idempotent then
       store <- remove v store
     else if not (mem v store) then
@@ -36,8 +35,8 @@ object
 	 empty
 	 vals)
 
-  method exists v = exists v store
-  method get_value = elements store
+  method exists v = mem v store
+  method values = elements store
 end
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
