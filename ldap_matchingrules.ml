@@ -2,41 +2,9 @@ open Ldap_types
 open Ldap_schema
 
 (* equality matching rules *)
-type ('a, 'b) equality_match = {
-  empty: 'a;
-  is_empty: 'a -> bool;
-  mem: 'b -> 'a -> bool;
-  add: 'b -> 'a -> 'a;
-  singleton: 'b -> 'a;
-  remove: 'b -> 'a -> 'a;
-  union: 'a -> 'a -> 'a;
-  inter: 'a -> 'a -> 'a;
-  diff: 'a -> 'a -> 'a;
-  compare: 'a -> 'a -> int;
-  equal: 'a -> 'a -> bool;
-  subset: 'a -> 'a -> bool;
-  iter: ('b -> unit) -> 'a -> unit;
-  fold: ('b -> 'c -> 'c) -> 'a -> 'a;
-  for_all: ('b -> bool) -> 'a -> bool;
-  exists: ('b -> bool) -> 'a -> bool;
-  filter: ('b -> bool) -> 'a -> 'a;
-  partition: ('b -> bool) -> 'a -> 'a * 'a;
-  cardinal: 'a -> int;
-  elements: 'a -> 'b list;
-  min_elt: 'a -> 'b;
-  max_elt: 'a -> 'b;
-  choose: 'a -> 'b;
-  split: 'b -> 'a -> 'a * bool * 'a
-}
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
 let object_identifier_equality_match v1 v2 = String.compare v1 v2
-module MrSet = 
-  Set.Make 
-    (struct 
-       type t = String.t
-       let compare = mr
-     end)
 
 (* 2.5.13.1 NAME 'distinguishedNameMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 *)
 let distinguished_name_equality_match v1 v2 = String.compare v1 v2
