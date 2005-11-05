@@ -16,13 +16,7 @@ type scflavor = Optimistic (* attempt to find objectclasses which make illegal
 exception Single_value of string
 exception Objectclass_is_required
 
-module OrdOid =
-struct
-  type t = Oid.t
-  let compare = Oid.compare
-end
-
-module Setstr = Set.Make (OrdOid)
+module Setstr = Set.Make (Oid)
 
 let rec setOfList ?(set=Setstr.empty) list = 
   match list with
@@ -34,31 +28,42 @@ object (self)
   inherit ldapentry as super
   val schemaAttrs = Hashtbl.create 50
   val schema = schema
+  val mutable dn = ""
+  val mutable data = Hashtbl.create 50
+  val mutable changes = []
+  val mutable changetype = `ADD
   val mutable consistent = false
+
     (* the set of all attibutes actually present *)
   val mutable present       = Setstr.empty
+
     (* the set of all musts from all objectclasses on the entry *)
   val mutable must          = Setstr.empty
+
     (* the set of all mays from all objectclasses on the entry *)
   val mutable may           = Setstr.empty
+
     (* the set of required objectclasses *)
   val mutable requiredOcs   = Setstr.empty
+
     (* present objectclasses *)
   val mutable presentOcs    = Setstr.empty
 
   (* must + may *)
   val mutable all_allowed   = Setstr.empty
+
     (* must - (present * must) *)
   val mutable missingAttrs  = Setstr.empty
+
     (* requiredOcs - (presentOcs * requiredOcs) *)
   val mutable missingOcs    = Setstr.empty
+
     (* any objectclass which depends on a missing objectclass *)
   val mutable illegalOcs    = Setstr.empty
+
     (* present - (present * all_allowed) *)
   val mutable illegalAttrs  = Setstr.empty
 
-  (* schema checking is best expressed as set manipulations.
-     I can ascert this having implimented it in other ways *)
   method private update_condition =
     let rec generate_mustmay ocs schema set must =
       match ocs with

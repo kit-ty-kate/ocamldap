@@ -322,12 +322,7 @@ let new_case_ignore_ia5_equality_set syntax =
 (* ordering matching rules used in inequality filters *)
 
 (* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
-let generalized_time_ordering_match v1 v2 = 
-  try
-    let v1' = int_of_string (String.sub 0 (String.length v1 - 1) v1) in
-    let v2' = int_of_string (String.sub 0 (String.length v2 - 1) v2) in
-      Pervasives.compare v1' v2'
-  with _ -> String.compare v1 v2
+let generalized_time_ordering_match v1 v2 = String.compare v1 v2
 
 module GeneralizedTimeOrderingMatch = Set.Make
   (struct
