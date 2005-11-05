@@ -7,12 +7,21 @@
 
 (* for the schema checker, should never be seen by
    the user *)
+
+module Oidset = Set.Make (Oid)
+
+type oc_violation_data = {
+  missing_attributes: Oidset.t;
+  illegal_attributes: Oidset.t;
+  missing_objectclasses: Oidset.t;
+  illegal_objectclasses: Oidset.t
+}
+
 exception Single_value of string
 exception Objectclass_is_required
+exception Objectclass_violation of oc_violation_data
 
-module Setstr = Set.Make (Oid)
-
-let rec setOfList ?(set=Setstr.empty) list = 
+let rec setOfList ?(set=Oidset.empty) list = 
   match list with
       a :: tail -> setOfList ~set:(Setstr.add a set) tail
     | []  -> set
@@ -20,18 +29,122 @@ let rec setOfList ?(set=Setstr.empty) list =
 class scldapentry schema =
 object (self)
   val mutable dn = ""
-  val mutable data = Hashtbl.create 50
+  val mutable data = Oidmap.empty
   val mutable changes = []
   val mutable changetype = `ADD
+
+  method private check =
+    let rec generate_mustmay ocs schema set action =
+      match ocs with
+	  oc :: tail -> 
+	    let attrs = 
+	      setOfList 
+		(List.rev_map
+		   (fun attr -> attrToOid schema attr)
+		   (match must with
+			`MUST -> (getOc schema oc).oc_must
+		      | `MAY -> (getOc schema oc).oc_may)
+	    in
+	      generate_mustmay tail schema (Oidset.union attrs set) action
+	| [] -> set
+    in
+    let rec lstRequired schema (oc: Lcstring.t) =
+      oc :: (List.flatten 
+	       (List.rev_map 
+		  (fun sup -> lstRequired schema sup) 
+		  (getOc schema oc).oc_sup))
+    in
+    let rec generate_requiredocs schema ocs =
+      setOfList 
+	(List.rev_map 
+	   (ocToOid schema)
+	   (List.flatten (List.rev_map (lstRequired schema) ocs)))
+    in
+    let generate_illegal_oc missing schema ocs =
+      let is_illegal_oc missing schema oc =
+	let supchain = lstRequired schema oc in
+	  List.exists
+	    (fun mis ->
+	       List.exists ((=) mis)
+		 supchain)
+	    missing
+      in
+	List.filter (is_illegal_oc missing schema) ocs
+    in
+    let present = (setOfList (List.rev_map Oid.of_string self#attributes)) in
+    let must = 
+      generate_mustmay 
+	(List.rev_map 
+	   (Oid.of_string) 
+	   (try self#get_value "objectclass"
+	    with Not_found -> raise Objectclass_is_required))
+	schema
+	Oidset.empty
+	`MUST
+    in
+    let may = 
+      generate_mustmay 
+	(List.rev_map 
+	   (Lcstring.of_string) 
+	   (try self#get_value "objectclass" (* objectclass *)
+	    with Not_found -> raise Objectclass_is_required))
+	schema
+	Oidset.empty
+	`MAY
+    in
+    let all_allowed = Oidset.union must may in
+    let missingAttrs = Oidset.diff must (Oidset.inter must present) in
+    let illegalAttrs = Oidset.diff present (Oidset.inter all_allowed present) in
+    let requiredOcs =
+      generate_requiredocs 
+	schema 
+	(List.rev_map
+	   (Lcstring.of_string) 
+	   (try self#get_value "objectclass" 
+	    with Not_found -> raise Objectclass_is_required))
+    in
+    let presentOcs =
+      setOfList 
+	(List.rev_map 
+	   (fun attr -> ocToOid schema (Lcstring.of_string attr)) 
+	   (try self#get_value "objectclass" 
+	    with Not_found -> raise Objectclass_is_required))
+    in
+    let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs) in
+    let illegalOcs = 
+      setOfList
+	(List.rev_map
+	   (ocToOid schema)
+	   (generate_illegal_oc 
+	      (List.rev_map 
+		 (fun x -> Lcstring.of_string (oidToOc schema x))
+		 (Oidset.elements missingOcs))
+	      schema
+	      (List.rev_map
+		 (Lcstring.of_string)
+		 (try self#get_value "objectclass" 
+		  with Not_found -> raise Objectclass_is_required))))
+    in
+      if not (Oidset.is_empty (Oidset.union missingAttrs illegalAttrs illegalOcs)) then
+	raise (Objectclass_violation 
+		 {missing_attribute=missingAttrs;
+		  illegal_attribute=illegalAttrs;
+		  missing_objectclass=missingOcs;
+		  illegal_objectclass=illegalOcs})
+      else ()
     
+  method add = ()
 end
 
 (* schema checking flavor *)
-type adaptiveflavor = Optimistic (* attempt to find objectclasses which make illegal
-				    attributes legal, delete them if no objectclass can
-				    be found *)
-		      | Pessimistic (* delete any illegal attributes, do not add 
-				       objectclasses to make them legal*)
+type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
+				    which make illegal attributes
+				    legal. If no such objectclass can
+				    be found then delete the illegal
+				    attributes *)
+		      | Pessimistic (* delete any illegal attributes,
+				       do not add objectclasses to
+				       make them legal*)
 class adaptivescldapentry schema =
 object (self)
   inherit scldapentry as super
@@ -39,7 +152,7 @@ object (self)
   val schema = schema
   val mutable consistent = false
 
-    (* the set of all attibutes actually present *)
+  (* the set of all attibutes actually present *)
   val mutable present       = Setstr.empty
 
     (* the set of all musts from all objectclasses on the entry *)
@@ -68,91 +181,6 @@ object (self)
 
     (* present - (present * all_allowed) *)
   val mutable illegalAttrs  = Setstr.empty
-
-  method private update_condition =
-    let rec generate_mustmay ocs schema set must =
-      match ocs with
-	  oc :: tail -> 
-	    let musts = setOfList 
-	      (List.rev_map 
-		 (fun attr -> attrToOid schema attr)
-		 (if must then (getOc schema oc).oc_must
-		  else (getOc schema oc).oc_may))
-	    in
-	      generate_mustmay tail schema (Setstr.union musts set) must
-	| [] -> set
-    in
-    let rec lstRequired schema (oc: Lcstring.t) =
-      oc :: (List.flatten (List.rev_map 
-			     (fun sup -> lstRequired schema sup) 
-			     (getOc schema oc).oc_sup))
-    in
-    let rec generate_requiredocs schema ocs =
-      setOfList 
-	(List.rev_map 
-	   (ocToOid schema)
-	   (List.flatten (List.rev_map (lstRequired schema) ocs)))
-    in
-    let generate_illegal_oc missing schema ocs =
-      let is_illegal_oc missing schema oc =
-	let supchain = lstRequired schema oc in
-	  List.exists
-	    (fun mis ->
-	       List.exists ((=) mis)
-		 supchain)
-	    missing
-      in
-	List.filter (is_illegal_oc missing schema) ocs
-    in
-
-      present      <- (setOfList (List.rev_map Oid.of_string super#attributes));
-      must         <- (generate_mustmay 
-			 (List.rev_map 
-			    (Oid.of_string) 
-			    (try super#get_value "2.5.4.0" (* objectclass *) 
-			     with Not_found -> raise Objectclass_is_required))
-			 schema
-			 Setstr.empty
-			 true);
-      may          <- (generate_mustmay 
-			 (List.rev_map 
-			    (Lcstring.of_string) 
-			    (try super#get_value "2.5.4.0" (* objectclass *)
-			     with Not_found -> raise Objectclass_is_required))
-			 schema
-			 Setstr.empty
-			 false);
-      all_allowed  <- Setstr.union must may;
-      missingAttrs <- Setstr.diff must (Setstr.inter must present);
-      illegalAttrs <- Setstr.diff present (Setstr.inter all_allowed present);
-      requiredOcs  <- (generate_requiredocs 
-			 schema 
-			 (List.rev_map
-			    (Lcstring.of_string) 
-			    (try super#get_value "objectclass" 
-			     with Not_found -> raise Objectclass_is_required)));
-      presentOcs   <- (setOfList 
-			 (List.rev_map 
-			    (fun attr -> ocToOid schema (Lcstring.of_string attr)) 
-			    (try super#get_value "objectclass" 
-			     with Not_found -> raise Objectclass_is_required)));
-      missingOcs   <- Setstr.diff requiredOcs (Setstr.inter requiredOcs presentOcs);
-      illegalOcs   <- (setOfList
-			 (List.rev_map
-			    (ocToOid schema)
-			    (generate_illegal_oc 
-			       (List.rev_map 
-				  (fun x -> Lcstring.of_string (oidToOc schema x))
-				  (Setstr.elements missingOcs))
-			       schema
-			       (List.rev_map
-				  (Lcstring.of_string)
-				  (try super#get_value "objectclass" 
-				   with Not_found -> raise Objectclass_is_required)))));
-      if Setstr.is_empty (Setstr.union missingAttrs illegalAttrs) then
-	consistent <- true
-      else
-	consistent <- false
 
   method private drive_updatecon =
     try self#update_condition
@@ -366,18 +394,18 @@ exception Cannot_sort_dependancies of (string list);;
 let diff_values convert_to_oid convert_from_oid attr attrvals svcvals =
     (attr, (List.rev_map
 	      convert_from_oid
-	      (Setstr.elements
-		 (Setstr.diff
+	      (Oidset.elements
+		 (Oidset.diff
 		    svcvals
-		    (Setstr.inter svcvals attrvals)))))
+		    (Oidset.inter svcvals attrvals)))))
 
 (* compute the intersection of values between an attribute and a service,
    you need to pass this function as an argument to apply_set_op_to_values *)
 let intersect_values convert_to_oid convert_from_oid attr attrvals svcvals =
   (attr, (List.rev_map
 	    convert_from_oid
-	    (Setstr.elements
-	       (Setstr.inter svcvals attrvals))))
+	    (Oidset.elements
+	       (Oidset.inter svcvals attrvals))))
 
 (* this function allows you to apply a set operation to the values of an attribute, and 
    the static values on a service *)
@@ -409,8 +437,8 @@ class ldapaccount
   (services:(string, service) Hashtbl.t) =
 object (self)
   inherit scldapentry schema as super
-  val mutable toGenerate = Setstr.empty
-  val mutable neededByGenerators = Setstr.empty
+  val mutable toGenerate = Oidset.empty
+  val mutable neededByGenerators = Oidset.empty
   val services = services
   val generators = generators
 
@@ -433,7 +461,7 @@ object (self)
 	   (List.filter
 	      (fun g ->
 		 if ((Hashtbl.mem generators g) && 
-		     (not (Setstr.mem
+		     (not (Oidset.mem
 			     (attrToOid schema (Lcstring.of_string g))
 			     (setOfList self#list_present)))) then
 		   true
@@ -458,7 +486,7 @@ object (self)
 			      else false)
 			   (List.rev_append
 			      missing
-			      (Setstr.elements togenerate)))
+			      (Oidset.elements togenerate)))
       in
 	(* the total set of generatable at any point in time is. The set
 	   we are already generating, unioned with any generatable dependancies, unioned
@@ -475,7 +503,7 @@ object (self)
       setOfList
 	(Hashtbl.fold 
 	   (fun key valu requiredlst -> 
-	      if Setstr.mem (attrToOid schema (Lcstring.of_string valu.gen_name)) togen then
+	      if Oidset.mem (attrToOid schema (Lcstring.of_string valu.gen_name)) togen then
 		List.rev_append
 		  requiredlst
 		  (List.rev_map
@@ -493,27 +521,27 @@ object (self)
 
   method list_missing = 
     let allmissing = 
-      Setstr.union neededByGenerators (setOfList super#list_missing) 
+      Oidset.union neededByGenerators (setOfList super#list_missing) 
     in
-      Setstr.elements
-	(Setstr.diff
+      Oidset.elements
+	(Oidset.diff
 	   allmissing 
-	   (Setstr.inter
+	   (Oidset.inter
 	      allmissing
-	      (Setstr.union 
+	      (Oidset.union 
 		 toGenerate 
 		 (setOfList super#list_present))))
 
   method attributes =
     (List.rev_map (oidToAttr schema)
-       (Setstr.elements
-	  (Setstr.union toGenerate
+       (Oidset.elements
+	  (Oidset.union toGenerate
 	     (setOfList 
 		(List.rev_map
 		   (fun a -> attrToOid schema (Lcstring.of_string a))
 		   super#attributes)))))
 
-  method is_missing x = (not (Setstr.mem
+  method is_missing x = (not (Oidset.mem
 				(attrToOid schema (Lcstring.of_string x)) 
 				toGenerate)) 
 			|| (super#is_missing x)
@@ -552,13 +580,13 @@ object (self)
 	       (sort_genlst generators
 		  (List.rev_map
 		     (fun elt -> String.lowercase (oidToAttr schema elt))
-		     (Setstr.elements toGenerate))));
-	    toGenerate <- Setstr.empty
+		     (Oidset.elements toGenerate))));
+	    toGenerate <- Oidset.empty
 	| a  -> raise (Generation_failed
 			 (Missing_required (List.rev_map (oidToAttr schema) a)))
 
   method get_value x =
-    if (Setstr.mem (attrToOid schema (Lcstring.of_string x)) toGenerate) then
+    if (Oidset.mem (attrToOid schema (Lcstring.of_string x)) toGenerate) then
       ["generate"]
     else
       super#get_value x
@@ -665,7 +693,7 @@ object (self)
 
   method add_generate x = 
     (if (Hashtbl.mem generators (lowercase x)) then
-       toGenerate <- Setstr.add (attrToOid schema (Lcstring.of_string x)) toGenerate
+       toGenerate <- Oidset.add (attrToOid schema (Lcstring.of_string x)) toGenerate
      else raise (No_generator x));
     self#resolve_missing
   method delete_generate x =
@@ -680,14 +708,14 @@ object (self)
     in
       (List.iter (self#delete_generate) (find_dep x generators));
       toGenerate <- 
-      Setstr.remove
+      Oidset.remove
 	(attrToOid schema (Lcstring.of_string x)) toGenerate
 
   method add x = (* add x, remove all attributes in x from the list of generated attributes *)
     super#add x; 
     (List.iter 
       (fun a -> 
-	 toGenerate <- (Setstr.remove
+	 toGenerate <- (Oidset.remove
 			  (attrToOid schema (Lcstring.of_string (fst a)))
 			  toGenerate))
        x);
@@ -697,7 +725,7 @@ object (self)
     super#replace x;
     (List.iter
        (fun a -> 
-	  toGenerate <- (Setstr.remove
+	  toGenerate <- (Oidset.remove
 			   (attrToOid schema (Lcstring.of_string (fst a)))
 			   toGenerate))
        x);
