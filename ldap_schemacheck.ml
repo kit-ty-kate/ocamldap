@@ -33,7 +33,7 @@ object (self)
   val mutable changes = []
   val mutable changetype = `ADD
 
-  method private check =
+  method private check data =
     let rec generate_mustmay ocs schema set action =
       match ocs with
 	  oc :: tail -> 
@@ -132,8 +132,14 @@ object (self)
 		  missing_objectclass=missingOcs;
 		  illegal_objectclass=illegalOcs})
       else ()
-    
-  method add = ()
+
+  (* translate operations with attribute names into operations naming
+     the attribute's oid *)
+  method private translate_ops ops =
+    List.rev_map
+      (fun (name, vals) -> (attrToOid schema (Lcstring.of_string name), vals))
+      ops
+	 
 end
 
 (* schema checking flavor *)
