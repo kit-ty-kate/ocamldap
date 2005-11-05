@@ -4,12 +4,6 @@
 (* A schema checking entry:
    An entry which validates its validity against the server's
    schema *)
-(* schema checking flavor *)
-type scflavor = Optimistic (* attempt to find objectclasses which make illegal
-			      attributes legal, delete them if no objectclass can
-			      be found *)
-		| Pessimistic (* delete any illegal attributes, do not add 
-				 objectclasses to make them legal*)
 
 (* for the schema checker, should never be seen by
    the user *)
@@ -25,13 +19,24 @@ let rec setOfList ?(set=Setstr.empty) list =
 
 class scldapentry schema =
 object (self)
-  inherit ldapentry as super
-  val schemaAttrs = Hashtbl.create 50
-  val schema = schema
   val mutable dn = ""
   val mutable data = Hashtbl.create 50
   val mutable changes = []
   val mutable changetype = `ADD
+    
+end
+
+(* schema checking flavor *)
+type adaptiveflavor = Optimistic (* attempt to find objectclasses which make illegal
+				    attributes legal, delete them if no objectclass can
+				    be found *)
+		      | Pessimistic (* delete any illegal attributes, do not add 
+				       objectclasses to make them legal*)
+class adaptivescldapentry schema =
+object (self)
+  inherit scldapentry as super
+  val schemaAttrs = Hashtbl.create 50
+  val schema = schema
   val mutable consistent = false
 
     (* the set of all attibutes actually present *)
