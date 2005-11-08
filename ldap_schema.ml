@@ -81,9 +81,9 @@ type objectclass = {oc_name: string list;
 type attribute = {at_name:string list;
 		  at_desc:string;
 		  at_oid:Oid.t;
-		  at_equality:string;
-		  at_ordering:string;
-		  at_substr:Oid.t;
+		  at_equality:Oid.t option;
+		  at_ordering:Oid.t option;
+		  at_substr:Oid.t option;
 		  at_syntax:Oid.t;
 		  at_length: Int64.t;
 		  at_obsolete:bool;
@@ -221,13 +221,18 @@ exception Syntax_error_oc of Lexing.lexbuf * objectclass * string;;
 exception Syntax_error_at of Lexing.lexbuf * attribute * string;;
 
 let rec readSchema oclst attrlst =
-  let empty_oc = {oc_name=[];oc_oid=Oid.of_string "";oc_desc="";oc_obsolete=false;oc_sup=[];
-		  oc_must=[];oc_may=[];oc_type=Abstract;oc_xattr=[]} 
+  let empty_oc = 
+    {oc_name=[];oc_oid=Oid.of_string "";oc_desc="";oc_obsolete=false;oc_sup=[];
+     oc_must=[];oc_may=[];oc_type=Abstract;oc_xattr=[]} 
   in
-  let empty_attr = {at_name=[];at_oid=Oid.of_string "";at_desc="";at_equality="";at_ordering="";
-		    at_usage=""; at_substr=Oid.of_string "";at_syntax=Oid.of_string "";
-		    at_length=0L;at_obsolete=false;at_single_value=false;
-		    at_collective=false;at_no_user_modification=false;at_sup=[];at_xattr=[]} 
+  let empty_attr = 
+    {at_name=[];at_oid=Oid.of_string "";at_desc="";
+     at_equality=None;at_ordering=None;
+     at_usage=""; at_substr=None;
+     at_syntax=(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26");
+     at_length=0L;at_obsolete=false;at_single_value=false;
+     at_collective=false;at_no_user_modification=false;
+     at_sup=[];at_xattr=[]} 
   in
   let readOc lxbuf oc =
     let rec readOptionalFields lxbuf oc =
@@ -283,9 +288,15 @@ let rec readSchema oclst attrlst =
 	| Obsolete            -> readOptionalFields lxbuf {attr with at_obsolete=true}
 	| Sup s               -> 
 	    readOptionalFields lxbuf {attr with at_sup=(List.rev_map (Lcstring.of_string) s)}
-	| Equality s          -> readOptionalFields lxbuf {attr with at_equality=s}
-	| Substr s            -> readOptionalFields lxbuf {attr with at_substr=Oid.of_string s}
-	| Ordering s          -> readOptionalFields lxbuf {attr with at_ordering=s}
+	| Equality s          -> 
+	    readOptionalFields lxbuf 
+	      {attr with at_equality=(Some (Oid.of_string s))}
+	| Substr s            -> 
+	    readOptionalFields lxbuf 
+	      {attr with at_substr=(Some (Oid.of_string s))}
+	| Ordering s          -> 
+	    readOptionalFields lxbuf 
+	      {attr with at_ordering=(Some (Oid.of_string s))}
 	| Syntax (s, l)       -> 
 	    readOptionalFields lxbuf {attr with at_syntax=Oid.of_string s;at_length=l}
 	| Single_value         -> readOptionalFields lxbuf {attr with at_single_value=true}
@@ -293,9 +304,10 @@ let rec readSchema oclst attrlst =
 	| No_user_modification -> readOptionalFields lxbuf {attr with at_no_user_modification=true}
 	| Usage s              -> readOptionalFields lxbuf {attr with at_usage=s}
 	| Rparen               -> attr
-	| Xstring t            -> (readOptionalFields 
-				     lxbuf 
-				     {attr with at_xattr=(t :: attr.at_xattr)})
+	| Xstring t            -> 
+	    (readOptionalFields 
+	       lxbuf 
+	       {attr with at_xattr=(t :: attr.at_xattr)})
 	| _                    -> raise (Parse_error_at (lxbuf, attr, "unexpected token"))
       with Failure(f) -> raise (Parse_error_at (lxbuf, attr, f))
     in

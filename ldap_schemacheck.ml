@@ -20,6 +20,9 @@ type oc_violation_data = {
 exception Single_value of string
 exception Objectclass_is_required
 exception Objectclass_violation of oc_violation_data
+exception Invalid_matching_rule_syntax of Oid.t * Oid.t
+exception Unknown_syntax of Oid.t
+exception Unknown_matching_rule of Oid.t
 
 let rec setOfList ?(set=Oidset.empty) list = 
   match list with
@@ -133,12 +136,36 @@ object (self)
 		  illegal_objectclass=illegalOcs})
       else ()
 
-  (* translate operations with attribute names into operations naming
-     the attribute's oid *)
   method private translate_ops ops =
     List.rev_map
-      (fun (name, vals) -> (attrToOid schema (Lcstring.of_string name), vals))
+      (fun (name, vals) -> (getAttr schema (Lcstring.of_string name), vals))
       ops
+
+  method add ops =
+    let ops = self#translate_ops ops in
+    let data' =
+      List.fold_left
+	(fun data' ({at_syntax=syn;at_equality=equ;at_ordering=ord;at_substr=substr}, values) ->
+	   let attr_object = 
+	     match at_equality with
+		 Some oid -> 
+		   let (syntax, constructor) = 
+		     try Oidmap.find oid Ldap_matchingrules.equality 
+		     with Not_found -> raise (Unknown_matching_rule oid)
+		   in
+		     if Oid.compare syn syntax = 0 then
+		       try constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+		       with Not_found -> raise (Unknown_syntax syntax)
+		     else raise (Invalid_matching_rule_syntax (oid, syn))
+	       | None -> 
+		   let (syntax, constructor) = 
+		     Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
+		       Ldap_matchingrules.equality
+		   in
+		     constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+	   in
+	     List.iter attr_object#add values;
+	     
 	 
 end
 

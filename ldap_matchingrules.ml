@@ -324,41 +324,11 @@ let new_case_ignore_ia5_equality_set syntax =
 (* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
 let generalized_time_ordering_match v1 v2 = String.compare v1 v2
 
-module GeneralizedTimeOrderingMatch = Set.Make
-  (struct
-     type t = String.t
-     let compare = generalized_time_ordering_match
-   end)
-
-let new_generalized_time_ordering_set syntax =
-  (new attribute
-     GeneralizedTimeOrderingMatch.add
-     GeneralizedTimeOrderingMatch.mem
-     GeneralizedTimeOrderingMatch.remove
-     GeneralizedTimeOrderingMatch.empty
-     GeneralizedTimeOrderingMatch.elements
-     syntax :> attribute_t)
-
 (* 2.5.13.3 NAME 'caseIgnoreOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_ordering_match v1 v2 = 
   String.compare
     (String.lowercase (collapse_whitespace v1))
     (String.lowercase (collapse_whitespace v2))
-
-module CaseIgnoreOrderingMatch = Set.Make
-  (struct
-     type t = String.t
-     let compare = case_ignore_ordering_match
-   end)
-
-let new_case_ignore_ordering_set syntax =
-  (new attribute
-     CaseIgnoreOrderingMatch.add
-     CaseIgnoreOrderingMatch.mem
-     CaseIgnoreOrderingMatch.remove
-     CaseIgnoreOrderingMatch.empty
-     CaseIgnoreOrderingMatch.elements
-     syntax :> attribute_t)
 
 (* substring matching rules, these are different beasts *)
 
@@ -371,7 +341,7 @@ let telephone_number_substrings_match subs v = false
 (* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let numeric_string_substrings_match subs v = false
 
-let equality_matching_rules = 
+let equality = 
   List.fold_left
     (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
     Oidmap.empty
@@ -460,24 +430,24 @@ let equality_matching_rules =
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26", 
       new_case_ignore_ia5_equality_set)]
 
-let ordering_matching_rules =
+let ordering =
   List.fold_left
     (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
     Oidmap.empty
     [(Oid.of_string "2.5.13.28", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24", 
-      new_generalized_time_ordering_set);
+      generalized_time_ordering_match);
      (Oid.of_string "generalizedtimeorderingmatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24",
-      new_generalized_time_ordering_set);
+      generalized_time_ordering_match);
      (Oid.of_string "2.5.13.3", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_ignore_ordering_set);
+      case_ignore_ordering_match);
      (Oid.of_string "caseignoreorderingmatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_ignore_ordering_set)]
+      case_ignore_ordering_match)]
     
-let substring_matching_rules = 
+let substring = 
   List.fold_left
     (fun m (oid, value) -> Oidmap.add oid value m)
     Oidmap.empty
