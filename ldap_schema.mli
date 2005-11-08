@@ -138,47 +138,37 @@ exception Non_unique_attribute_alias of string
 val readSchema : string list -> string list -> schema
 
 (** given a name of an attribute name (canonical or otherwise), return
-    its oid @raise Invalid_attribute If the attribute is not found in the schema. *)
-val attrToOid : schema -> string -> Oid.t
+    its oid *)
+val attrNameToOid : schema -> string -> Oid.t
 
-(** given the oid of an attribute, return its record @raise
-    Invalid_attribute If the attribute is not found in the schema. *)
+(** given the oid of an attribute, return its record *)
 val oidToAttr : schema -> Oid.t -> attribute
 
-(** given the oid of an attribute, return its canonical name @raise
-    Invalid_attribute If the attribute is not found in the schema. *)
+(** given the oid of an attribute, return its canonical name *)
 val oidToAttrName : schema -> Oid.t -> string
 
-(** get an attr structure by one of its names (canonical or otherwise)
-    @raise Invalid_attribute If the attribute is not found in the
-    schema. *)
+(** get an attr structure by one of its names (canonical or otherwise) *)
 val attrNameToAttr : schema -> string -> attribute
 
 (** get an objectclass structure by one of its names (canonical or
-    otherwise). @raise Invalid_objectclass If the objectclass is
-    not found in the schema. *)
+    otherwise). *)
 val ocNameToOc : schema -> string -> objectclass
 
 (** given a name of an objectclass (canonical or otherwise), return
-    its oid. @raise Invalid_objectclass If the objectclass is not
-    found in the schema. *)
-val ocToOid : schema -> string -> Oid.t
+    its oid. *)
+val ocNameToOid : schema -> string -> Oid.t
 
-(** given the oid of an objectclass, return its objectclass structure
-    @raise Invalid_objectclass If the objectclass is not found in the
-    schema. *)
+(** given the oid of an objectclass, return its objectclass structure  *)
 val oidToOc : schema -> Oid.t -> objectclass
 
-(** given the oid of an objectclass, return its canonical name @raise
-    Invalid_objectclass If the objectclass is not found in the
-    schema. *)
+(** given the oid of an objectclass, return its canonical name *)
 val oidToOcName : schema -> Oid.t -> string
 
-(** equate attributes by oid. This allows non canonical names to be
-    handled correctly, for example "uid" and "userID" are actually the
-    same attribute. @raise Invalid_attribute If either attribute is
-    not found in the schema. *)
-val equateAttrs : schema -> string -> string -> bool
+(** compare attributes by oid. *)
+val compareAttrs : schema -> string -> string -> int
+
+(** compare objectclasses by oid. *)
+val compareOcs : schema -> string -> string -> int
 
 (** {1 Schema Validation} A function to check for errors in the schema
     and report them *)

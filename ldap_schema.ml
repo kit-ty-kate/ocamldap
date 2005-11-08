@@ -150,21 +150,24 @@ let ocNameToOc schema oc =
 	 | [oc] -> oc
 	 | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc)))
 
-let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
+let attrNameToOid schema attr = (attrNameToAttr schema attr).at_oid
 
 let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
 
 let oidToAttrName schema attr = 
   List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
 
-let ocToOid schema oc = (ocNameToOc schema oc).oc_oid
+let ocNameToOid schema oc = (ocNameToOc schema oc).oc_oid
 
 let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
 
 let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
 
-let equateAttrs schema a1 a2 = 
-  Oid.compare (attrToOid schema a1) (attrToOid schema a2) = 0
+let compareAttrs schema a1 a2 = 
+  Oid.compare (attrNameToOid schema a1) (attrNameToOid schema a2)
+
+let compareOcs schema oc1 oc2 = 
+  Oid.compare (ocNameToOid schema oc1) (ocNameToOid schema oc2)
 
 type schema_error = 
     Undefined_attr_reference of string
