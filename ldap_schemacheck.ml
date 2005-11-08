@@ -96,15 +96,15 @@ object (self)
 		 illegalOcs))) 
       then
 	raise (Objectclass_violation 
-		 {missing_attribute=missingAttrs;
-		  illegal_attribute=illegalAttrs;
-		  missing_objectclass=missingOcs;
-		  illegal_objectclass=illegalOcs})
+		 {missing_attributes=missingAttrs;
+		  illegal_attributes=illegalAttrs;
+		  missing_objectclasses=missingOcs;
+		  illegal_objectclasses=illegalOcs})
       else ()
 
   method private translate_ops ops =
     List.rev_map
-      (fun (name, vals) -> (getAttr schema (Lcstring.of_string name), vals))
+      (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
 
   method add ops =
@@ -117,7 +117,7 @@ object (self)
 	   let attr_object = 
 	     try Oidmap.find atoid data
 	     with Not_found ->
-	       begin match at_equality with
+	       begin match equ with
 		   Some oid -> 
 		     let (syntax, constructor) = 
 		       try Oidmap.find oid Ldap_matchingrules.equality 

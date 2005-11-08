@@ -449,11 +449,12 @@ let ordering =
     
 let substring = 
   List.fold_left
-    (fun m (oid, value) -> Oidmap.add oid value m)
+    (fun m (oid, (value: (Ldap_types.substring_component -> string -> bool))) -> 
+       Oidmap.add oid value m)
     Oidmap.empty
     [(Oid.of_string "2.5.13.4", case_ignore_substrings_match);
      (Oid.of_string "caseignoresubstringsmatch", case_ignore_substrings_match);
-     (Oid.of_string "2.5.13.21", telephone_number_substring_match);
-     (Oid.of_string "telephonenumbersubstringsmatch", telephone_number_substring_match);
+     (Oid.of_string "2.5.13.21", telephone_number_substrings_match);
+     (Oid.of_string "telephonenumbersubstringsmatch", telephone_number_substrings_match);
      (Oid.of_string "2.5.13.10", numeric_string_substrings_match);
      (Oid.of_string "numericstringsubstringsmatch", numeric_string_substrings_match)]

@@ -98,7 +98,7 @@ let dit_structure_rule_description_syntax v = ()
 
 let syntaxes = 
   List.fold_left
-    (fun m (key, value) -> Oidmap.add key value m)
+    (fun m (key, (value: string -> unit)) -> Oidmap.add key value m)
     Oidmap.empty
     [(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.3", attribute_type_description_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.5", binary_syntax);
