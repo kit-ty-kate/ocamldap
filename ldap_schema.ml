@@ -40,7 +40,8 @@ module Oid =
      val compare: t -> t -> int
    end);;
 
-module Oidmap = Map.Make(Oid)
+module Oidset = Set.Make (Oid)
+module Oidmap = Map.Make (Oid)
 
 let format_oid id = 
   Format.open_box 0;

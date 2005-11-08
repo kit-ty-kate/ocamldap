@@ -1,23 +1,71 @@
 (** A library for parsing rfc2252 schemas as returned by directory
-  servers *)
+    servers *)
 
 module Oid :
-  sig
-    type t
-    val of_string : string -> t
-    val to_string : t -> string
-    val compare : t -> t -> int
-  end
+sig
+  type t
+  val of_string : string -> t
+  val to_string : t -> string
+  val compare : t -> t -> int
+end
+
+module Oidset :
+sig
+  type elt = Oid.t
+  type t = Set.Make(Oid).t
+  val empty : t
+  val is_empty : t -> bool
+  val mem : elt -> t -> bool
+  val add : elt -> t -> t
+  val singleton : elt -> t
+  val remove : elt -> t -> t
+  val union : t -> t -> t
+  val inter : t -> t -> t
+  val diff : t -> t -> t
+  val compare : t -> t -> int
+  val equal : t -> t -> bool
+  val subset : t -> t -> bool
+  val iter : (elt -> unit) -> t -> unit
+  val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+  val for_all : (elt -> bool) -> t -> bool
+  val exists : (elt -> bool) -> t -> bool
+  val filter : (elt -> bool) -> t -> t
+  val partition : (elt -> bool) -> t -> t * t
+  val cardinal : t -> int
+  val elements : t -> elt list
+  val min_elt : t -> elt
+  val max_elt : t -> elt
+  val choose : t -> elt
+  val split : elt -> t -> t * bool * t
+end
+
+module Oidmap :
+sig
+  type key = Oid.t
+  type 'a t = 'a Map.Make(Oid).t
+  val empty : 'a t
+  val is_empty : 'a t -> bool
+  val add : key -> 'a -> 'a t -> 'a t
+  val find : key -> 'a t -> 'a
+  val remove : key -> 'a t -> 'a t
+  val mem : key -> 'a t -> bool
+  val iter : (key -> 'a -> unit) -> 'a t -> unit
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+  val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  val compare : ('a -> 'a -> int) -> 'a t -> 'a t -> int
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+end
 
 val format_oid : Oid.t -> unit
 
 module Lcstring :
-  sig
-    type t
-    val of_string : string -> t
-    val to_string : t -> string
-    val compare : t -> t -> int
-  end
+sig
+  type t
+  val of_string : string -> t
+  val to_string : t -> string
+  val compare : t -> t -> int
+end
 
 val format_lcstring : Lcstring.t -> unit
 
@@ -56,14 +104,14 @@ type attribute = {
 }
 
 (** The type representing the whole schema. Consists of hashtbls
-  indexed by two useful keys. For both attributes and objectclasses
-  there exists a hashtbl indexed by OID, and one indexed by lower case
-  canonical name. There exist functions in Ldap_ooclient to look up
-  attributes and objectclasses by non canonical names if that is
-  necessary for you to do. see attrToOid, and ocToOid. They will find
-  the oid of an attribute or objectclass given any name, not just the
-  canonical one. Not that this is somewhat (like several orders of
-  magnitude) slower than lookups by canonical name.*)
+    indexed by two useful keys. For both attributes and objectclasses
+    there exists a hashtbl indexed by OID, and one indexed by lower case
+    canonical name. There exist functions in Ldap_ooclient to look up
+    attributes and objectclasses by non canonical names if that is
+    necessary for you to do. see attrToOid, and ocToOid. They will find
+    the oid of an attribute or objectclass given any name, not just the
+    canonical one. Not that this is somewhat (like several orders of
+    magnitude) slower than lookups by canonical name.*)
 type schema = {
   objectclasses : (Lcstring.t, objectclass) Hashtbl.t;
   objectclasses_byoid : (Oid.t, objectclass) Hashtbl.t;

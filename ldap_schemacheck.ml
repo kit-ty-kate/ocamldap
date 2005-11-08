@@ -11,6 +11,7 @@
 open Ldap_schema
 
 module Oidset = Set.Make (Oid)
+module Oidmap = Map.Make (Oid)
 
 type oc_violation_data = {
   missing_attributes: Oidset.t;
@@ -28,7 +29,7 @@ exception Unknown_matching_rule of Oid.t
 
 let rec setOfList ?(set=Oidset.empty) list = 
   match list with
-      a :: tail -> setOfList ~set:(Setstr.add a set) tail
+      a :: tail -> setOfList ~set:(Oidset.add a set) tail
     | []  -> set
 
 class scldapentry schema =
