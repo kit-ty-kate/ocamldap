@@ -40,7 +40,7 @@ object (self)
     let presentOcs =
       setOfList 
 	(List.rev_map 
-	   (ocToOid schema)
+	   (ocNameToOid schema)
 	   (try (Oidmap.find (Oid.of_string "2.5.4.0") data)#values (* objectclass *)
 	    with Not_found -> raise Objectclass_is_required))
     in
@@ -49,7 +49,7 @@ object (self)
     let (must, may) =
       List.fold_left
 	(fun (must, may) oc ->
-	   let mkset l = setOfList (List.rev_map (attrToOid schema) l) in
+	   let mkset l = setOfList (List.rev_map (attrNameToOid schema) l) in
 	   let {oc_must=oc_must;oc_may=oc_may} = oidToOc schema oc in
 	     (Oidset.union must (mkset oc_must), Oidset.union may (mkset oc_may)))
 	(Oidset.empty, Oidset.empty)
@@ -58,45 +58,43 @@ object (self)
     let all_allowed = Oidset.union must may in
     let missingAttrs = Oidset.diff must (Oidset.inter must present) in
     let illegalAttrs = Oidset.diff present (Oidset.inter all_allowed present) in
-    let requiredOcs =
-      let rec lstRequired schema oc =
-	oc :: (List.flatten 
-		 (List.rev_map 
-		    (fun sup -> lstRequired schema (List.rev_map (ocToOid schema) sup))
-		    (oidToOc schema oc).oc_sup))
-      in	
-	setOfList 
-	  (List.rev_map 
-	     (ocToOid schema)
-	     (List.flatten 
+    let rec lstRequired schema oid =
+      oid :: (List.flatten 
 		(List.rev_map 
-		   (lstRequired schema) 
-		   presentOcslst)))
+		   (fun sup -> lstRequired schema (ocNameToOid schema sup))
+		   (oidToOc schema oid).oc_sup))
+    in
+    let requiredOcs =
+      setOfList 
+	(List.flatten
+	   (List.rev_map 
+	      (lstRequired schema) 
+	      presentOcslst))
     in
     let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs) in
+    let missingOcslst = Oidset.elements missingOcs in
     let illegalOcs = 
-      let generate_illegal_oc missing schema ocs =
-	let is_illegal_oc missing schema oc =
-	  let supchain = lstRequired schema oc in
-	    List.exists
-	      (fun mis ->
-		 List.exists ((=) mis)
-		   supchain)
-	      missing
-	in
-	  List.filter (is_illegal_oc missing schema) ocs
-      in
-	setOfList
-	  (List.rev_map
-	     (ocToOid schema)
-	     (generate_illegal_oc 
-		(List.rev_map 
-		   (fun x -> Lcstring.of_string (oidToOc schema x))
-		   (Oidset.elements missingOcs))
-		schema
-		presentOcslst))
+      setOfList
+	(List.filter 
+	   (fun oid ->
+	      let supchain = lstRequired schema oid in
+		List.exists
+		  (fun missing -> 
+		     List.exists 
+		       (fun sup -> Oid.compare sup missing = 0) 
+		       supchain)
+		  missingOcslst)
+	   presentOcslst)
     in
-      if not (Oidset.is_empty (Oidset.union missingAttrs illegalAttrs illegalOcs)) then
+      if 
+	(not 
+	   (Oidset.is_empty 
+	      (Oidset.union 
+		 (Oidset.union 
+		    missingAttrs 
+		    illegalAttrs) 
+		 illegalOcs))) 
+      then
 	raise (Objectclass_violation 
 		 {missing_attribute=missingAttrs;
 		  illegal_attribute=illegalAttrs;
