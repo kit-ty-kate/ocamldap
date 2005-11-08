@@ -38,21 +38,21 @@ type objectclass = {
 
 (** The type representing an attribute definition *)
 type attribute = {
-  at_name : string list;
-  at_desc : string;
-  at_oid : Oid.t;
-  at_equality : string;
-  at_ordering : string;
-  at_substr : Oid.t;
-  at_syntax : Oid.t;
-  at_length : Int64.t;
-  at_obsolete : bool;
-  at_single_value : bool;
-  at_collective : bool;
-  at_no_user_modification : bool;
-  at_usage : string;
-  at_sup : Lcstring.t list;
-  at_xattr : string list;
+  at_name:string list;
+  at_desc:string;
+  at_oid:Oid.t;
+  at_equality:Oid.t option;
+  at_ordering:Oid.t option;
+  at_substr:Oid.t option;
+  at_syntax:Oid.t;
+  at_length: Int64.t;
+  at_obsolete:bool;
+  at_single_value:bool;
+  at_collective:bool;
+  at_no_user_modification:bool;
+  at_usage:string;
+  at_sup:Lcstring.t list;
+  at_xattr:string list
 }
 
 (** The type representing the whole schema. Consists of hashtbls
@@ -90,3 +90,53 @@ exception Syntax_error_at of Lexing.lexbuf * attribute * string
     a schema type given a list of attribute definition lines, and
     objectclass definition lines. *)
 val readSchema : string list -> string list -> schema
+
+(** given a name of an attribute name (canonical or otherwise), return
+    its oid @raise Invalid_attribute If the attribute is not found in the schema. *)
+val attrToOid :
+  schema ->
+  Lcstring.t -> Oid.t
+
+(** given the oid of an attribute, return its record @raise
+    Invalid_attribute If the attribute is not found in the schema. *)
+val oidToAttr : schema -> Oid.t -> attribute
+
+(** given the oid of an attribute, return its canonical name @raise
+    Invalid_attribute If the attribute is not found in the schema. *)
+val oidToAttrName : schema -> Oid.t -> string
+
+(** given a name of an objectclass (canonical or otherwise), return
+    its oid. @raise Invalid_objectclass If the objectclass is not
+    found in the schema. *)
+val ocToOid :
+  schema ->
+  Lcstring.t -> Oid.t
+
+(** given the oid of an objectclass, return its canonical name @raise
+    Invalid_objectclass If the objectclass is not found in the
+    schema. *)
+val oidToOc : schema -> Oid.t -> string
+
+(** get an objectclass structure by one of its names (canonical or
+    otherwise, however getting it by canonical name is currently much
+    faster) @raise Invalid_objectclass If the objectclass is not found
+    in the schema. *)
+val getOc :
+  schema ->
+  Lcstring.t -> objectclass
+
+(** get an attr structure by one of its names (canonical or otherwise,
+    however getting it by canonical name is currently much faster)
+    @raise Invalid_attribute If the attribute is not found in the
+    schema. *)
+val getAttr :
+  schema ->
+  Lcstring.t -> attribute
+
+(** equate attributes by oid. This allows non canonical names to be
+    handled correctly, for example "uid" and "userID" are actually the
+    same attribute. @raise Invalid_attribute If either attribute is
+    not found in the schema. *)
+val equateAttrs :
+  schema ->
+  Lcstring.t -> Lcstring.t -> bool

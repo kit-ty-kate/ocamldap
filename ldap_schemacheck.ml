@@ -37,31 +37,11 @@ object (self)
   val mutable changetype = `ADD
 
   method private check data =
-    let rec generate_mustmay ocs schema set action =
-      match ocs with
-	  oc :: tail -> 
-	    let attrs = 
-	      setOfList 
-		(List.rev_map
-		   (fun attr -> attrToOid schema attr)
-		   (match must with
-			`MUST -> (getOc schema oc).oc_must
-		      | `MAY -> (getOc schema oc).oc_may)
-	    in
-	      generate_mustmay tail schema (Oidset.union attrs set) action
-	| [] -> set
-    in
-    let rec lstRequired schema (oc: Lcstring.t) =
+    let rec lstRequired schema oc =
       oc :: (List.flatten 
 	       (List.rev_map 
-		  (fun sup -> lstRequired schema sup) 
-		  (getOc schema oc).oc_sup))
-    in
-    let rec generate_requiredocs schema ocs =
-      setOfList 
-	(List.rev_map 
-	   (ocToOid schema)
-	   (List.flatten (List.rev_map (lstRequired schema) ocs)))
+		  (fun sup -> lstRequired schema (List.rev_map (ocToOid schema) sup))
+		  (oidToOc schema oc).oc_sup))
     in
     let generate_illegal_oc missing schema ocs =
       let is_illegal_oc missing schema oc =
@@ -74,44 +54,38 @@ object (self)
       in
 	List.filter (is_illegal_oc missing schema) ocs
     in
-    let present = (setOfList (List.rev_map Oid.of_string self#attributes)) in
-    let must = 
-      generate_mustmay 
+    let presentOcs =
+      setOfList 
 	(List.rev_map 
-	   (Oid.of_string) 
-	   (try self#get_value "objectclass"
-	    with Not_found -> raise Objectclass_is_required))
-	schema
-	Oidset.empty
-	`MUST
+	   (ocToOid schema)
+	   (List.rev_map 
+	      (Lcstring.of_string) 
+	      (try (Oidmap.find (Oid.of_string "2.5.4.0") data)#values (* objectclass *)
+	       with Not_found -> raise Objectclass_is_required)))
     in
-    let may = 
-      generate_mustmay 
-	(List.rev_map 
-	   (Lcstring.of_string) 
-	   (try self#get_value "objectclass" (* objectclass *)
-	    with Not_found -> raise Objectclass_is_required))
-	schema
-	Oidset.empty
-	`MAY
+    let presentOcslst = Oidset.elements presentOcs in
+    let present = (Oidmap.fold (fun k v s -> Oidset.add k s) Oidset.empty data) in
+    let (must, may) =
+      List.fold_left
+	(fun oc (must, may) ->
+	   let mkset l = setOfList (List.rev_map (attrToOid schema) l) in
+	   let {oc_must=oc_must;oc_may=oc_may} = oidToOc schema oc in
+	     (Oidset.union must (mkset oc_must),
+	      Oidset.union may (mkset oc_may)))
+	(Oidset.empty, Oidset.empty)
+	presentOcslst
     in
     let all_allowed = Oidset.union must may in
     let missingAttrs = Oidset.diff must (Oidset.inter must present) in
     let illegalAttrs = Oidset.diff present (Oidset.inter all_allowed present) in
     let requiredOcs =
-      generate_requiredocs 
-	schema 
-	(List.rev_map
-	   (Lcstring.of_string) 
-	   (try self#get_value "objectclass" 
-	    with Not_found -> raise Objectclass_is_required))
-    in
-    let presentOcs =
       setOfList 
 	(List.rev_map 
-	   (fun attr -> ocToOid schema (Lcstring.of_string attr)) 
-	   (try self#get_value "objectclass" 
-	    with Not_found -> raise Objectclass_is_required))
+	   (ocToOid schema)
+	   (List.flatten 
+	      (List.rev_map 
+		 (lstRequired schema) 
+		 presentOcslst)))
     in
     let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs) in
     let illegalOcs = 
@@ -123,10 +97,7 @@ object (self)
 		 (fun x -> Lcstring.of_string (oidToOc schema x))
 		 (Oidset.elements missingOcs))
 	      schema
-	      (List.rev_map
-		 (Lcstring.of_string)
-		 (try self#get_value "objectclass" 
-		  with Not_found -> raise Objectclass_is_required))))
+	      presentOcslst))
     in
       if not (Oidset.is_empty (Oidset.union missingAttrs illegalAttrs illegalOcs)) then
 	raise (Objectclass_violation 
@@ -142,33 +113,44 @@ object (self)
       ops
 
   method add ops =
-    let ops = self#translate_ops ops in
     let data' =
       List.fold_left
-	(fun data' ({at_syntax=syn;at_equality=equ;at_ordering=ord;at_substr=substr}, values) ->
+	(fun data' ({at_oid=atoid;at_syntax=syn;
+		     at_equality=equ;at_ordering=ord;
+		     at_substr=substr}, 
+		    values) ->
 	   let attr_object = 
-	     match at_equality with
-		 Some oid -> 
-		   let (syntax, constructor) = 
-		     try Oidmap.find oid Ldap_matchingrules.equality 
-		     with Not_found -> raise (Unknown_matching_rule oid)
-		   in
-		     if Oid.compare syn syntax = 0 then
-		       try constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
-		       with Not_found -> raise (Unknown_syntax syntax)
-		     else raise (Invalid_matching_rule_syntax (oid, syn))
-	       | None -> 
-		   let (syntax, constructor) = 
-		     Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
-		       Ldap_matchingrules.equality
-		   in
-		     constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+	     try Oidmap.find atoid data
+	     with Not_found ->
+	       begin match at_equality with
+		   Some oid -> 
+		     let (syntax, constructor) = 
+		       try Oidmap.find oid Ldap_matchingrules.equality 
+		       with Not_found -> raise (Unknown_matching_rule oid)
+		     in
+		       if Oid.compare syn syntax = 0 then
+			 try constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+			 with Not_found -> raise (Unknown_syntax syntax)
+		       else raise (Invalid_matching_rule_syntax (oid, syn))
+		 | None -> (* use the default equality matching rule *)
+		     let (syntax, constructor) = 
+		       Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
+			 Ldap_matchingrules.equality
+		     in
+		       constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+	       end
 	   in
 	     List.iter attr_object#add values;
-	     
+	     Oidmap.add atoid attr_object data')
+	data
+	(self#translate_ops ops)
+    in
+      self#check data';
+      data <- data'
 	 
 end
 
+(*
 (* schema checking flavor *)
 type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
 				    which make illegal attributes
@@ -764,3 +746,4 @@ object (self)
        x);
     self#resolve_missing
 end;;
+*)
