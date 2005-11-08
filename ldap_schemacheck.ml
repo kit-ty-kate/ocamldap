@@ -18,6 +18,7 @@ type oc_violation_data = {
 }
 
 exception Single_value of string
+exception No_such_attribute of string
 exception Objectclass_is_required
 exception Objectclass_violation of oc_violation_data
 exception Invalid_matching_rule_syntax of Oid.t * Oid.t
@@ -102,47 +103,94 @@ object (self)
 		  illegal_objectclasses=illegalOcs})
       else ()
 
-  method private translate_ops ops =
+  method private normalize_ops ops =
     List.rev_map
       (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
 
+  method private new_attribute {at_oid=atoid;at_syntax=syn;
+				at_equality=equ;at_ordering=ord;
+				at_substr=substr} =
+    match equ with
+	Some oid -> 
+	  let (syntax, constructor) = 
+	    try Oidmap.find oid Ldap_matchingrules.equality 
+	    with Not_found -> raise (Unknown_matching_rule oid)
+	  in
+	    if Oid.compare syn syntax = 0 then
+	      try constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
+	      with Not_found -> raise (Unknown_syntax syntax)
+	    else raise (Invalid_matching_rule_syntax (oid, syn))
+      | None -> (* use the default equality matching rule *)
+	  let (syntax, constructor) = 
+	    Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
+	      Ldap_matchingrules.equality
+	  in
+	    constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
+
   method add ops =
     let data' =
       List.fold_left
-	(fun data' ({at_oid=atoid;at_syntax=syn;
-		     at_equality=equ;at_ordering=ord;
-		     at_substr=substr}, 
-		    values) ->
-	   let attr_object = 
-	     try Oidmap.find atoid data
-	     with Not_found ->
-	       begin match equ with
-		   Some oid -> 
-		     let (syntax, constructor) = 
-		       try Oidmap.find oid Ldap_matchingrules.equality 
-		       with Not_found -> raise (Unknown_matching_rule oid)
-		     in
-		       if Oid.compare syn syntax = 0 then
-			 try constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
-			 with Not_found -> raise (Unknown_syntax syntax)
-		       else raise (Invalid_matching_rule_syntax (oid, syn))
-		 | None -> (* use the default equality matching rule *)
-		     let (syntax, constructor) = 
-		       Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
-			 Ldap_matchingrules.equality
-		     in
-		       constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
-	       end
-	   in
-	     List.iter attr_object#add values;
-	     Oidmap.add atoid attr_object data')
+	(fun data -> 
+	   function (attr, []) -> data
+	     | ({at_oid=oid} as attr, values) ->
+		 let attr_object = 
+		   try Oidmap.find oid data
+		   with Not_found ->
+		     self#new_attribute attr
+		 in
+		   List.iter attr_object#add values;
+		   Oidmap.add oid attr_object data)
 	data
-	(self#translate_ops ops)
+	(self#normalize_ops ops)
     in
       self#check data';
+      changes <- ops :: changes;
       data <- data'
-	 
+
+  method delete ops = 
+    let data' = 
+      List.fold_left
+	(fun data ({at_oid=oid}, (values: string list)) ->
+	   let (attr_obj: Ldap_matchingrules.attribute_t) = 
+	     try Oidmap.find oid data
+	     with Not_found -> 
+	       raise (No_such_attribute (oidToAttrName schema oid))
+	   in
+	     if values = [] then
+	       Oidmap.remove oid data
+	     else begin
+	       List.iter attr_obj#delete values;
+	       Oidmap.add oid attr_obj data
+	     end)
+	data
+	(self#normalize_ops ops)
+    in
+      self#check data';
+      changes <- ops :: changes;
+      data <- data'
+
+  method replace ops = 		   
+    let data' = 
+      List.fold_left
+	(fun data ({at_oid=oid} as attr, values) ->
+	   let attr_obj =
+	     try Oidmap.find oid data
+	     with Not_found ->
+	       self#new_attribute attr
+	   in
+	     if values = [] then
+	       Oidmap.remove oid data
+	     else begin
+	       attr_obj#replace values;
+	       Oidmap.add oid attr_obj data
+	     end)
+	data
+	(self#normalize_ops ops)
+    in
+      self#check data';
+      changes <- ops :: changes;
+      data <- data'
 end
 
 (*
