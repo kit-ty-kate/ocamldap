@@ -22,7 +22,7 @@
 
 open Ldap_types
 open Ldap_funclient
-open Ldap_schemaparser
+open Ldap_schema
 open String
 
 (* types used throughout the library *)
@@ -65,7 +65,7 @@ object
     (Ldap_types.modify_optype * string * string list) list -> unit
   method modrdn : string -> ?deleteoldrdn:bool -> string -> unit
   method rawschema : ldapentry_t
-  method schema : Ldap_schemaparser.schema
+  method schema : Ldap_schema.schema
   method search :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->

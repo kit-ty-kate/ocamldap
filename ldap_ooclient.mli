@@ -291,7 +291,7 @@ object
   (** Fetch and parse the schema from the directory via the standard
       mechanism (requires version 3). Return a structured
       representation of the schema indexed by canonical name, and oid. *)
-  method schema : Ldap_schemaparser.schema
+  method schema : Ldap_schema.schema
 
   (** {2 Making Modifications} *)
 
@@ -356,6 +356,7 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
+(*
 (** {2 Schema Aware ldapentry Derivatives} *)
 
 (** {1 General Schema Aware Entry} {!Ldap_ooclient.scldapentry}, A
@@ -728,3 +729,4 @@ object
   method set_changetype : changetype -> unit
   method set_dn : string -> unit      
 end
+*)

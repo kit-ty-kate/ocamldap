@@ -8,6 +8,8 @@
 (* for the schema checker, should never be seen by
    the user *)
 
+open Ldap_schema
+
 module Oidset = Set.Make (Oid)
 
 type oc_violation_data = {
