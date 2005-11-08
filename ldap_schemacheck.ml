@@ -10,9 +10,6 @@
 
 open Ldap_schema
 
-module Oidset = Set.Make (Oid)
-module Oidmap = Map.Make (Oid)
-
 type oc_violation_data = {
   missing_attributes: Oidset.t;
   illegal_attributes: Oidset.t;
@@ -40,23 +37,6 @@ object (self)
   val mutable changetype = `ADD
 
   method private check data =
-    let rec lstRequired schema oc =
-      oc :: (List.flatten 
-	       (List.rev_map 
-		  (fun sup -> lstRequired schema (List.rev_map (ocToOid schema) sup))
-		  (oidToOc schema oc).oc_sup))
-    in
-    let generate_illegal_oc missing schema ocs =
-      let is_illegal_oc missing schema oc =
-	let supchain = lstRequired schema oc in
-	  List.exists
-	    (fun mis ->
-	       List.exists ((=) mis)
-		 supchain)
-	    missing
-      in
-	List.filter (is_illegal_oc missing schema) ocs
-    in
     let presentOcs =
       setOfList 
 	(List.rev_map 
@@ -67,14 +47,13 @@ object (self)
 	       with Not_found -> raise Objectclass_is_required)))
     in
     let presentOcslst = Oidset.elements presentOcs in
-    let present = (Oidmap.fold (fun k v s -> Oidset.add k s) Oidset.empty data) in
+    let present = (Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty) in
     let (must, may) =
       List.fold_left
-	(fun oc (must, may) ->
+	(fun (must, may) oc ->
 	   let mkset l = setOfList (List.rev_map (attrToOid schema) l) in
-	   let {oc_must=oc_must;oc_may=oc_may} = oidToOc schema oc in
-	     (Oidset.union must (mkset oc_must),
-	      Oidset.union may (mkset oc_may)))
+	   let {oc_must=oc_must;oc_may=oc_may} = getOc schema oc in
+	     (Oidset.union must (mkset oc_must), Oidset.union may (mkset oc_may)))
 	(Oidset.empty, Oidset.empty)
 	presentOcslst
     in
@@ -82,25 +61,42 @@ object (self)
     let missingAttrs = Oidset.diff must (Oidset.inter must present) in
     let illegalAttrs = Oidset.diff present (Oidset.inter all_allowed present) in
     let requiredOcs =
-      setOfList 
-	(List.rev_map 
-	   (ocToOid schema)
-	   (List.flatten 
-	      (List.rev_map 
-		 (lstRequired schema) 
-		 presentOcslst)))
+      let rec lstRequired schema oc =
+	oc :: (List.flatten 
+		 (List.rev_map 
+		    (fun sup -> lstRequired schema (List.rev_map (ocToOid schema) sup))
+		    (oidToOc schema oc).oc_sup))
+      in	
+	setOfList 
+	  (List.rev_map 
+	     (ocToOid schema)
+	     (List.flatten 
+		(List.rev_map 
+		   (lstRequired schema) 
+		   presentOcslst)))
     in
     let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs) in
     let illegalOcs = 
-      setOfList
-	(List.rev_map
-	   (ocToOid schema)
-	   (generate_illegal_oc 
-	      (List.rev_map 
-		 (fun x -> Lcstring.of_string (oidToOc schema x))
-		 (Oidset.elements missingOcs))
-	      schema
-	      presentOcslst))
+      let generate_illegal_oc missing schema ocs =
+	let is_illegal_oc missing schema oc =
+	  let supchain = lstRequired schema oc in
+	    List.exists
+	      (fun mis ->
+		 List.exists ((=) mis)
+		   supchain)
+	      missing
+	in
+	  List.filter (is_illegal_oc missing schema) ocs
+      in
+	setOfList
+	  (List.rev_map
+	     (ocToOid schema)
+	     (generate_illegal_oc 
+		(List.rev_map 
+		   (fun x -> Lcstring.of_string (oidToOc schema x))
+		   (Oidset.elements missingOcs))
+		schema
+		presentOcslst))
     in
       if not (Oidset.is_empty (Oidset.union missingAttrs illegalAttrs illegalOcs)) then
 	raise (Objectclass_violation 

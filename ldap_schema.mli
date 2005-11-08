@@ -141,9 +141,7 @@ val readSchema : string list -> string list -> schema
 
 (** given a name of an attribute name (canonical or otherwise), return
     its oid @raise Invalid_attribute If the attribute is not found in the schema. *)
-val attrToOid :
-  schema ->
-  Lcstring.t -> Oid.t
+val attrToOid : schema -> string -> Oid.t
 
 (** given the oid of an attribute, return its record @raise
     Invalid_attribute If the attribute is not found in the schema. *)
@@ -153,38 +151,35 @@ val oidToAttr : schema -> Oid.t -> attribute
     Invalid_attribute If the attribute is not found in the schema. *)
 val oidToAttrName : schema -> Oid.t -> string
 
+(** get an attr structure by one of its names (canonical or otherwise,
+    however getting it by canonical name is currently much faster)
+    @raise Invalid_attribute If the attribute is not found in the
+    schema. *)
+val attrNameToAttr : schema -> string -> attribute
+
 (** given a name of an objectclass (canonical or otherwise), return
     its oid. @raise Invalid_objectclass If the objectclass is not
     found in the schema. *)
-val ocToOid :
-  schema ->
-  Lcstring.t -> Oid.t
+val ocToOid : schema -> string -> Oid.t
+
+(** given the oid of an objectclass, return its objectclass structure
+    @raise Invalid_objectclass If the objectclass is not found in the
+    schema. *)
+val oidToOc : schema -> Oid.t -> objectclass
 
 (** given the oid of an objectclass, return its canonical name @raise
     Invalid_objectclass If the objectclass is not found in the
     schema. *)
-val oidToOc : schema -> Oid.t -> string
+val oidToOcName : schema -> Oid.t -> string
 
 (** get an objectclass structure by one of its names (canonical or
     otherwise, however getting it by canonical name is currently much
     faster) @raise Invalid_objectclass If the objectclass is not found
     in the schema. *)
-val getOc :
-  schema ->
-  Lcstring.t -> objectclass
-
-(** get an attr structure by one of its names (canonical or otherwise,
-    however getting it by canonical name is currently much faster)
-    @raise Invalid_attribute If the attribute is not found in the
-    schema. *)
-val getAttr :
-  schema ->
-  Lcstring.t -> attribute
+val ocNameToOc : schema -> string -> objectclass
 
 (** equate attributes by oid. This allows non canonical names to be
     handled correctly, for example "uid" and "userID" are actually the
     same attribute. @raise Invalid_attribute If either attribute is
     not found in the schema. *)
-val equateAttrs :
-  schema ->
-  Lcstring.t -> Lcstring.t -> bool
+val equateAttrs : schema -> string -> string -> bool

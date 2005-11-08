@@ -345,41 +345,44 @@ exception Invalid_objectclass of string
 exception Invalid_attribute of string
 
 (* lookup functions *)
-let getAttr schema (attr:Lcstring.t) =
-  try (Hashtbl.find schema.attributes attr) (* try canonical name first *)
-  with Not_found ->
-    (match 
-       Hashtbl.fold
-	 (fun k v matches ->
-	    if (List.exists 
-		  (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
-		  v.at_name)
-	    then
-	      v :: matches
-	    else matches)
-	 schema.attributes []
-     with
-         [] -> raise (Invalid_attribute (Lcstring.to_string attr))
-       | [attr] -> attr
-       | _ -> raise (Invalid_attribute 
-		       ("this attribute mapps to multiple oids: " ^ 
-			(Lcstring.to_string attr))));;
+let attrNameToAttr schema attr =
+  let attr = Lcstring.of_string attr in
+    try (Hashtbl.find schema.attributes attr) (* try canonical name first *)
+    with Not_found ->
+      (match 
+	 Hashtbl.fold
+	   (fun k v matches ->
+	      if (List.exists 
+		    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
+		    v.at_name)
+	      then
+		v :: matches
+	      else matches)
+	   schema.attributes []
+       with
+           [] -> raise (Invalid_attribute (Lcstring.to_string attr))
+	 | [attr] -> attr
+	 | _ -> raise (Invalid_attribute 
+			 ("this attribute mapps to multiple oids: " ^ 
+			    (Lcstring.to_string attr))))
 
-let attrToOid schema (attr:Lcstring.t) = (getAttr schema attr).at_oid
+let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
 
-let oidToAttr schema (attr:Oid.t) = Hashtbl.find schema.attributes_byoid attr
-let oidToAttrName schema (attr:Oid.t) = 
+let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
+let oidToAttrName schema attr = 
   List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
 
-let ocToOid schema (oc:Lcstring.t) =
-  try (Hashtbl.find schema.objectclasses oc).oc_oid
-  with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
+let ocToOid schema oc =
+  let oc = Lcstring.of_string oc in
+    try (Hashtbl.find schema.objectclasses oc).oc_oid
+    with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
 
-let oidToOc schema (oc:Oid.t) =
-  List.hd (Hashtbl.find schema.objectclasses_byoid oc).oc_name
+let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
+let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
 
-let getOc schema (oc:Lcstring.t) =
-  try Hashtbl.find schema.objectclasses oc
-  with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
+let ocNameToOc schema oc =
+  let oc = Lcstring.of_string oc in
+    try Hashtbl.find schema.objectclasses oc
+    with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
 
 let equateAttrs schema a1 a2 = (attrToOid schema a1) = (attrToOid schema a2)
