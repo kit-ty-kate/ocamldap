@@ -69,7 +69,7 @@ let format_lcstring id =
   Format.close_box ()
 
 type octype = Abstract | Structural | Auxiliary;;
-type objectclass = {oc_name: string list;
+type objectclass = {oc_name:string list;
 		    oc_oid:Oid.t;
 		    oc_desc:string;
 		    oc_obsolete:bool;
@@ -363,26 +363,42 @@ let attrNameToAttr schema attr =
            [] -> raise (Invalid_attribute (Lcstring.to_string attr))
 	 | [attr] -> attr
 	 | _ -> raise (Invalid_attribute 
-			 ("this attribute mapps to multiple oids: " ^ 
+			 ("this attribute maps to multiple oids: " ^ 
 			    (Lcstring.to_string attr))))
-
-let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
-
-let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
-let oidToAttrName schema attr = 
-  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
-
-let ocToOid schema oc =
-  let oc = Lcstring.of_string oc in
-    try (Hashtbl.find schema.objectclasses oc).oc_oid
-    with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
-
-let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
-let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
 
 let ocNameToOc schema oc =
   let oc = Lcstring.of_string oc in
     try Hashtbl.find schema.objectclasses oc
-    with Not_found -> raise (Invalid_objectclass (Lcstring.to_string oc));;
+    with Not_found ->
+      (match 
+	 Hashtbl.fold
+	   (fun k v matches ->
+	      if (List.exists 
+		    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
+		    v.oc_name)
+	      then
+		v :: matches
+	      else matches)
+	   schema.objectclasses []
+       with
+           [] -> raise (Invalid_objectclass (Lcstring.to_string oc))
+	 | [oc] -> oc
+	 | _ -> raise (Invalid_objectclass 
+			 ("this objectclass maps to multiple oids: " ^ 
+			    (Lcstring.to_string oc))))
 
-let equateAttrs schema a1 a2 = (attrToOid schema a1) = (attrToOid schema a2)
+let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
+
+let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
+
+let oidToAttrName schema attr = 
+  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
+
+let ocToOid schema oc = (ocNameToOc schema oc).oc_oid
+
+let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
+
+let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
+
+let equateAttrs schema a1 a2 = 
+  Oid.compare (attrToOid schema a1) (attrToOid schema a2) = 0

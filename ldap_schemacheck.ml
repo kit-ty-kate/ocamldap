@@ -41,10 +41,8 @@ object (self)
       setOfList 
 	(List.rev_map 
 	   (ocToOid schema)
-	   (List.rev_map 
-	      (Lcstring.of_string) 
-	      (try (Oidmap.find (Oid.of_string "2.5.4.0") data)#values (* objectclass *)
-	       with Not_found -> raise Objectclass_is_required)))
+	   (try (Oidmap.find (Oid.of_string "2.5.4.0") data)#values (* objectclass *)
+	    with Not_found -> raise Objectclass_is_required))
     in
     let presentOcslst = Oidset.elements presentOcs in
     let present = (Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty) in

@@ -103,21 +103,8 @@ type attribute = {
   at_xattr:string list
 }
 
-(** The type representing the whole schema. Consists of hashtbls
-    indexed by two useful keys. For both attributes and objectclasses
-    there exists a hashtbl indexed by OID, and one indexed by lower case
-    canonical name. There exist functions in Ldap_ooclient to look up
-    attributes and objectclasses by non canonical names if that is
-    necessary for you to do. see attrToOid, and ocToOid. They will find
-    the oid of an attribute or objectclass given any name, not just the
-    canonical one. Not that this is somewhat (like several orders of
-    magnitude) slower than lookups by canonical name.*)
-type schema = {
-  objectclasses : (Lcstring.t, objectclass) Hashtbl.t;
-  objectclasses_byoid : (Oid.t, objectclass) Hashtbl.t;
-  attributes : (Lcstring.t, attribute) Hashtbl.t;
-  attributes_byoid : (Oid.t, attribute) Hashtbl.t;
-}
+(** An abstract container for the schema *)
+type schema
 
 (** This reference controls the dept of printing for the schema in the
     toplevel. The default is 10 keys from each table will be printed. OID
@@ -133,6 +120,12 @@ exception Parse_error_oc of Lexing.lexbuf * objectclass * string
 exception Parse_error_at of Lexing.lexbuf * attribute * string
 exception Syntax_error_oc of Lexing.lexbuf * objectclass * string
 exception Syntax_error_at of Lexing.lexbuf * attribute * string
+
+(** {1 Schema Access Functions} A set of functions which should be
+    used to access the schema. All functions on Oid types are O(1),
+    all functions dealing with names are O(1) for canonical names, and
+    O(n) for non canonical names. Functions which return names will
+    always return the canonical name. *)
 
 (** readSchema attribute_list objectclass_list, parse the schema into
     a schema type given a list of attribute definition lines, and
@@ -151,11 +144,15 @@ val oidToAttr : schema -> Oid.t -> attribute
     Invalid_attribute If the attribute is not found in the schema. *)
 val oidToAttrName : schema -> Oid.t -> string
 
-(** get an attr structure by one of its names (canonical or otherwise,
-    however getting it by canonical name is currently much faster)
+(** get an attr structure by one of its names (canonical or otherwise)
     @raise Invalid_attribute If the attribute is not found in the
     schema. *)
 val attrNameToAttr : schema -> string -> attribute
+
+(** get an objectclass structure by one of its names (canonical or
+    otherwise). @raise Invalid_objectclass If the objectclass is
+    not found in the schema. *)
+val ocNameToOc : schema -> string -> objectclass
 
 (** given a name of an objectclass (canonical or otherwise), return
     its oid. @raise Invalid_objectclass If the objectclass is not
@@ -171,12 +168,6 @@ val oidToOc : schema -> Oid.t -> objectclass
     Invalid_objectclass If the objectclass is not found in the
     schema. *)
 val oidToOcName : schema -> Oid.t -> string
-
-(** get an objectclass structure by one of its names (canonical or
-    otherwise, however getting it by canonical name is currently much
-    faster) @raise Invalid_objectclass If the objectclass is not found
-    in the schema. *)
-val ocNameToOc : schema -> string -> objectclass
 
 (** equate attributes by oid. This allows non canonical names to be
     handled correctly, for example "uid" and "userID" are actually the
