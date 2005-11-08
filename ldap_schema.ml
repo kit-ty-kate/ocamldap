@@ -69,36 +69,42 @@ let format_lcstring id =
   Format.close_box ()
 
 type octype = Abstract | Structural | Auxiliary;;
-type objectclass = {oc_name: string list;
-		    oc_oid: Oid.t;
-		    oc_desc: string;
-		    oc_obsolete: bool;
-		    oc_sup: string list;
-		    oc_must: string list;
-		    oc_may: string list;
-		    oc_type: octype;
-		    oc_xattr: string list}
+type objectclass = {
+  oc_name: string list;
+  oc_oid: Oid.t;
+  oc_desc: string;
+  oc_obsolete: bool;
+  oc_sup: string list;
+  oc_must: string list;
+  oc_may: string list;
+  oc_type: octype;
+  oc_xattr: string list
+}
 
-type attribute = {at_name: string list;
-		  at_desc: string;
-		  at_oid: Oid.t;
-		  at_equality: Oid.t option;
-		  at_ordering: Oid.t option;
-		  at_substr: Oid.t option;
-		  at_syntax: Oid.t;
-		  at_length:  Int64.t;
-		  at_obsolete: bool;
-		  at_single_value: bool;
-		  at_collective: bool;
-		  at_no_user_modification: bool;
-		  at_usage: string;
-		  at_sup: string list;
-		  at_xattr: string list};;
+type attribute = {
+  at_name: string list;
+  at_desc: string;
+  at_oid: Oid.t;
+  at_equality: Oid.t option;
+  at_ordering: Oid.t option;
+  at_substr: Oid.t option;
+  at_syntax: Oid.t;
+  at_length:  Int64.t;
+  at_obsolete: bool;
+  at_single_value: bool;
+  at_collective: bool;
+  at_no_user_modification: bool;
+  at_usage: string;
+  at_sup: string list;
+  at_xattr: string list
+}
 		  
-type schema = {objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
-	       objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
-	       attributes: (Lcstring.t, attribute) Hashtbl.t;
-	       attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
+type schema = {
+  objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
+  objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
+  attributes: (Lcstring.t, attribute) Hashtbl.t;
+  attributes_byoid: (Oid.t, attribute) Hashtbl.t
+}
 
 exception Invalid_objectclass of string
 exception Non_unique_objectclass_alias of string
@@ -123,7 +129,7 @@ let attrNameToAttr schema attr =
        with
            [] -> raise (Invalid_attribute (Lcstring.to_string attr))
 	 | [attr] -> attr
-	 | _ -> raise (Non_unique_attribute_alias (Lcstring.to_string attr))
+	 | _ -> raise (Non_unique_attribute_alias (Lcstring.to_string attr)))
 
 let ocNameToOc schema oc =
   let oc = Lcstring.of_string oc in
@@ -142,7 +148,7 @@ let ocNameToOc schema oc =
        with
            [] -> raise (Invalid_objectclass (Lcstring.to_string oc))
 	 | [oc] -> oc
-	 | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc))
+	 | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc)))
 
 let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
 
@@ -160,35 +166,35 @@ let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
 let equateAttrs schema a1 a2 = 
   Oid.compare (attrToOid schema a1) (attrToOid schema a2) = 0
 
-type schema_error = Undefined_attr_reference of string
-		    | Non_unique_attr_alias of string
-		    | Undefined_oc_reference of string
-		    | Cross_linked_oid of string list
+type schema_error = 
+    Undefined_attr_reference of string
+  | Non_unique_attr_alias of string
+  | Non_unique_oc_alias of string
+  | Undefined_oc_reference of string
+  | Cross_linked_oid of string list
 
-let typecheck_schema schema = 
-    (* check that all musts, and all mays are attributes which
-       exist. It would be an error to specify a must or a may which does
-       not exist. *)
+let typecheck schema = 
+  (* check that all musts, and all mays are attributes which exist. *)
   let errors = 
     Hashtbl.fold
       (fun oc {oc_must=musts;oc_may=mays} errors -> 
+	 let oc = Lcstring.to_string oc in
 	 let check_error errors attr = 
-	   try attrNameToAttr schema attr;errors
+	   try ignore (attrNameToAttr schema attr);errors
 	   with 
 	       Invalid_attribute _ -> 
 		 (oc, Undefined_attr_reference attr) :: errors
 	     | Non_unique_attribute_alias attr -> 
 		 (oc, Non_unique_attr_alias attr) :: errors
 	 in
-	   (List.rev_append
-	      errors
+	   (List.rev_append errors
 	      (List.rev_append
 		 (List.fold_left check_error [] musts)
 		 (List.fold_left check_error [] mays))))
       schema.objectclasses
       []
   in
-    (* check for cross linked oids *)
+  (* check for cross linked oids *)
   let errors =
     let oids = Hashtbl.create 100 in
     let seen = Hashtbl.create 100 in
@@ -199,35 +205,33 @@ let typecheck_schema schema =
 	(fun oid {oc_name=n} -> Hashtbl.add oids oid (List.hd n))
 	schema.objectclasses_byoid;
       Hashtbl.fold
-	(fun oid name errors ->
+	(fun oid (name: string) errors ->
 	   if List.length (Hashtbl.find_all oids oid) > 1 then
-	     if Hashtbl.mem seen oid then
-	       errors
-	     else (
+	     if Hashtbl.mem seen oid then errors
+	     else begin
 	       Hashtbl.add seen oid ();
 	       (name, Cross_linked_oid (Hashtbl.find_all oids oid)) :: errors
-	     )
+	     end
 	   else 
-	     errors
-	)
+	     errors)
 	oids
 	errors
   in
-    (* make sure all superior ocs are defined *)
+  (* make sure all superior ocs are defined *)
   let errors =
     Hashtbl.fold
       (fun oc {oc_sup=sups} errors ->
-	  List.rev_append
-	    errors
-	    (List.rev_map
-	       (fun missing -> (missing, Undefined_oc_reference missing))
-	       (List.filter
-		  (fun oc -> 
-		     not 
-		       (Hashtbl.mem
-			  schema.objectclasses
-			  (Lcstring.of_string oc)))
-		  (List.rev_map Lcstring.to_string sups))))
+	 let oc = Lcstring.to_string oc in
+	   List.fold_left
+	     (fun errors sup -> 
+		try ignore (ocNameToOc schema sup);errors
+		with 
+		    Invalid_objectclass _ -> 
+		      (oc, Undefined_oc_reference sup) :: errors
+		  | Non_unique_objectclass_alias _ ->
+		      (oc, Non_unique_oc_alias sup) :: errors)
+	     errors
+	     sups)
       schema.objectclasses
       errors
   in
@@ -296,8 +300,8 @@ let rec readSchema oclst attrlst =
 	| Ldap_schemalexer.Structural -> readOptionalFields lxbuf {oc with oc_type=Structural}
 	| Ldap_schemalexer.Auxiliary  -> readOptionalFields lxbuf {oc with oc_type=Auxiliary}
 	| Must s                -> readOptionalFields lxbuf {oc with oc_must=s}
-	| May s                 -> readOptionalFields {oc with oc_may=s}
-	| Xstring t             -> readOptionalFields {oc with oc_xattr=(t :: oc.oc_xattr)}
+	| May s                 -> readOptionalFields lxbuf {oc with oc_may=s}
+	| Xstring t             -> readOptionalFields lxbuf {oc with oc_xattr=(t :: oc.oc_xattr)}
 	| Rparen                -> oc
 	| _                     -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
       with Failure(_) -> raise (Parse_error_oc (lxbuf, oc, "Expected right parenthesis"))

@@ -73,34 +73,34 @@ type octype = Abstract | Structural | Auxiliary
 
 (** The type representing an objectclass definition *)
 type objectclass = {
-  oc_name : string list;
-  oc_oid : Oid.t;
-  oc_desc : string;
-  oc_obsolete : bool;
-  oc_sup : Lcstring.t list;
-  oc_must : Lcstring.t list;
-  oc_may : Lcstring.t list;
-  oc_type : octype;
-  oc_xattr : string list;
+  oc_name: string list;
+  oc_oid: Oid.t;
+  oc_desc: string;
+  oc_obsolete: bool;
+  oc_sup: string list;
+  oc_must: string list;
+  oc_may: string list;
+  oc_type: octype;
+  oc_xattr: string list
 }
 
-(** The type representing an attribute definition *)
+(** the type representing an attribute definition *)
 type attribute = {
-  at_name:string list;
-  at_desc:string;
-  at_oid:Oid.t;
-  at_equality:Oid.t option;
-  at_ordering:Oid.t option;
-  at_substr:Oid.t option;
-  at_syntax:Oid.t;
-  at_length: Int64.t;
-  at_obsolete:bool;
-  at_single_value:bool;
-  at_collective:bool;
-  at_no_user_modification:bool;
-  at_usage:string;
-  at_sup:Lcstring.t list;
-  at_xattr:string list
+  at_name: string list;
+  at_desc: string;
+  at_oid: Oid.t;
+  at_equality: Oid.t option;
+  at_ordering: Oid.t option;
+  at_substr: Oid.t option;
+  at_syntax: Oid.t;
+  at_length:  Int64.t;
+  at_obsolete: bool;
+  at_single_value: bool;
+  at_collective: bool;
+  at_no_user_modification: bool;
+  at_usage: string;
+  at_sup: string list;
+  at_xattr: string list
 }
 
 (** An abstract container for the schema *)
@@ -179,3 +179,15 @@ val oidToOcName : schema -> Oid.t -> string
     same attribute. @raise Invalid_attribute If either attribute is
     not found in the schema. *)
 val equateAttrs : schema -> string -> string -> bool
+
+(** {1 Schema Validation} A function to check for errors in the schema
+    and report them *)
+
+type schema_error = 
+    Undefined_attr_reference of string
+  | Non_unique_attr_alias of string
+  | Non_unique_oc_alias of string
+  | Undefined_oc_reference of string
+  | Cross_linked_oid of string list
+
+val typecheck : schema -> (string * schema_error) list
