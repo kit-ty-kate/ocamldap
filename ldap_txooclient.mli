@@ -49,7 +49,7 @@ class ldapadvisorytxcon :
       (Ldap_types.modify_optype * string * string list) list -> unit
     method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
     method rawschema : ldapentry
-    method schema : Ldap_schemaparser.schema
+    method schema : Ldap_schema.schema
     method search :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->

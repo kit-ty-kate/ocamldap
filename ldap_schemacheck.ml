@@ -124,7 +124,7 @@ object (self)
 		       with Not_found -> raise (Unknown_matching_rule oid)
 		     in
 		       if Oid.compare syn syntax = 0 then
-			 try constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+			 try constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
 			 with Not_found -> raise (Unknown_syntax syntax)
 		       else raise (Invalid_matching_rule_syntax (oid, syn))
 		 | None -> (* use the default equality matching rule *)
@@ -132,7 +132,7 @@ object (self)
 		       Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
 			 Ldap_matchingrules.equality
 		     in
-		       constructor (Oidmap.find syntax Ldap_syntaxes.syntax)
+		       constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
 	       end
 	   in
 	     List.iter attr_object#add values;
