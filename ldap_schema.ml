@@ -69,55 +69,103 @@ let format_lcstring id =
   Format.close_box ()
 
 type octype = Abstract | Structural | Auxiliary;;
-type objectclass = {oc_name:string list;
-		    oc_oid:Oid.t;
-		    oc_desc:string;
-		    oc_obsolete:bool;
-		    oc_sup:Lcstring.t list;
-		    oc_must:Lcstring.t list;
-		    oc_may:Lcstring.t list;
-		    oc_type:octype;
-		    oc_xattr:string list}
+type objectclass = {oc_name: string list;
+		    oc_oid: Oid.t;
+		    oc_desc: string;
+		    oc_obsolete: bool;
+		    oc_sup: string list;
+		    oc_must: string list;
+		    oc_may: string list;
+		    oc_type: octype;
+		    oc_xattr: string list}
 
-type attribute = {at_name:string list;
-		  at_desc:string;
-		  at_oid:Oid.t;
-		  at_equality:Oid.t option;
-		  at_ordering:Oid.t option;
-		  at_substr:Oid.t option;
-		  at_syntax:Oid.t;
-		  at_length: Int64.t;
-		  at_obsolete:bool;
-		  at_single_value:bool;
-		  at_collective:bool;
-		  at_no_user_modification:bool;
-		  at_usage:string;
-		  at_sup:Lcstring.t list;
-		  at_xattr:string list};;
+type attribute = {at_name: string list;
+		  at_desc: string;
+		  at_oid: Oid.t;
+		  at_equality: Oid.t option;
+		  at_ordering: Oid.t option;
+		  at_substr: Oid.t option;
+		  at_syntax: Oid.t;
+		  at_length:  Int64.t;
+		  at_obsolete: bool;
+		  at_single_value: bool;
+		  at_collective: bool;
+		  at_no_user_modification: bool;
+		  at_usage: string;
+		  at_sup: string list;
+		  at_xattr: string list};;
 		  
 type schema = {objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
 	       objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
 	       attributes: (Lcstring.t, attribute) Hashtbl.t;
 	       attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
 
+exception Invalid_objectclass of string
+exception Non_unique_objectclass_alias of string
+exception Invalid_attribute of string
+exception Non_unique_attribute_alias of string
+
+(* lookup functions *)
+let attrNameToAttr schema attr =
+  let attr = Lcstring.of_string attr in
+    try (Hashtbl.find schema.attributes attr) (* try canonical name first *)
+    with Not_found ->
+      (match 
+	 Hashtbl.fold
+	   (fun k v matches ->
+	      if (List.exists 
+		    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
+		    v.at_name)
+	      then
+		v :: matches
+	      else matches)
+	   schema.attributes []
+       with
+           [] -> raise (Invalid_attribute (Lcstring.to_string attr))
+	 | [attr] -> attr
+	 | _ -> raise (Non_unique_attribute_alias (Lcstring.to_string attr))
+
+let ocNameToOc schema oc =
+  let oc = Lcstring.of_string oc in
+    try Hashtbl.find schema.objectclasses oc
+    with Not_found ->
+      (match 
+	 Hashtbl.fold
+	   (fun k v matches ->
+	      if (List.exists 
+		    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
+		    v.oc_name)
+	      then
+		v :: matches
+	      else matches)
+	   schema.objectclasses []
+       with
+           [] -> raise (Invalid_objectclass (Lcstring.to_string oc))
+	 | [oc] -> oc
+	 | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc))
+
+let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
+
+let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
+
+let oidToAttrName schema attr = 
+  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
+
+let ocToOid schema oc = (ocNameToOc schema oc).oc_oid
+
+let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
+
+let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
+
+let equateAttrs schema a1 a2 = 
+  Oid.compare (attrToOid schema a1) (attrToOid schema a2) = 0
+
 type schema_error = Undefined_attr_reference of string
+		    | Non_unique_attr_alias of string
 		    | Undefined_oc_reference of string
 		    | Cross_linked_oid of string list
 
 let typecheck_schema schema = 
-  let attribute_exists_p schema attr = 
-    if Hashtbl.mem schema.attributes attr then true
-    else
-      Hashtbl.fold
-	(fun _ {at_name=names} b -> 
-	   if b then b
-	   else
-	     List.exists
-	       (fun name -> (Lcstring.of_string name) = attr)
-	       names)
-	schema.attributes
-	false
-  in
     (* check that all musts, and all mays are attributes which
        exist. It would be an error to specify a must or a may which does
        not exist. *)
@@ -125,10 +173,12 @@ let typecheck_schema schema =
     Hashtbl.fold
       (fun oc {oc_must=musts;oc_may=mays} errors -> 
 	 let check_error errors attr = 
-	   if not (attribute_exists_p schema attr) then
-	     (Lcstring.to_string oc, 
-	      Undefined_attr_reference (Lcstring.to_string attr)) :: errors
-	   else errors
+	   try attrNameToAttr schema attr;errors
+	   with 
+	       Invalid_attribute _ -> 
+		 (oc, Undefined_attr_reference attr) :: errors
+	     | Non_unique_attribute_alias attr -> 
+		 (oc, Non_unique_attr_alias attr) :: errors
 	 in
 	   (List.rev_append
 	      errors
@@ -241,21 +291,13 @@ let rec readSchema oclst attrlst =
 	  Name s                -> readOptionalFields lxbuf {oc with oc_name=s}
 	| Desc s                -> readOptionalFields lxbuf {oc with oc_desc=s}
 	| Obsolete              -> readOptionalFields lxbuf {oc with oc_obsolete=true}
-	| Sup s                 -> (readOptionalFields 
-				       lxbuf 
-				       {oc with oc_sup=(List.rev_map (Lcstring.of_string) s)})
+	| Sup s                 -> readOptionalFields lxbuf {oc with oc_sup=s}
 	| Ldap_schemalexer.Abstract   -> readOptionalFields lxbuf {oc with oc_type=Abstract}
 	| Ldap_schemalexer.Structural -> readOptionalFields lxbuf {oc with oc_type=Structural}
 	| Ldap_schemalexer.Auxiliary  -> readOptionalFields lxbuf {oc with oc_type=Auxiliary}
-	| Must s                -> (readOptionalFields 
-				       lxbuf 
-				       {oc with oc_must=(List.rev_map (Lcstring.of_string) s)})
-	| May s                 -> (readOptionalFields 
-				       lxbuf
-				       {oc with oc_may=(List.rev_map (Lcstring.of_string) s)})
-	| Xstring t             -> (readOptionalFields 
-				       lxbuf 
-				       {oc with oc_xattr=(t :: oc.oc_xattr)})
+	| Must s                -> readOptionalFields lxbuf {oc with oc_must=s}
+	| May s                 -> readOptionalFields {oc with oc_may=s}
+	| Xstring t             -> readOptionalFields {oc with oc_xattr=(t :: oc.oc_xattr)}
 	| Rparen                -> oc
 	| _                     -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
       with Failure(_) -> raise (Parse_error_oc (lxbuf, oc, "Expected right parenthesis"))
@@ -287,8 +329,7 @@ let rec readSchema oclst attrlst =
 	  Name s              -> readOptionalFields lxbuf {attr with at_name=s}
 	| Desc s              -> readOptionalFields lxbuf {attr with at_desc=s}
 	| Obsolete            -> readOptionalFields lxbuf {attr with at_obsolete=true}
-	| Sup s               -> 
-	    readOptionalFields lxbuf {attr with at_sup=(List.rev_map (Lcstring.of_string) s)}
+	| Sup s               -> readOptionalFields lxbuf {attr with at_sup=s}
 	| Equality s          -> 
 	    readOptionalFields lxbuf 
 	      {attr with at_equality=(Some (Oid.of_string s))}
@@ -339,66 +380,4 @@ let rec readSchema oclst attrlst =
 		attributes_byoid=Hashtbl.create 5000} in
     readAttrs attrlst schema;
     readOcs oclst schema;
-    schema;;
-
-exception Invalid_objectclass of string
-exception Invalid_attribute of string
-
-(* lookup functions *)
-let attrNameToAttr schema attr =
-  let attr = Lcstring.of_string attr in
-    try (Hashtbl.find schema.attributes attr) (* try canonical name first *)
-    with Not_found ->
-      (match 
-	 Hashtbl.fold
-	   (fun k v matches ->
-	      if (List.exists 
-		    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
-		    v.at_name)
-	      then
-		v :: matches
-	      else matches)
-	   schema.attributes []
-       with
-           [] -> raise (Invalid_attribute (Lcstring.to_string attr))
-	 | [attr] -> attr
-	 | _ -> raise (Invalid_attribute 
-			 ("this attribute maps to multiple oids: " ^ 
-			    (Lcstring.to_string attr))))
-
-let ocNameToOc schema oc =
-  let oc = Lcstring.of_string oc in
-    try Hashtbl.find schema.objectclasses oc
-    with Not_found ->
-      (match 
-	 Hashtbl.fold
-	   (fun k v matches ->
-	      if (List.exists 
-		    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
-		    v.oc_name)
-	      then
-		v :: matches
-	      else matches)
-	   schema.objectclasses []
-       with
-           [] -> raise (Invalid_objectclass (Lcstring.to_string oc))
-	 | [oc] -> oc
-	 | _ -> raise (Invalid_objectclass 
-			 ("this objectclass maps to multiple oids: " ^ 
-			    (Lcstring.to_string oc))))
-
-let attrToOid schema attr = (attrNameToAttr schema attr).at_oid
-
-let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
-
-let oidToAttrName schema attr = 
-  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
-
-let ocToOid schema oc = (ocNameToOc schema oc).oc_oid
-
-let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
-
-let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
-
-let equateAttrs schema a1 a2 = 
-  Oid.compare (attrToOid schema a1) (attrToOid schema a2) = 0
+    schema

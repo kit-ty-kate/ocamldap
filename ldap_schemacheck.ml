@@ -50,7 +50,7 @@ object (self)
       List.fold_left
 	(fun (must, may) oc ->
 	   let mkset l = setOfList (List.rev_map (attrToOid schema) l) in
-	   let {oc_must=oc_must;oc_may=oc_may} = getOc schema oc in
+	   let {oc_must=oc_must;oc_may=oc_may} = ocNameToOc schema oc in
 	     (Oidset.union must (mkset oc_must), Oidset.union may (mkset oc_may)))
 	(Oidset.empty, Oidset.empty)
 	presentOcslst

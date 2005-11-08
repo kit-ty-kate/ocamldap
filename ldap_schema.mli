@@ -127,6 +127,11 @@ exception Syntax_error_at of Lexing.lexbuf * attribute * string
     O(n) for non canonical names. Functions which return names will
     always return the canonical name. *)
 
+exception Invalid_objectclass of string
+exception Non_unique_objectclass_alias of string
+exception Invalid_attribute of string
+exception Non_unique_attribute_alias of string
+
 (** readSchema attribute_list objectclass_list, parse the schema into
     a schema type given a list of attribute definition lines, and
     objectclass definition lines. *)
