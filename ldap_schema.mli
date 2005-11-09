@@ -103,8 +103,12 @@ type attribute = {
   at_xattr: string list
 }
 
-(** An abstract container for the schema *)
-type schema
+type schema = {
+  objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
+  objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
+  attributes: (Lcstring.t, attribute) Hashtbl.t;
+  attributes_byoid: (Oid.t, attribute) Hashtbl.t
+}
 
 (** This reference controls the dept of printing for the schema in the
     toplevel. The default is 10 keys from each table will be printed. OID

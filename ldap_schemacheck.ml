@@ -194,17 +194,41 @@ object (self)
     let data' = self#replace' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`REPLACE, a, v)) ops)
 
-  method modify' ops = 
-    let data' =
-      List.fold_left
-	(fun data ->
-	   function (`ADD, attr, vals) -> self#add' data [(attr, vals)]
-	     | (`DELETE, attr, vals) -> self#delete' data [(attr, vals)]
-	     | (`REPLACE, attr, vals) -> self#replace' data [(attr, vals)])
-	data
-	ops
-    in
+  method private modify' data ops = 
+    List.fold_left
+      (fun data ->
+	 function (`ADD, attr, vals) -> self#add' data [(attr, vals)]
+	   | (`DELETE, attr, vals) -> self#delete' data [(attr, vals)]
+	   | (`REPLACE, attr, vals) -> self#replace' data [(attr, vals)])
+      data
+      ops
+	
+  method modify ops = 
+    let data' = self#modify' data ops in
       self#commit_changes data' ops
+
+  method attributes = 
+    Oidmap.fold
+      (fun k v l -> (oidToAttrName schema k) :: l)
+      data
+      []
+
+  method exists a = 
+    try ignore (Oidmap.find (attrNameToOid schema a) data);true
+    with Not_found -> false
+
+  method get_value a = (Oidmap.find (attrNameToOid schema a) data)#values
+  method changes = changes
+  method changetype = changetype
+  method set_changetype (c: Ldap_ooclient.changetype) = changetype <- c
+  method flush_changes = changes <- []
+  method dn = dn
+  method set_dn dn' = 
+    ignore (Ldap_dn.of_string dn'); (* check for validity *)
+    dn <- dn'
+  method print = print_endline "This deprecated method has been removed"
+  method diff (e: Ldap_ooclient.ldapentry_t) = 
+    ([]: (Ldap_types.modify_optype * string * string list) list)
 end
 
 (*
