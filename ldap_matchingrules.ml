@@ -125,24 +125,6 @@ let new_integer_equality_set syntax =
      IntegerMatch.elements
      syntax :> attribute_t)
 
-(* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
-let numeric_string_equality_match v1 v2 = 
-  String.compare v1 v2
-
-module NumericStringMatch = Set.Make
-  (struct
-     type t = String.t
-     let compare = numeric_string_equality_match
-   end)
-
-let new_integer_equality_set syntax =
-  (new attribute
-     NumericStringMatch.add NumericStringMatch.mem
-     NumericStringMatch.remove NumericStringMatch.empty
-     NumericStringMatch.elements
-     syntax :> attribute_t)
-
-
 (* 2.5.13.16 NAME 'bitStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.6 *)
 let bit_string_equality_match v1 v2 = String.compare v1 v2
 
@@ -384,7 +366,10 @@ let case_exact_ordering_match v1 v2 =
     (collapse_whitespace v2)
 
 (* 2.5.13.9 NAME 'numericStringOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
-let numeric_string_ordering_match
+let numeric_string_ordering_match v1 v2 =
+  String.compare
+    (remove_whitespace v1)
+    (remove_whitespace v2)
 
 (* substring matching rules *)
 
@@ -437,12 +422,6 @@ let equality =
      (Oid.of_string "integermatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.27", 
       new_integer_equality_set);
-     (Oid.of_string "2.5.13.8", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      new_numeric_string_equality_set);
-     (Oid.of_string "numericStringMatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      new_numeric_string_equality_set);
      (Oid.of_string "2.5.13.16", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", 
       new_bit_string_equality_set);
@@ -531,7 +510,13 @@ let ordering =
       case_exact_ordering_match);
      (Oid.of_string "caseExactOrderingMatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_exact_ordering_match)]
+      case_exact_ordering_match);
+     (Oid.of_string "2.5.13.9", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
+      numeric_string_ordering_match);
+     (Oid.of_string "numericStringOrderingMatch", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
+      numeric_string_ordering_match)]
 
 let substring = 
   List.fold_left
