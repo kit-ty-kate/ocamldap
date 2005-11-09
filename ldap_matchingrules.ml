@@ -49,6 +49,15 @@ end
 
 (* equality matching rules *)
 
+(* used to normalize whitespace for caseIgnoreMatch and friends *)
+let whsp = Pcre.regexp ~study:true "\\s+"
+let leading_or_trailing_whsp = Pcre.regexp ~study:true "(^\\s+|\\s+$)"
+let collapse_whitespace v = 
+  (Pcre.replace ~rex:leading_or_trailing_whsp ~templ:""
+     (Pcre.replace ~rex:whsp ~templ:" " v))
+
+let remove_whitespace v = Pcre.replace ~rex:whsp ~templ:"" v
+
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
 let object_identifier_equality_match v1 v2 = String.compare v1 v2
 
@@ -60,10 +69,8 @@ module ObjectIdentifierMatch = Set.Make
 
 let new_object_identifier_equality_set syntax =
   (new attribute
-     ObjectIdentifierMatch.add
-     ObjectIdentifierMatch.mem
-     ObjectIdentifierMatch.remove
-     ObjectIdentifierMatch.empty
+     ObjectIdentifierMatch.add ObjectIdentifierMatch.mem
+     ObjectIdentifierMatch.remove ObjectIdentifierMatch.empty
      ObjectIdentifierMatch.elements
      syntax :> attribute_t)
 
@@ -78,15 +85,16 @@ module DistinguishedNameMatch = Set.Make
 
 let new_distinguished_name_equality_set syntax =
   (new attribute
-     DistinguishedNameMatch.add
-     DistinguishedNameMatch.mem
-     DistinguishedNameMatch.remove
-     DistinguishedNameMatch.empty
+     DistinguishedNameMatch.add DistinguishedNameMatch.mem
+     DistinguishedNameMatch.remove DistinguishedNameMatch.empty
      DistinguishedNameMatch.elements
      syntax :> attribute_t)
 
 (* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
-let numeric_string_equality_match v1 v2 = String.compare v1 v2
+let numeric_string_equality_match v1 v2 = 
+  String.compare 
+    (remove_whitespace v1)
+    (remove_whitespace v2)
 
 module NumericStringMatch = Set.Make
   (struct
@@ -96,10 +104,8 @@ module NumericStringMatch = Set.Make
 
 let new_numeric_string_equality_set syntax =
   (new attribute
-     NumericStringMatch.add
-     NumericStringMatch.mem
-     NumericStringMatch.remove
-     NumericStringMatch.empty
+     NumericStringMatch.add NumericStringMatch.mem
+     NumericStringMatch.remove NumericStringMatch.empty
      NumericStringMatch.elements
      syntax :> attribute_t)
 
@@ -114,12 +120,28 @@ module IntegerMatch = Set.Make
 
 let new_integer_equality_set syntax =
   (new attribute
-     IntegerMatch.add
-     IntegerMatch.mem
-     IntegerMatch.remove
-     IntegerMatch.empty
+     IntegerMatch.add IntegerMatch.mem
+     IntegerMatch.remove IntegerMatch.empty
      IntegerMatch.elements
      syntax :> attribute_t)
+
+(* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
+let numeric_string_equality_match v1 v2 = 
+  String.compare v1 v2
+
+module NumericStringMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = numeric_string_equality_match
+   end)
+
+let new_integer_equality_set syntax =
+  (new attribute
+     NumericStringMatch.add NumericStringMatch.mem
+     NumericStringMatch.remove NumericStringMatch.empty
+     NumericStringMatch.elements
+     syntax :> attribute_t)
+
 
 (* 2.5.13.16 NAME 'bitStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.6 *)
 let bit_string_equality_match v1 v2 = String.compare v1 v2
@@ -132,10 +154,8 @@ module BitStringMatch = Set.Make
 
 let new_bit_string_equality_set syntax =
   (new attribute
-     BitStringMatch.add
-     BitStringMatch.mem
-     BitStringMatch.remove
-     BitStringMatch.empty
+     BitStringMatch.add BitStringMatch.mem
+     BitStringMatch.remove BitStringMatch.empty
      BitStringMatch.elements
      syntax :> attribute_t)
 
@@ -150,10 +170,8 @@ module PresentationAddressMatch = Set.Make
 
 let new_presentation_address_equality_set syntax =
   (new attribute
-     PresentationAddressMatch.add
-     PresentationAddressMatch.mem
-     PresentationAddressMatch.remove
-     PresentationAddressMatch.empty
+     PresentationAddressMatch.add PresentationAddressMatch.mem
+     PresentationAddressMatch.remove PresentationAddressMatch.empty
      PresentationAddressMatch.elements
      syntax :> attribute_t)
 
@@ -168,10 +186,8 @@ module UniqueMemberMatch = Set.Make
 
 let new_unique_member_equality_set syntax =
   (new attribute
-     UniqueMemberMatch.add
-     UniqueMemberMatch.mem
-     UniqueMemberMatch.remove
-     UniqueMemberMatch.empty
+     UniqueMemberMatch.add UniqueMemberMatch.mem
+     UniqueMemberMatch.remove UniqueMemberMatch.empty
      UniqueMemberMatch.elements
      syntax :> attribute_t)
 
@@ -186,10 +202,8 @@ module ProtocolInformationMatch = Set.Make
 
 let new_protocol_information_equality_set syntax =
   (new attribute
-     ProtocolInformationMatch.add
-     ProtocolInformationMatch.mem
-     ProtocolInformationMatch.remove
-     ProtocolInformationMatch.empty
+     ProtocolInformationMatch.add ProtocolInformationMatch.mem
+     ProtocolInformationMatch.remove ProtocolInformationMatch.empty
      ProtocolInformationMatch.elements
      syntax :> attribute_t)
 
@@ -204,18 +218,10 @@ module GeneralizedTimeMatch = Set.Make
 
 let new_generalized_time_equality_set syntax =
   (new attribute
-     GeneralizedTimeMatch.add
-     GeneralizedTimeMatch.mem
-     GeneralizedTimeMatch.remove
-     GeneralizedTimeMatch.empty
+     GeneralizedTimeMatch.add GeneralizedTimeMatch.mem
+     GeneralizedTimeMatch.remove GeneralizedTimeMatch.empty
      GeneralizedTimeMatch.elements
      syntax :> attribute_t)
-
-let whsp = Pcre.regexp ~study:true "\\s+"
-let leading_or_trailing_whsp = Pcre.regexp ~study:true "(^\\s+|\\s+$)"
-let collapse_whitespace v = 
-  (Pcre.replace ~rex:leading_or_trailing_whsp ~templ:""
-     (Pcre.replace ~rex:whsp ~templ:" " v))
      
 (* 2.5.13.2 NAME 'caseIgnoreMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_equality_match v1 v2 = 
@@ -231,11 +237,28 @@ module CaseIgnoreMatch = Set.Make
 
 let new_case_ignore_equality_set syntax =
   (new attribute
-     CaseIgnoreMatch.add
-     CaseIgnoreMatch.mem
-     CaseIgnoreMatch.remove
-     CaseIgnoreMatch.empty
+     CaseIgnoreMatch.add CaseIgnoreMatch.mem
+     CaseIgnoreMatch.remove CaseIgnoreMatch.empty
      CaseIgnoreMatch.elements
+     syntax :> attribute_t)
+
+(* 2.5.13.5 NAME 'caseExactMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let case_exact_equality_match v1 v2 = 
+  String.compare 
+    (collapse_whitespace v1)
+    (collapse_whitespace v2)
+
+module CaseExactMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = case_exact_equality_match
+   end)
+
+let new_case_exact_equality_set syntax =
+  (new attribute
+     CaseExactMatch.add CaseExactMatch.mem
+     CaseExactMatch.remove CaseExactMatch.empty
+     CaseExactMatch.elements
      syntax :> attribute_t)
 
 (* 2.5.13.11 NAME 'caseIgnoreListMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.41 *)
@@ -249,10 +272,8 @@ module CaseIgnoreListMatch = Set.Make
 
 let new_case_ignore_list_equality_set syntax =
   (new attribute
-     CaseIgnoreListMatch.add
-     CaseIgnoreListMatch.mem
-     CaseIgnoreListMatch.remove
-     CaseIgnoreListMatch.empty
+     CaseIgnoreListMatch.add CaseIgnoreListMatch.mem
+     CaseIgnoreListMatch.remove CaseIgnoreListMatch.empty
      CaseIgnoreListMatch.elements
      syntax :> attribute_t)
 
@@ -270,10 +291,8 @@ module TelephoneNumberMatch = Set.Make
 
 let new_telephone_number_equality_set syntax =
   (new attribute
-     TelephoneNumberMatch.add
-     TelephoneNumberMatch.mem
-     TelephoneNumberMatch.remove
-     TelephoneNumberMatch.empty
+     TelephoneNumberMatch.add TelephoneNumberMatch.mem
+     TelephoneNumberMatch.remove TelephoneNumberMatch.empty
      TelephoneNumberMatch.elements
      syntax :> attribute_t)
 
@@ -291,10 +310,8 @@ module CaseExactIA5Match = Set.Make
 
 let new_case_exact_ia5_equality_set syntax =
   (new attribute
-     CaseExactIA5Match.add
-     CaseExactIA5Match.mem
-     CaseExactIA5Match.remove
-     CaseExactIA5Match.empty
+     CaseExactIA5Match.add CaseExactIA5Match.mem
+     CaseExactIA5Match.remove CaseExactIA5Match.empty
      CaseExactIA5Match.elements
      syntax :> attribute_t)
 
@@ -312,29 +329,41 @@ module CaseIgnoreIA5Match = Set.Make
 
 let new_case_ignore_ia5_equality_set syntax =
   (new attribute
-     CaseIgnoreIA5Match.add
-     CaseIgnoreIA5Match.mem
-     CaseIgnoreIA5Match.remove
-     CaseIgnoreIA5Match.empty
+     CaseIgnoreIA5Match.add CaseIgnoreIA5Match.mem
+     CaseIgnoreIA5Match.remove CaseIgnoreIA5Match.empty
      CaseIgnoreIA5Match.elements
      syntax :> attribute_t)
 
 (* 2.5.13.17 NAME 'octetStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
-let octet_string_match = String.compare
+let octet_string_equality_match = String.compare
 
 module OctetStringMatch = Set.Make
   (struct
      type t = String.t
-     let compare = octet_string_match
+     let compare = octet_string_equality_match
    end)
 
 let new_octet_string_match syntax =
   (new attribute
-     OctetStringMatch.add
-     OctetStringMatch.mem
-     OctetStringMatch.remove
-     OctetStringMatch.empty
+     OctetStringMatch.add OctetStringMatch.mem
+     OctetStringMatch.remove OctetStringMatch.empty
      OctetStringMatch.elements
+     syntax :> attribute_t)
+
+(* 2.5.13.13 NAME 'booleanMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 *)
+let boolean_equality_match = String.compare
+
+module BooleanMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = octet_string_equality_match
+   end)
+
+let new_boolean_match syntax =
+  (new attribute
+     BooleanMatch.add BooleanMatch.mem
+     BooleanMatch.remove BooleanMatch.empty 
+     BooleanMatch.elements
      syntax :> attribute_t)
 
 (* ordering matching rules used in inequality filters *)
@@ -348,7 +377,16 @@ let case_ignore_ordering_match v1 v2 =
     (String.lowercase (collapse_whitespace v1))
     (String.lowercase (collapse_whitespace v2))
 
-(* substring matching rules, these are different beasts *)
+(* 2.5.13.6 NAME 'caseExactOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let case_exact_ordering_match v1 v2 = 
+  String.compare
+    (collapse_whitespace v1)
+    (collapse_whitespace v2)
+
+(* 2.5.13.9 NAME 'numericStringOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
+let numeric_string_ordering_match
+
+(* substring matching rules *)
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let case_ignore_substrings_match subs v = false
@@ -363,7 +401,13 @@ let equality =
   List.fold_left
     (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
     Oidmap.empty
-    [(Oid.of_string "2.5.13.17",
+    [(Oid.of_string "2.5.13.13",
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.7",
+      new_boolean_match);
+     (Oid.of_string "booleanMatch",
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.7",
+      new_boolean_match);
+     (Oid.of_string "2.5.13.17",
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40",
       new_octet_string_match);
      (Oid.of_string "octetStringMatch",
@@ -393,6 +437,12 @@ let equality =
      (Oid.of_string "integermatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.27", 
       new_integer_equality_set);
+     (Oid.of_string "2.5.13.8", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
+      new_numeric_string_equality_set);
+     (Oid.of_string "numericStringMatch", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
+      new_numeric_string_equality_set);
      (Oid.of_string "2.5.13.16", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", 
       new_bit_string_equality_set);
@@ -429,6 +479,12 @@ let equality =
      (Oid.of_string "caseignorematch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
       new_case_ignore_equality_set);
+     (Oid.of_string "2.5.13.5", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
+      new_case_exact_equality_set);
+     (Oid.of_string "caseexactematch", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
+      new_case_exact_equality_set);
      (Oid.of_string "2.5.13.11", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.41", 
       new_case_ignore_list_equality_set);
@@ -469,8 +525,14 @@ let ordering =
       case_ignore_ordering_match);
      (Oid.of_string "caseignoreorderingmatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_ignore_ordering_match)]
-    
+      case_ignore_ordering_match);
+     (Oid.of_string "2.5.13.6", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
+      case_exact_ordering_match);
+     (Oid.of_string "caseExactOrderingMatch", 
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
+      case_exact_ordering_match)]
+
 let substring = 
   List.fold_left
     (fun m (oid, (value: (Ldap_types.substring_component -> string -> bool))) -> 
