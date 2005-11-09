@@ -45,7 +45,19 @@ module Oidmap = Map.Make (Oid)
 
 let format_oid id = 
   Format.open_box 0;
-  Format.print_string ("<oid " ^ Oid.to_string id ^ ">");
+  Format.print_string ("<Oid.t " ^ Oid.to_string id ^ ">");
+  Format.close_box ()
+
+let format_oidset set = 
+  Format.open_box 0;
+  Format.print_string "<Oidset.t [";
+  Format.print_cut ();
+  List.iter 
+    (fun oid -> 
+       format_oid oid;
+       Format.print_cut ())
+    (Oidset.elements set);
+  Format.print_string "]>";
   Format.close_box ()
 
 module Lcstring =

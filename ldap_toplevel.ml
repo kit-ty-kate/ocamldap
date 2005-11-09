@@ -34,6 +34,7 @@ let eval s =
 eval "#install_printer Ldap_ooclient.format_entries;;";;
 eval "#install_printer Ldap_ooclient.format_entry;;";;
 eval "#install_printer Ldap_schema.format_oid;;";;
+eval "#install_printer Ldap_schema.format_oidset;;";;
 eval "#install_printer Ldap_schema.format_lcstring;;";;
 eval "#install_printer Ldap_schema.format_schema;;";;
 

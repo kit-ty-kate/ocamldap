@@ -58,6 +58,7 @@ sig
 end
 
 val format_oid : Oid.t -> unit
+val format_oidset : Oidset.t -> unit
 
 module Lcstring :
 sig
