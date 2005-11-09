@@ -33,9 +33,9 @@ let eval s =
 
 eval "#install_printer Ldap_ooclient.format_entries;;";;
 eval "#install_printer Ldap_ooclient.format_entry;;";;
-eval "#install_printer Ldap_schemaparser.format_oid;;";;
-eval "#install_printer Ldap_schemaparser.format_lcstring;;";;
-eval "#install_printer Ldap_schemaparser.format_schema;;";;
+eval "#install_printer Ldap_schema.format_oid;;";;
+eval "#install_printer Ldap_schema.format_lcstring;;";;
+eval "#install_printer Ldap_schema.format_schema;;";;
 
 let ldap_cmd_harness ~h ~d ~w f = 
   let ldap = new ldapcon [h] in
