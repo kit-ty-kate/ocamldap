@@ -96,11 +96,15 @@ let ldap_syntax_description v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.17 DESC 'DIT Structure Rule Description' *)
 let dit_structure_rule_description_syntax v = ()
 
+(* 1.3.6.1.4.1.1466.115.121.1.40 DESC 'Octet String' *)
+let octet_string v = ()
+
 let syntaxes = 
   List.fold_left
     (fun m (key, (value: string -> unit)) -> Oidmap.add key value m)
     Oidmap.empty
-    [(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.3", attribute_type_description_syntax);
+    [(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40", octet_string);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.3", attribute_type_description_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.5", binary_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", bitstring_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.7", boolean_syntax);

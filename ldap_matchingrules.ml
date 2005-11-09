@@ -319,6 +319,24 @@ let new_case_ignore_ia5_equality_set syntax =
      CaseIgnoreIA5Match.elements
      syntax :> attribute_t)
 
+(* 2.5.13.17 NAME 'octetStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
+let octet_string_match = String.compare
+
+module OctetStringMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = octet_string_match
+   end)
+
+let new_octet_string_match syntax =
+  (new attribute
+     OctetStringMatch.add
+     OctetStringMatch.mem
+     OctetStringMatch.remove
+     OctetStringMatch.empty
+     OctetStringMatch.elements
+     syntax :> attribute_t)
+
 (* ordering matching rules used in inequality filters *)
 
 (* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
@@ -345,7 +363,13 @@ let equality =
   List.fold_left
     (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
     Oidmap.empty
-    [(Oid.of_string "2.5.13.0", 
+    [(Oid.of_string "2.5.13.17",
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40",
+      new_octet_string_match);
+     (Oid.of_string "octetStringMatch",
+      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40",
+      new_octet_string_match);
+     (Oid.of_string "2.5.13.0", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.38", 
       new_object_identifier_equality_set);
      (Oid.of_string "objectidentifiermatch", 

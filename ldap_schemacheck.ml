@@ -30,12 +30,15 @@ let rec setOfList ?(set=Oidset.empty) list =
       a :: tail -> setOfList ~set:(Oidset.add a set) tail
     | []  -> set
 
-class scldapentry schema =
+class scldapentry ?(entry=new Ldap_ooclient.ldapentry) schema =
 object (self)
   val mutable dn = ""
   val mutable data = Oidmap.empty
   val mutable changes = []
   val mutable changetype = `ADD
+
+  initializer
+    self#of_entry entry
 
   method private check data =
     let presentOcs =
@@ -130,7 +133,7 @@ object (self)
 
   method private commit_changes data' ops =
     self#check data';
-    changes <- ops @ changes;
+    if not (changetype = `ADD) then changes <- ops @ changes;
     data <- data'
 
   method private add' data ops =
@@ -229,6 +232,20 @@ object (self)
   method print = print_endline "This deprecated method has been removed"
   method diff (e: Ldap_ooclient.ldapentry_t) = 
     ([]: (Ldap_types.modify_optype * string * string list) list)
+
+  method of_entry (e: Ldap_ooclient.ldapentry_t) =
+    let data' =
+      List.fold_left
+	(fun data attr -> self#add' data [(attr, e#get_value attr)])
+	data
+	e#attributes
+    in
+    let dn' = dn in
+      try
+	self#set_dn e#dn;
+	self#commit_changes data' [];
+	changetype <- e#changetype
+      with exn -> dn <- dn'
 end
 
 (*
