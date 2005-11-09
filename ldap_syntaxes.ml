@@ -9,7 +9,10 @@ let attribute_type_description_syntax v = ()
 let binary_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.6 DESC 'Bit String' *)
-let bitstring_syntax v = ()
+let bitstring_rex = Pcre.regexp ~study:true "^\'[01]*\'B$"
+let bitstring_syntax v = 
+  if not (Pcre.pmatch ~rex:bitstring_rex v) then
+    raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.7 DESC 'Boolean' *)
 let boolean_syntax v =
@@ -26,10 +29,16 @@ let certificate_list_syntax v = ()
 let certificate_pair_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.11 DESC 'Country String' *)
-let country_string_syntax v = ()
+let country_string_rex = Pcre.regexp ~study:true "^[a-zA-Z]{2}$"
+let country_string_syntax v =
+  if Pcre.pmatch ~rex:country_string_rex v then
+    raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.12 DESC 'DN' *)
-let dn_syntax v = ()
+let dn_syntax v =
+  try ignore (Ldap_dn.of_string v)
+  with exn ->
+    raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.15 DESC 'Directory String' *)
 let directory_string_syntax v = ()

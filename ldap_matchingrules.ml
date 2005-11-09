@@ -374,10 +374,16 @@ let numeric_string_ordering_match v1 v2 =
     (remove_whitespace v1)
     (remove_whitespace v2)
 
+(* 2.5.13.15 NAME 'integerOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 *)
+let integer_ordering_match = numeric_string_ordering_match
+
 (* substring matching rules *)
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let case_ignore_substrings_match subs v = false
+
+(* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+let case_exact_substrings_match subs v = false
 
 (* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let telephone_number_substrings_match subs v = false
@@ -385,150 +391,87 @@ let telephone_number_substrings_match subs v = false
 (* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let numeric_string_substrings_match subs v = false
 
+(* 1.3.6.1.4.1.4203.1.2.1 NAME 'caseExactIA5SubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
+let case_exact_ia5_substrings_match subs v = false
+
+(* 1.3.6.1.4.1.1466.109.114.3 NAME 'caseIgnoreIA5SubstringsMatch' 
+   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
+let case_ignore_ia5_substrings_match subs v = false
+
+let oid = Oid.of_string
 let equality = 
   List.fold_left
-    (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
+    (fun m (oid, alias, syntax, constructor) -> 
+       (Oidmap.add alias (syntax, constructor)
+	  (Oidmap.add oid (syntax, constructor) m)))
     Oidmap.empty
-    [(Oid.of_string "2.5.13.13",
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.7",
-      new_boolean_match);
-     (Oid.of_string "booleanMatch",
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.7",
-      new_boolean_match);
-     (Oid.of_string "2.5.13.17",
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40",
-      new_octet_string_match);
-     (Oid.of_string "octetStringMatch",
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40",
-      new_octet_string_match);
-     (Oid.of_string "2.5.13.0", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.38", 
-      new_object_identifier_equality_set);
-     (Oid.of_string "objectidentifiermatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.38", 
-      new_object_identifier_equality_set);
-     (Oid.of_string "2.5.13.1", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.12", 
-      new_distinguished_name_equality_set);
-     (Oid.of_string "distinguishednamematch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.12", 
-      new_distinguished_name_equality_set);
-     (Oid.of_string "2.5.13.8", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      new_numeric_string_equality_set);
-     (Oid.of_string "numericstringmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      new_numeric_string_equality_set);
-     (Oid.of_string "2.5.13.14", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.27", 
-      new_integer_equality_set);
-     (Oid.of_string "integermatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.27", 
-      new_integer_equality_set);
-     (Oid.of_string "2.5.13.16", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", 
-      new_bit_string_equality_set);
-     (Oid.of_string "bitstringmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", 
-      new_bit_string_equality_set);
-     (Oid.of_string "2.5.13.22", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.43", 
-      new_presentation_address_equality_set);
-     (Oid.of_string "presentationaddressmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.43", 
-      new_presentation_address_equality_set);
-     (Oid.of_string "2.5.13.23", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.34", 
-      new_unique_member_equality_set);
-     (Oid.of_string "uniquemembermatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.34", 
-      new_unique_member_equality_set);
-     (Oid.of_string "2.5.13.24", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.42", 
-      new_protocol_information_equality_set);
-     (Oid.of_string "protocolinformationmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.42", 
-      new_protocol_information_equality_set);
-     (Oid.of_string "2.5.13.27", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24", 
-      new_generalized_time_equality_set);
-     (Oid.of_string "generalizedtimematch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24", 
-      new_generalized_time_equality_set);
-     (Oid.of_string "2.5.13.2", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_ignore_equality_set);
-     (Oid.of_string "caseignorematch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_ignore_equality_set);
-     (Oid.of_string "2.5.13.5", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_exact_equality_set);
-     (Oid.of_string "caseExactMatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      new_case_exact_equality_set);
-     (Oid.of_string "2.5.13.11", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.41", 
-      new_case_ignore_list_equality_set);
-     (Oid.of_string "caseignorelistmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.41", 
-      new_case_ignore_list_equality_set);
-     (Oid.of_string "2.5.13.20", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.50", 
-      new_telephone_number_equality_set);
-     (Oid.of_string "telephonenumbermatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.50", 
-      new_telephone_number_equality_set);
-     (Oid.of_string "1.3.6.1.4.1.1466.109.114.1", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26", 
-      new_case_exact_ia5_equality_set);
-     (Oid.of_string "caseexactia5match", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26", 
-      new_case_exact_ia5_equality_set);
-     (Oid.of_string "1.3.6.1.4.1.1466.109.114.2", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26", 
-      new_case_ignore_ia5_equality_set);
-     (Oid.of_string "caseignoreia5match", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.26", 
-      new_case_ignore_ia5_equality_set)]
+    [(oid "2.5.13.13", oid "booleanMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.7", new_boolean_match);
+     (oid "2.5.13.17", oid "octetStringMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.40", new_octet_string_match);
+     (oid "2.5.13.0", oid "objectidentifiermatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.38", new_object_identifier_equality_set);
+     (oid "2.5.13.1", oid "distinguishednamematch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.12", new_distinguished_name_equality_set);
+     (oid "2.5.13.8", oid "numericstringmatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.36", new_numeric_string_equality_set);
+     (oid "2.5.13.14", oid "integermatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.27", new_integer_equality_set);
+     (oid "2.5.13.16", oid "bitstringmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.6", new_bit_string_equality_set);
+     (oid "2.5.13.22", oid "presentationaddressmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.43", new_presentation_address_equality_set);
+     (oid "2.5.13.23", oid "uniquemembermatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.34", new_unique_member_equality_set);
+     (oid "2.5.13.24", oid "protocolinformationmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.42", new_protocol_information_equality_set);
+     (oid "2.5.13.27", oid "generalizedtimematch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.24", new_generalized_time_equality_set);
+     (oid "2.5.13.2", oid "caseignorematch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.15", new_case_ignore_equality_set);
+     (oid "2.5.13.5", oid "caseExactMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.15", new_case_exact_equality_set);
+     (oid "2.5.13.11", oid "caseignorelistmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.41", new_case_ignore_list_equality_set);
+     (oid "2.5.13.20", oid "telephonenumbermatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.50", new_telephone_number_equality_set);
+     (oid "1.3.6.1.4.1.1466.109.114.1", oid "caseexactia5match", 
+      oid "1.3.6.1.4.1.1466.115.121.1.26", new_case_exact_ia5_equality_set);
+     (oid "1.3.6.1.4.1.1466.109.114.2", oid "caseignoreia5match", 
+      oid "1.3.6.1.4.1.1466.115.121.1.26", new_case_ignore_ia5_equality_set)]
 
 let ordering =
   List.fold_left
-    (fun m (oid, syntax, attribute) -> Oidmap.add oid (syntax, attribute) m)
+    (fun m (oid, alias, syntax, matchingrule) -> 
+       Oidmap.add alias (syntax, matchingrule)
+	 (Oidmap.add oid (syntax, matchingrule) m))
     Oidmap.empty
-    [(Oid.of_string "2.5.13.28", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24", 
-      generalized_time_ordering_match);
-     (Oid.of_string "generalizedtimeorderingmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.24",
-      generalized_time_ordering_match);
-     (Oid.of_string "2.5.13.3", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_ignore_ordering_match);
-     (Oid.of_string "caseignoreorderingmatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_ignore_ordering_match);
-     (Oid.of_string "2.5.13.6", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_exact_ordering_match);
-     (Oid.of_string "caseExactOrderingMatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
-      case_exact_ordering_match);
-     (Oid.of_string "2.5.13.9", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      numeric_string_ordering_match);
-     (Oid.of_string "numericStringOrderingMatch", 
-      Oid.of_string "1.3.6.1.4.1.1466.115.121.1.36", 
-      numeric_string_ordering_match)]
+    [(oid "2.5.13.28", oid "generalizedtimeorderingmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.24", generalized_time_ordering_match);
+     (oid "2.5.13.3", oid "caseignoreorderingmatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_ordering_match);
+     (oid "2.5.13.6", oid "caseExactOrderingMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.15", case_exact_ordering_match);
+     (oid "2.5.13.9", oid "numericStringOrderingMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.36", numeric_string_ordering_match);
+     (oid "2.5.13.15", oid "integerOrderingMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.36", integer_ordering_match)]
 
 let substring = 
   List.fold_left
-    (fun m (oid, (value: (Ldap_types.substring_component -> string -> bool))) -> 
-       Oidmap.add oid value m)
+    (fun m (oid, alias, syntax, (value: (Ldap_types.substring_component -> string -> bool))) -> 
+       (Oidmap.add alias (syntax, value)
+	  (Oidmap.add oid (syntax, value) m)))
     Oidmap.empty
-    [(Oid.of_string "2.5.13.4", case_ignore_substrings_match);
-     (Oid.of_string "caseignoresubstringsmatch", case_ignore_substrings_match);
-     (Oid.of_string "2.5.13.21", telephone_number_substrings_match);
-     (Oid.of_string "telephonenumbersubstringsmatch", telephone_number_substrings_match);
-     (Oid.of_string "2.5.13.10", numeric_string_substrings_match);
-     (Oid.of_string "numericstringsubstringsmatch", numeric_string_substrings_match)]
+    [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.58", case_ignore_substrings_match);
+     (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.58", telephone_number_substrings_match);
+     (oid "2.5.13.10", oid "numericstringsubstringsmatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.58", numeric_string_substrings_match);
+     (oid "2.5.13.7", oid "caseExactSubstringsMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.58", case_exact_substrings_match);
+     (oid "1.3.6.1.4.1.4203.1.2.1", oid "caseExactIA5SubstringsMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.26", case_exact_ia5_substrings_match);
+     (oid "1.3.6.1.4.1.1466.109.114.3", oid "caseIgnoreIA5SubstringsMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.26", case_ignore_ia5_substrings_match)]
