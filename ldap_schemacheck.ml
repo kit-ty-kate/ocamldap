@@ -30,7 +30,7 @@ let rec setOfList ?(set=Oidset.empty) list =
       a :: tail -> setOfList ~set:(Oidset.add a set) tail
     | []  -> set
 
-class scldapentry ?(entry=new Ldap_ooclient.ldapentry) schema =
+class scldapentry ?(from_entry=new Ldap_ooclient.ldapentry) schema =
 object (self)
   val mutable dn = ""
   val mutable data = Oidmap.empty
@@ -38,7 +38,7 @@ object (self)
   val mutable changetype = `ADD
 
   initializer
-    self#of_entry entry
+    self#of_entry from_entry
 
   method private check data =
     let presentOcs =
@@ -167,7 +167,10 @@ object (self)
 	     Oidmap.remove oid data
 	   else begin
 	     List.iter attr_obj#delete values;
-	     Oidmap.add oid attr_obj data
+	     if attr_obj#cardinal = 0 then (* remove empty attributes *)
+	       Oidmap.remove oid data
+	     else
+	       Oidmap.add oid attr_obj data
 	   end)
       data
       (self#normalize_ops ops)

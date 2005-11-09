@@ -11,6 +11,7 @@ object
   method replace: string list -> unit
   method exists: string -> bool
   method values: string list
+  method cardinal: int
 end
 
 class ['a] attribute 
@@ -19,32 +20,34 @@ class ['a] attribute
   (remove: string -> 'a -> 'a)
   (empty: 'a)
   (elements: 'a -> string list)
+  (cardinal: 'a -> int)
   (syntax: string -> unit) =
 object
-  val mutable store = empty
+  val mutable data = empty
   method add ?(idempotent=false) v =
     syntax v;
     if idempotent then
-      store <- add v store
-    else if mem v store then
+      data <- add v data
+    else if mem v data then
       raise Value_exists
     else
-      store <- add v store
+      data <- add v data
   method delete ?(idempotent=false) v =
     if idempotent then
-      store <- remove v store
-    else if not (mem v store) then
+      data <- remove v data
+    else if not (mem v data) then
       raise Value_does_not_exist
     else
-      store <- remove v store
+      data <- remove v data
   method replace vals =
-    store <- 
+    data <- 
       (List.fold_left
 	 (fun s v -> syntax v;add v s)
 	 empty
 	 vals)
-  method exists v = mem v store
-  method values = elements store
+  method exists v = mem v data
+  method values = elements data
+  method cardinal = cardinal data
 end
 
 (* equality matching rules *)
@@ -71,7 +74,7 @@ let new_object_identifier_equality_set syntax =
   (new attribute
      ObjectIdentifierMatch.add ObjectIdentifierMatch.mem
      ObjectIdentifierMatch.remove ObjectIdentifierMatch.empty
-     ObjectIdentifierMatch.elements
+     ObjectIdentifierMatch.elements ObjectIdentifierMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.1 NAME 'distinguishedNameMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 *)
@@ -87,7 +90,7 @@ let new_distinguished_name_equality_set syntax =
   (new attribute
      DistinguishedNameMatch.add DistinguishedNameMatch.mem
      DistinguishedNameMatch.remove DistinguishedNameMatch.empty
-     DistinguishedNameMatch.elements
+     DistinguishedNameMatch.elements DistinguishedNameMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
@@ -106,7 +109,7 @@ let new_numeric_string_equality_set syntax =
   (new attribute
      NumericStringMatch.add NumericStringMatch.mem
      NumericStringMatch.remove NumericStringMatch.empty
-     NumericStringMatch.elements
+     NumericStringMatch.elements NumericStringMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.14 NAME 'integerMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 *)
@@ -122,7 +125,7 @@ let new_integer_equality_set syntax =
   (new attribute
      IntegerMatch.add IntegerMatch.mem
      IntegerMatch.remove IntegerMatch.empty
-     IntegerMatch.elements
+     IntegerMatch.elements IntegerMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.16 NAME 'bitStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.6 *)
@@ -138,7 +141,7 @@ let new_bit_string_equality_set syntax =
   (new attribute
      BitStringMatch.add BitStringMatch.mem
      BitStringMatch.remove BitStringMatch.empty
-     BitStringMatch.elements
+     BitStringMatch.elements BitStringMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.22 NAME 'presentationAddressMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.43 *)
@@ -154,7 +157,7 @@ let new_presentation_address_equality_set syntax =
   (new attribute
      PresentationAddressMatch.add PresentationAddressMatch.mem
      PresentationAddressMatch.remove PresentationAddressMatch.empty
-     PresentationAddressMatch.elements
+     PresentationAddressMatch.elements PresentationAddressMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.23 NAME 'uniqueMemberMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.34 *)
@@ -170,7 +173,7 @@ let new_unique_member_equality_set syntax =
   (new attribute
      UniqueMemberMatch.add UniqueMemberMatch.mem
      UniqueMemberMatch.remove UniqueMemberMatch.empty
-     UniqueMemberMatch.elements
+     UniqueMemberMatch.elements UniqueMemberMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.24 NAME 'protocolInformationMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.42 *)
@@ -186,7 +189,7 @@ let new_protocol_information_equality_set syntax =
   (new attribute
      ProtocolInformationMatch.add ProtocolInformationMatch.mem
      ProtocolInformationMatch.remove ProtocolInformationMatch.empty
-     ProtocolInformationMatch.elements
+     ProtocolInformationMatch.elements ProtocolInformationMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.27 NAME 'generalizedTimeMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
@@ -202,7 +205,7 @@ let new_generalized_time_equality_set syntax =
   (new attribute
      GeneralizedTimeMatch.add GeneralizedTimeMatch.mem
      GeneralizedTimeMatch.remove GeneralizedTimeMatch.empty
-     GeneralizedTimeMatch.elements
+     GeneralizedTimeMatch.elements GeneralizedTimeMatch.cardinal
      syntax :> attribute_t)
      
 (* 2.5.13.2 NAME 'caseIgnoreMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
@@ -221,7 +224,7 @@ let new_case_ignore_equality_set syntax =
   (new attribute
      CaseIgnoreMatch.add CaseIgnoreMatch.mem
      CaseIgnoreMatch.remove CaseIgnoreMatch.empty
-     CaseIgnoreMatch.elements
+     CaseIgnoreMatch.elements CaseIgnoreMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.5 NAME 'caseExactMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
@@ -240,7 +243,7 @@ let new_case_exact_equality_set syntax =
   (new attribute
      CaseExactMatch.add CaseExactMatch.mem
      CaseExactMatch.remove CaseExactMatch.empty
-     CaseExactMatch.elements
+     CaseExactMatch.elements CaseExactMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.11 NAME 'caseIgnoreListMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.41 *)
@@ -256,7 +259,7 @@ let new_case_ignore_list_equality_set syntax =
   (new attribute
      CaseIgnoreListMatch.add CaseIgnoreListMatch.mem
      CaseIgnoreListMatch.remove CaseIgnoreListMatch.empty
-     CaseIgnoreListMatch.elements
+     CaseIgnoreListMatch.elements CaseIgnoreListMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.20 NAME 'telephoneNumberMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
@@ -275,7 +278,7 @@ let new_telephone_number_equality_set syntax =
   (new attribute
      TelephoneNumberMatch.add TelephoneNumberMatch.mem
      TelephoneNumberMatch.remove TelephoneNumberMatch.empty
-     TelephoneNumberMatch.elements
+     TelephoneNumberMatch.elements TelephoneNumberMatch.cardinal
      syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.1 NAME 'caseExactIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
@@ -294,7 +297,7 @@ let new_case_exact_ia5_equality_set syntax =
   (new attribute
      CaseExactIA5Match.add CaseExactIA5Match.mem
      CaseExactIA5Match.remove CaseExactIA5Match.empty
-     CaseExactIA5Match.elements
+     CaseExactIA5Match.elements CaseExactIA5Match.cardinal
      syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.2 NAME 'caseIgnoreIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
@@ -313,7 +316,7 @@ let new_case_ignore_ia5_equality_set syntax =
   (new attribute
      CaseIgnoreIA5Match.add CaseIgnoreIA5Match.mem
      CaseIgnoreIA5Match.remove CaseIgnoreIA5Match.empty
-     CaseIgnoreIA5Match.elements
+     CaseIgnoreIA5Match.elements CaseIgnoreIA5Match.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.17 NAME 'octetStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
@@ -329,7 +332,7 @@ let new_octet_string_match syntax =
   (new attribute
      OctetStringMatch.add OctetStringMatch.mem
      OctetStringMatch.remove OctetStringMatch.empty
-     OctetStringMatch.elements
+     OctetStringMatch.elements OctetStringMatch.cardinal
      syntax :> attribute_t)
 
 (* 2.5.13.13 NAME 'booleanMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 *)
@@ -345,7 +348,7 @@ let new_boolean_match syntax =
   (new attribute
      BooleanMatch.add BooleanMatch.mem
      BooleanMatch.remove BooleanMatch.empty 
-     BooleanMatch.elements
+     BooleanMatch.elements BooleanMatch.cardinal
      syntax :> attribute_t)
 
 (* ordering matching rules used in inequality filters *)
@@ -461,7 +464,7 @@ let equality =
      (Oid.of_string "2.5.13.5", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
       new_case_exact_equality_set);
-     (Oid.of_string "caseexactematch", 
+     (Oid.of_string "caseExactMatch", 
       Oid.of_string "1.3.6.1.4.1.1466.115.121.1.15", 
       new_case_exact_equality_set);
      (Oid.of_string "2.5.13.11", 
