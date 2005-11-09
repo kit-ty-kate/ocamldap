@@ -1,5 +1,7 @@
 open Ldap_schema
 
+exception Invalid_syntax of string
+
 (* 1.3.6.1.4.1.1466.115.121.1.3 DESC 'Attribute Type Description' *)
 let attribute_type_description_syntax v = ()
   
@@ -10,7 +12,9 @@ let binary_syntax v = ()
 let bitstring_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.7 DESC 'Boolean' *)
-let boolean_syntax v = ()
+let boolean_syntax v =
+  if not (v = "TRUE" || v = "FALSE") then
+    raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.8 DESC 'Certificate' *)
 let certificate_syntax v = ()

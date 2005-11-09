@@ -36,6 +36,8 @@ object (self)
   val mutable data = Oidmap.empty
   val mutable changes = []
   val mutable changetype = `ADD
+  val mutable must = Oidset.empty
+  val mutable may = Oidset.empty
 
   initializer
     self#of_entry from_entry
@@ -50,7 +52,7 @@ object (self)
     in
     let presentOcslst = Oidset.elements presentOcs in
     let present = (Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty) in
-    let (must, may) =
+    let (must', may') =
       List.fold_left
 	(fun (must, may) oc ->
 	   let mkset l = setOfList (List.rev_map (attrNameToOid schema) l) in
@@ -59,8 +61,8 @@ object (self)
 	(Oidset.empty, Oidset.empty)
 	presentOcslst
     in
-    let all_allowed = Oidset.union must may in
-    let missingAttrs = Oidset.diff must (Oidset.inter must present) in
+    let all_allowed = Oidset.union must' may' in
+    let missingAttrs = Oidset.diff must' (Oidset.inter must' present) in
     let illegalAttrs = Oidset.diff present (Oidset.inter all_allowed present) in
     let rec lstRequired schema oid =
       oid :: (List.flatten 
@@ -104,7 +106,10 @@ object (self)
 		  illegal_attributes=illegalAttrs;
 		  missing_objectclasses=missingOcs;
 		  illegal_objectclasses=illegalOcs})
-      else ()
+      else begin
+	must <- must';
+	may <- may'
+      end
 
   method private normalize_ops ops =
     List.rev_map
@@ -249,6 +254,25 @@ object (self)
 	self#commit_changes data' [];
 	changetype <- e#changetype
       with exn -> dn <- dn'
+
+  method private oid_lst_to_name_lst lst = 
+    List.rev_map
+      (fun oid -> oidToAttrName schema oid)
+      lst
+
+  method must = self#oid_lst_to_name_lst (Oidset.elements must)      
+  method must_byoid = must
+  method may = self#oid_lst_to_name_lst (Oidset.elements may)
+  method may_byoid = may
+
+  method attributes_not_allowed_byoid = 
+    let oids = setOfList (Hashtbl.fold (fun k v l -> k :: l) schema.attributes_byoid []) in
+      Oidset.diff oids (Oidset.union must may)
+
+  method attributes_not_allowed =
+    self#oid_lst_to_name_lst 
+      (Oidset.elements self#attributes_not_allowed_byoid)
+      
 end
 
 (*
