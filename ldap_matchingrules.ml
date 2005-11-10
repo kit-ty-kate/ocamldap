@@ -445,12 +445,12 @@ let case_exact_ia5_substrings_match subs v = false
 let case_ignore_ia5_substrings_match subs v = false
 
 let oid = Oid.of_string
-let equality = 
+let (equality, equality_bysyntax) = 
   List.fold_left
-    (fun m (oid, alias, syntax, constructor) -> 
-       (Oidmap.add alias (syntax, constructor)
-	  (Oidmap.add oid (syntax, constructor) m)))
-    Oidmap.empty
+    (fun (m1, m2) (oid, alias, syntax, constructor) -> 
+       (Oidmap.add alias (syntax, constructor) (Oidmap.add oid (syntax, constructor) m1),
+	Oidmap.add syntax constructor m2))
+    (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.13", oid "booleanMatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.7", new_boolean_match);
      (oid "2.5.13.17", oid "octetStringMatch", 
@@ -486,12 +486,12 @@ let equality =
      (oid "1.3.6.1.4.1.1466.109.114.2", oid "caseignoreia5match", 
       oid "1.3.6.1.4.1.1466.115.121.1.26", new_case_ignore_ia5_equality_set)]
 
-let ordering =
+let (ordering, ordering_bysyntax) =
   List.fold_left
-    (fun m (oid, alias, syntax, matchingrule) -> 
-       Oidmap.add alias (syntax, matchingrule)
-	 (Oidmap.add oid (syntax, matchingrule) m))
-    Oidmap.empty
+    (fun (m1, m2) (oid, alias, syntax, matchingrule) -> 
+       (Oidmap.add alias (syntax, matchingrule) (Oidmap.add oid (syntax, matchingrule) m1),
+	Oidmap.add syntax matchingrule m2))
+    (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.28", oid "generalizedtimeorderingmatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.24", generalized_time_ordering_match);
      (oid "2.5.13.3", oid "caseignoreorderingmatch",
@@ -503,12 +503,12 @@ let ordering =
      (oid "2.5.13.15", oid "integerOrderingMatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.27", integer_ordering_match)]
 
-let substring = 
+let (substring, substring_bysyntax) = 
   List.fold_left
-    (fun m (oid, alias, syntax, (value: (Ldap_types.substring_component -> string -> bool))) -> 
-       (Oidmap.add alias (syntax, value)
-	  (Oidmap.add oid (syntax, value) m)))
-    Oidmap.empty
+    (fun (m1, m2) (oid, alias, syntax, (value: (Ldap_types.substring_component -> string -> bool))) -> 
+       (Oidmap.add alias (syntax, value) (Oidmap.add oid (syntax, value) m1),
+	Oidmap.add syntax value m2))
+    (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_substrings_match);
      (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
