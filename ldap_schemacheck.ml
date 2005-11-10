@@ -19,6 +19,7 @@ type oc_violation_data = {
 }
 
 exception Single_value of string
+exception Cannot_construct_attribute of string * string
 exception No_such_attribute of string
 exception Objectclass_is_required
 exception Objectclass_violation of oc_violation_data
@@ -117,52 +118,48 @@ object (self)
       (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
       
-  method private new_attribute {at_oid=atoid;at_syntax=syn;
+  method private new_attribute {at_oid=atoid;at_name=name;at_syntax=syn;
 				at_equality=equ;at_ordering=ord;
 				at_substr=substr} =
-    match equ with
-	Some oid -> 
-	  let attribute_constructor = 
-	    try 
-	      let (syntax, constructor) = Oidmap.find oid Ldap_matchingrules.equality in
-		if Oid.compare syn syntax = 0 then constructor
-		else raise (Invalid_matching_rule_syntax (oid, syn))
-	    with Not_found -> raise (Unknown_matching_rule oid)
-	  in
-	  let ordering_match = 
-	    match ord with
-		Some oid ->
-		  (try 
-		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
-		       if Oid.compare syn syntax = 0 then Some mrule
-		       else raise (Invalid_matching_rule_syntax (oid, syn))
-		   with Not_found -> raise (Unknown_matching_rule oid))
-	      | None -> None
-	  in
-	  let substring_match = 
-	    match substr with
-		Some oid ->
-		  (try
-		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
-		       if Oid.compare syn syntax = 0 then Some mrule
-		       else raise (Invalid_matching_rule_syntax (oid, syn))
-		   with Not_found -> raise (Unknown_matching_rule oid))
-	      | None -> None
-	  in
+    let ordering_match = 
+      match ord with
+	  Some oid ->
 	    (try 
-	       attribute_constructor
-		 ~ordering:ordering_match
-		 ~substrings:substring_match
-		 (Oidmap.find syn Ldap_syntaxes.syntaxes)
-	     with Not_found -> raise (Unknown_syntax syn))
-      | None -> (* use the default equality matching rule *)
-	  (try
-	     let (_, constructor) = 
-	       Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
-		 Ldap_matchingrules.equality
-	     in
-	       constructor (Oidmap.find syn Ldap_syntaxes.syntaxes)
-	   with Not_found -> raise (Unknown_syntax syn))
+	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
+		 if Oid.compare syn syntax = 0 then Some mrule
+		 else raise (Invalid_matching_rule_syntax (oid, syn))
+	     with Not_found -> raise (Unknown_matching_rule oid))
+	| None -> None
+    in
+    let substring_match = 
+      match substr with
+	  Some oid ->
+	    (try
+	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
+		 if Oid.compare syn syntax = 0 then Some mrule
+		 else raise (Invalid_matching_rule_syntax (oid, syn))
+	     with Not_found -> raise (Unknown_matching_rule oid))
+	| None -> None
+    in
+    let attribute_constructor = 
+      match equ with
+	  Some oid -> 
+	    (try 
+	       let (syntax, constructor) = Oidmap.find oid Ldap_matchingrules.equality in
+		 if Oid.compare syn syntax = 0 then constructor
+		 else raise (Invalid_matching_rule_syntax (oid, syn))
+	     with Not_found -> raise (Unknown_matching_rule oid))	    
+	| None -> (* equality match is special in that it is not optional *)
+	    raise 
+	      (Cannot_construct_attribute 
+		 (List.hd name, "No Equality Matching Rule is Defined"))
+    in
+      try 
+	attribute_constructor
+	  ~ordering:ordering_match
+	  ~substrings:substring_match
+	  (Oidmap.find syn Ldap_syntaxes.syntaxes)
+      with Not_found -> raise (Unknown_syntax syn)
 	    
   method private commit_changes data' ops =
     self#check data';
