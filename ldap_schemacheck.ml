@@ -118,11 +118,9 @@ object (self)
       (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
       
-  method private new_attribute {at_oid=atoid;at_name=name;at_syntax=syn;
-				at_equality=equ;at_ordering=ord;
-				at_substr=substr} =
+  method private new_attribute ({at_oid=atoid;at_name=name;at_syntax=syn} as attr) =
     let ordering_match = 
-      match ord with
+      match lookupMatchingRule schema `Ordering attr with
 	  Some oid ->
 	    (try 
 	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
@@ -132,7 +130,7 @@ object (self)
 	| None -> None
     in
     let substring_match = 
-      match substr with
+      match lookupMatchingRule schema `Substring attr with
 	  Some oid ->
 	    (try
 	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
@@ -142,7 +140,7 @@ object (self)
 	| None -> None
     in
     let attribute_constructor = 
-      match equ with
+      match lookupMatchingRule schema `Equality attr with
 	  Some oid -> 
 	    (try 
 	       let (syntax, constructor) = Oidmap.find oid Ldap_matchingrules.equality in

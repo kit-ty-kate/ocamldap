@@ -175,6 +175,11 @@ val compareAttrs : schema -> string -> string -> int
 (** compare objectclasses by oid. *)
 val compareOcs : schema -> string -> string -> int
 
+(** lookup matching rules, taking into account the higherarchical
+    relationship of attributes *)
+val lookupMatchingRule : schema -> [< `Equality | `Ordering | `Substring ] ->
+  attribute -> Oid.t option
+
 (** {1 Schema Validation} A function to check for errors in the schema
     and report them *)
 

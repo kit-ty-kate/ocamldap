@@ -181,6 +181,24 @@ let compareAttrs schema a1 a2 =
 let compareOcs schema oc1 oc2 = 
   Oid.compare (ocNameToOid schema oc1) (ocNameToOid schema oc2)
 
+let rec lookupMatchingRule schema rtype attr =
+  let mrule = 
+    match rtype with
+	`Ordering -> attr.at_ordering
+      | `Substring -> attr.at_substr
+      | `Equality -> attr.at_equality
+  in
+    match mrule with
+	Some oid -> Some oid
+      | None ->
+	  List.fold_left
+	    (fun mrule superior -> 
+	       match mrule with
+		   None -> lookupMatchingRule schema rtype (attrNameToAttr schema superior)
+		 | _ -> mrule)
+	    None
+	    attr.at_sup
+
 type schema_error = 
     Undefined_attr_reference of string
   | Non_unique_attr_alias of string
