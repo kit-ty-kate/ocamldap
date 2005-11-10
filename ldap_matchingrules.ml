@@ -3,6 +3,8 @@ open Ldap_schema
 
 exception Value_exists
 exception Value_does_not_exist
+exception Substring_matching_rule_not_defined
+exception Ordering_matching_rule_not_defined
 
 class type attribute_t =
 object
@@ -12,8 +14,16 @@ object
   method exists: string -> bool
   method values: string list
   method cardinal: int
-end
 
+  (* for search filter evaluation *)
+  method equality_match: string -> bool
+  method substrings_match: substring_component -> bool
+  method greater_than_or_equal_match: string -> bool
+  method less_than_or_equal_match: string -> bool
+  method approximate_match: string -> bool
+  method extensible_match: string -> (string -> string -> int) -> bool
+end
+	  
 class ['a] attribute 
   (add: string -> 'a -> 'a) 
   (mem: string -> 'a -> bool)
@@ -21,8 +31,11 @@ class ['a] attribute
   (empty: 'a)
   (elements: 'a -> string list)
   (cardinal: 'a -> int)
+  (exists: (string -> bool) -> 'a -> bool)
+  (ordering: (string -> string -> int) option)
+  (substrings: (substring_component -> string -> bool) option)
   (syntax: string -> unit) =
-object
+object (self)
   val mutable data = empty
   method add ?(idempotent=false) v =
     syntax v;
@@ -48,6 +61,24 @@ object
   method exists v = mem v data
   method values = elements data
   method cardinal = cardinal data
+  method equality_match v = mem v data
+  method substrings_match subs = 
+    match substrings with
+	Some substrings_rule -> exists (substrings_rule subs) data
+      | None -> raise Substring_matching_rule_not_defined
+
+  method private ordering_match i v =
+    match ordering with
+	Some ordering_rule ->
+	  exists 
+	    (fun elt -> ordering_rule elt v <> i)
+	    data
+      | None -> raise Ordering_matching_rule_not_defined
+  method greater_than_or_equal_match v = self#ordering_match (-1) v
+  method less_than_or_equal_match v = self#ordering_match 1 v
+
+  method approximate_match (v: string) = false
+  method extensible_match (v: string) (r: string -> string -> int) = false
 end
 
 (* equality matching rules *)
@@ -70,12 +101,13 @@ module ObjectIdentifierMatch = Set.Make
      let compare = object_identifier_equality_match
    end)
 
-let new_object_identifier_equality_set syntax =
+let new_object_identifier_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      ObjectIdentifierMatch.add ObjectIdentifierMatch.mem
      ObjectIdentifierMatch.remove ObjectIdentifierMatch.empty
      ObjectIdentifierMatch.elements ObjectIdentifierMatch.cardinal
-     syntax :> attribute_t)
+     ObjectIdentifierMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.1 NAME 'distinguishedNameMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 *)
 let distinguished_name_equality_match v1 v2 = String.compare v1 v2
@@ -86,12 +118,13 @@ module DistinguishedNameMatch = Set.Make
      let compare = distinguished_name_equality_match
    end)
 
-let new_distinguished_name_equality_set syntax =
+let new_distinguished_name_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      DistinguishedNameMatch.add DistinguishedNameMatch.mem
      DistinguishedNameMatch.remove DistinguishedNameMatch.empty
      DistinguishedNameMatch.elements DistinguishedNameMatch.cardinal
-     syntax :> attribute_t)
+     DistinguishedNameMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
 let numeric_string_equality_match v1 v2 = 
@@ -105,12 +138,13 @@ module NumericStringMatch = Set.Make
      let compare = numeric_string_equality_match
    end)
 
-let new_numeric_string_equality_set syntax =
+let new_numeric_string_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      NumericStringMatch.add NumericStringMatch.mem
      NumericStringMatch.remove NumericStringMatch.empty
      NumericStringMatch.elements NumericStringMatch.cardinal
-     syntax :> attribute_t)
+     NumericStringMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.14 NAME 'integerMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 *)
 let integer_equality_match v1 v2 = String.compare v1 v2
@@ -121,12 +155,13 @@ module IntegerMatch = Set.Make
      let compare = integer_equality_match
    end)
 
-let new_integer_equality_set syntax =
+let new_integer_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      IntegerMatch.add IntegerMatch.mem
      IntegerMatch.remove IntegerMatch.empty
      IntegerMatch.elements IntegerMatch.cardinal
-     syntax :> attribute_t)
+     IntegerMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.16 NAME 'bitStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.6 *)
 let bit_string_equality_match v1 v2 = String.compare v1 v2
@@ -137,12 +172,13 @@ module BitStringMatch = Set.Make
      let compare = bit_string_equality_match
    end)
 
-let new_bit_string_equality_set syntax =
+let new_bit_string_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      BitStringMatch.add BitStringMatch.mem
      BitStringMatch.remove BitStringMatch.empty
      BitStringMatch.elements BitStringMatch.cardinal
-     syntax :> attribute_t)
+     BitStringMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.22 NAME 'presentationAddressMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.43 *)
 let presentation_address_equality_match v1 v2 = String.compare v1 v2
@@ -153,12 +189,13 @@ module PresentationAddressMatch = Set.Make
      let compare = presentation_address_equality_match
    end)
 
-let new_presentation_address_equality_set syntax =
+let new_presentation_address_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      PresentationAddressMatch.add PresentationAddressMatch.mem
      PresentationAddressMatch.remove PresentationAddressMatch.empty
      PresentationAddressMatch.elements PresentationAddressMatch.cardinal
-     syntax :> attribute_t)
+     PresentationAddressMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.23 NAME 'uniqueMemberMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.34 *)
 let unique_member_equality_match v1 v2 = String.compare v1 v2
@@ -169,12 +206,13 @@ module UniqueMemberMatch = Set.Make
      let compare = unique_member_equality_match
    end)
 
-let new_unique_member_equality_set syntax =
+let new_unique_member_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      UniqueMemberMatch.add UniqueMemberMatch.mem
      UniqueMemberMatch.remove UniqueMemberMatch.empty
      UniqueMemberMatch.elements UniqueMemberMatch.cardinal
-     syntax :> attribute_t)
+     UniqueMemberMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.24 NAME 'protocolInformationMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.42 *)
 let protocol_information_equality_match v1 v2 = String.compare v1 v2
@@ -185,12 +223,13 @@ module ProtocolInformationMatch = Set.Make
      let compare = protocol_information_equality_match
    end)
 
-let new_protocol_information_equality_set syntax =
+let new_protocol_information_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      ProtocolInformationMatch.add ProtocolInformationMatch.mem
      ProtocolInformationMatch.remove ProtocolInformationMatch.empty
      ProtocolInformationMatch.elements ProtocolInformationMatch.cardinal
-     syntax :> attribute_t)
+     ProtocolInformationMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.27 NAME 'generalizedTimeMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
 let generalized_time_equality_match v1 v2 = String.compare v1 v2
@@ -201,12 +240,13 @@ module GeneralizedTimeMatch = Set.Make
      let compare = generalized_time_equality_match
    end)
 
-let new_generalized_time_equality_set syntax =
+let new_generalized_time_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      GeneralizedTimeMatch.add GeneralizedTimeMatch.mem
      GeneralizedTimeMatch.remove GeneralizedTimeMatch.empty
      GeneralizedTimeMatch.elements GeneralizedTimeMatch.cardinal
-     syntax :> attribute_t)
+     GeneralizedTimeMatch.exists
+     ordering substrings syntax :> attribute_t)
      
 (* 2.5.13.2 NAME 'caseIgnoreMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_equality_match v1 v2 = 
@@ -220,12 +260,13 @@ module CaseIgnoreMatch = Set.Make
      let compare = case_ignore_equality_match
    end)
 
-let new_case_ignore_equality_set syntax =
+let new_case_ignore_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      CaseIgnoreMatch.add CaseIgnoreMatch.mem
      CaseIgnoreMatch.remove CaseIgnoreMatch.empty
      CaseIgnoreMatch.elements CaseIgnoreMatch.cardinal
-     syntax :> attribute_t)
+     CaseIgnoreMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.5 NAME 'caseExactMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_equality_match v1 v2 = 
@@ -239,12 +280,13 @@ module CaseExactMatch = Set.Make
      let compare = case_exact_equality_match
    end)
 
-let new_case_exact_equality_set syntax =
+let new_case_exact_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      CaseExactMatch.add CaseExactMatch.mem
      CaseExactMatch.remove CaseExactMatch.empty
      CaseExactMatch.elements CaseExactMatch.cardinal
-     syntax :> attribute_t)
+     CaseExactMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.11 NAME 'caseIgnoreListMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.41 *)
 let case_ignore_list_equality_match = case_ignore_equality_match
@@ -255,12 +297,13 @@ module CaseIgnoreListMatch = Set.Make
      let compare = case_ignore_list_equality_match
    end)
 
-let new_case_ignore_list_equality_set syntax =
+let new_case_ignore_list_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      CaseIgnoreListMatch.add CaseIgnoreListMatch.mem
      CaseIgnoreListMatch.remove CaseIgnoreListMatch.empty
      CaseIgnoreListMatch.elements CaseIgnoreListMatch.cardinal
-     syntax :> attribute_t)
+     CaseIgnoreListMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.20 NAME 'telephoneNumberMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
 let telephone_number_equality_match v1 v2 = 
@@ -274,12 +317,13 @@ module TelephoneNumberMatch = Set.Make
      let compare = telephone_number_equality_match
    end)
 
-let new_telephone_number_equality_set syntax =
+let new_telephone_number_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      TelephoneNumberMatch.add TelephoneNumberMatch.mem
      TelephoneNumberMatch.remove TelephoneNumberMatch.empty
      TelephoneNumberMatch.elements TelephoneNumberMatch.cardinal
-     syntax :> attribute_t)
+     TelephoneNumberMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.1 NAME 'caseExactIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_exact_ia5_equality_match v1 v2 = 
@@ -293,12 +337,13 @@ module CaseExactIA5Match = Set.Make
      let compare = case_exact_ia5_equality_match
    end)
 
-let new_case_exact_ia5_equality_set syntax =
+let new_case_exact_ia5_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      CaseExactIA5Match.add CaseExactIA5Match.mem
      CaseExactIA5Match.remove CaseExactIA5Match.empty
      CaseExactIA5Match.elements CaseExactIA5Match.cardinal
-     syntax :> attribute_t)
+     CaseExactIA5Match.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.2 NAME 'caseIgnoreIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_ignore_ia5_equality_match v1 v2 = 
@@ -312,12 +357,13 @@ module CaseIgnoreIA5Match = Set.Make
      let compare = case_ignore_ia5_equality_match
    end)
 
-let new_case_ignore_ia5_equality_set syntax =
+let new_case_ignore_ia5_equality_set ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      CaseIgnoreIA5Match.add CaseIgnoreIA5Match.mem
      CaseIgnoreIA5Match.remove CaseIgnoreIA5Match.empty
      CaseIgnoreIA5Match.elements CaseIgnoreIA5Match.cardinal
-     syntax :> attribute_t)
+     CaseIgnoreIA5Match.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.17 NAME 'octetStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
 let octet_string_equality_match = String.compare
@@ -328,12 +374,13 @@ module OctetStringMatch = Set.Make
      let compare = octet_string_equality_match
    end)
 
-let new_octet_string_match syntax =
+let new_octet_string_match ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      OctetStringMatch.add OctetStringMatch.mem
      OctetStringMatch.remove OctetStringMatch.empty
      OctetStringMatch.elements OctetStringMatch.cardinal
-     syntax :> attribute_t)
+     OctetStringMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.13 NAME 'booleanMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 *)
 let boolean_equality_match = String.compare
@@ -344,12 +391,13 @@ module BooleanMatch = Set.Make
      let compare = octet_string_equality_match
    end)
 
-let new_boolean_match syntax =
+let new_boolean_match ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      BooleanMatch.add BooleanMatch.mem
      BooleanMatch.remove BooleanMatch.empty 
      BooleanMatch.elements BooleanMatch.cardinal
-     syntax :> attribute_t)
+     BooleanMatch.exists
+     ordering substrings syntax :> attribute_t)
 
 (* ordering matching rules used in inequality filters *)
 
