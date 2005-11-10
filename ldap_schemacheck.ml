@@ -142,24 +142,26 @@ object (self)
 	    match substr with
 		Some oid ->
 		  (try
-		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substrings in
+		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
 		       if Oid.compare syn syntax = 0 then Some mrule
 		       else raise (Invalid_matching_rule_syntax (oid, syn))
 		   with Not_found -> raise (Unknown_matching_rule oid))
 	      | None -> None
 	  in
-	    try 
-	      constructor
-		~ordering:ordering_match
-		~substrings:substring_match
-		(Oidmap.find syntax Ldap_syntaxes.syntaxes)
-	    with Not_found -> raise (Unknown_syntax syntax)
+	    (try 
+	       attribute_constructor
+		 ~ordering:ordering_match
+		 ~substrings:substring_match
+		 (Oidmap.find syn Ldap_syntaxes.syntaxes)
+	     with Not_found -> raise (Unknown_syntax syn))
       | None -> (* use the default equality matching rule *)
-	  let (syntax, constructor) = 
-	    Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
-	      Ldap_matchingrules.equality
-	  in
-	    constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
+	  (try
+	     let (_, constructor) = 
+	       Oidmap.find (Oid.of_string "caseIgnoreIA5Match")
+		 Ldap_matchingrules.equality
+	     in
+	       constructor (Oidmap.find syn Ldap_syntaxes.syntaxes)
+	   with Not_found -> raise (Unknown_syntax syn))
 
   method private commit_changes data' ops =
     self#check data';
