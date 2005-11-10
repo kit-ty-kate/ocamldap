@@ -121,14 +121,39 @@ object (self)
 				at_substr=substr} =
     match equ with
 	Some oid -> 
-	  let (syntax, constructor) = 
-	    try Oidmap.find oid Ldap_matchingrules.equality 
+	  let attribute_constructor = 
+	    try 
+	      let (syntax, constructor) = Oidmap.find oid Ldap_matchingrules.equality in
+		if Oid.compare syn syntax = 0 then constructor
+		else raise (Invalid_matching_rule_syntax (oid, syn))
 	    with Not_found -> raise (Unknown_matching_rule oid)
 	  in
-	    if Oid.compare syn syntax = 0 then
-	      try constructor (Oidmap.find syntax Ldap_syntaxes.syntaxes)
-	      with Not_found -> raise (Unknown_syntax syntax)
-	    else raise (Invalid_matching_rule_syntax (oid, syn))
+	  let ordering_match = 
+	    match ord with
+		Some oid ->
+		  (try 
+		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
+		       if Oid.compare syn syntax = 0 then Some mrule
+		       else raise (Invalid_matching_rule_syntax (oid, syn))
+		   with Not_found -> raise (Unknown_matching_rule oid))
+	      | None -> None
+	  in
+	  let substring_match = 
+	    match substr with
+		Some oid ->
+		  (try
+		     let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substrings in
+		       if Oid.compare syn syntax = 0 then Some mrule
+		       else raise (Invalid_matching_rule_syntax (oid, syn))
+		   with Not_found -> raise (Unknown_matching_rule oid))
+	      | None -> None
+	  in
+	    try 
+	      constructor
+		~ordering:ordering_match
+		~substrings:substring_match
+		(Oidmap.find syntax Ldap_syntaxes.syntaxes)
+	    with Not_found -> raise (Unknown_syntax syntax)
       | None -> (* use the default equality matching rule *)
 	  let (syntax, constructor) = 
 	    Oidmap.find (Oid.of_string "caseIgnoreIA5Match")

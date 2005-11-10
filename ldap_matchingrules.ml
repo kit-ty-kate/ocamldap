@@ -66,7 +66,6 @@ object (self)
     match substrings with
 	Some substrings_rule -> exists (substrings_rule subs) data
       | None -> raise Substring_matching_rule_not_defined
-
   method private ordering_match i v =
     match ordering with
 	Some ordering_rule ->
@@ -76,7 +75,6 @@ object (self)
       | None -> raise Ordering_matching_rule_not_defined
   method greater_than_or_equal_match v = self#ordering_match (-1) v
   method less_than_or_equal_match v = self#ordering_match 1 v
-
   method approximate_match (v: string) = false
   method extensible_match (v: string) (r: string -> string -> int) = false
 end
