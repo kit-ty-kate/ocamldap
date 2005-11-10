@@ -50,6 +50,7 @@ let facsimile_telephone_number_syntax v = ()
 let fax_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.24 DESC 'Generalized Time' *)
+let generalized_time_rex = Pcre.regexp ~study:true "^[0-9]{4}()"
 let generalized_time_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.26 DESC 'IA5 String' *)
@@ -112,11 +113,39 @@ let dit_structure_rule_description_syntax v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.40 DESC 'Octet String' *)
 let octet_string v = ()
 
+(* 1.3.6.1.4.1.1466.115.121.1.13 DESC 'Data Quality Syntax' *)
+let data_quality_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.51 DESC 'Teletex Terminal Identifier' *)
+let teletex_terminal_identifier v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.25 DESC 'Guide' *)
+let guide v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.52 DESC 'Telex Number' *)
+let telex_number v = ()
+
+(* 1.3.6.1.1.1.0.1 DESC 'RFC2307 Boot Parameter Syntax' *)
+let rfc2307_boot_paramater_syntax v = ()
+
+(* 1.3.6.1.1.1.0.0 DESC 'RFC2307 NIS Netgroup Triple' *)
+let rfc2307_nis_netgroup_triple v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.21 DESC 'Enhanced Guide' *)
+let enhanced_guide v = ()
+
 let syntaxes = 
   List.fold_left
     (fun m (key, (value: string -> unit)) -> Oidmap.add key value m)
     Oidmap.empty
     [(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40", octet_string);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.21", enhanced_guide);
+     (Oid.of_string "1.3.6.1.1.1.0.0", rfc2307_nis_netgroup_triple);
+     (Oid.of_string "1.3.6.1.1.1.0.1", rfc2307_boot_paramater_syntax);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.52", telex_number);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.25", guide);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.51", teletex_terminal_identifier);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.13", data_quality_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.3", attribute_type_description_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.5", binary_syntax);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.6", bitstring_syntax);

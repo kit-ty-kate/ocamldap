@@ -179,15 +179,3 @@ val compareOcs : schema -> string -> string -> int
     relationship of attributes *)
 val lookupMatchingRule : schema -> [< `Equality | `Ordering | `Substring ] ->
   attribute -> Oid.t option
-
-(** {1 Schema Validation} A function to check for errors in the schema
-    and report them *)
-
-type schema_error = 
-    Undefined_attr_reference of string
-  | Non_unique_attr_alias of string
-  | Non_unique_oc_alias of string
-  | Undefined_oc_reference of string
-  | Cross_linked_oid of string list
-
-val typecheck : schema -> (string * schema_error) list
