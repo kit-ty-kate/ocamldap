@@ -9,6 +9,7 @@
    the user *)
 
 open Ldap_schema
+open Ldap_types
 
 type oc_violation_data = {
   missing_attributes: Oidset.t;
@@ -115,7 +116,7 @@ object (self)
     List.rev_map
       (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
-
+      
   method private new_attribute {at_oid=atoid;at_syntax=syn;
 				at_equality=equ;at_ordering=ord;
 				at_substr=substr} =
@@ -162,7 +163,7 @@ object (self)
 	     in
 	       constructor (Oidmap.find syn Ldap_syntaxes.syntaxes)
 	   with Not_found -> raise (Unknown_syntax syn))
-
+	    
   method private commit_changes data' ops =
     self#check data';
     if not (changetype = `ADD) then changes <- ops @ changes;
@@ -299,7 +300,36 @@ object (self)
   method attributes_not_allowed =
     self#oid_lst_to_name_lst 
       (Oidset.elements self#attributes_not_allowed_byoid)
-      
+
+  method match_filter filter = 
+    let lookup_attr attrname = Oidmap.find (attrNameToOid schema attrname) data in
+      match filter with
+	  `And flist -> List.for_all self#match_filter flist
+	| `Or flist -> List.exists self#match_filter flist
+	| `Not filter -> not (self#match_filter filter)
+	| `EqualityMatch {attributeDesc=attrname;assertionValue=asserted_value} ->
+	    (try (lookup_attr attrname)#equality_match asserted_value
+	     with Not_found -> false)
+	| `Substrings {attrtype=attrname;substrings=subs} ->
+	    (try (lookup_attr attrname)#substrings_match subs
+	     with Not_found -> false)
+	| `GreaterOrEqual {attributeDesc=attrname;assertionValue=asserted_value} ->
+	    (try (lookup_attr attrname)#greater_than_or_equal_match asserted_value
+	     with Not_found -> false)
+	| `LessOrEqual {attributeDesc=attrname;assertionValue=asserted_value} ->
+	    (try (lookup_attr attrname)#less_than_or_equal_match asserted_value
+	     with Not_found -> false)
+	| `Present attrname ->
+	    (try ignore (lookup_attr attrname);true
+	     with Not_found -> false)
+	| `ApproxMatch {attributeDesc=attrname;assertionValue=asserted_value} ->
+	    (try (lookup_attr attrname)#approximate_match asserted_value
+	     with Not_found -> false)
+	| `ExtensibleMatch {matchingRule=mruleoid;ruletype=rtype;
+			    matchValue=asserted_value;dnAttributes=dnattrs} ->
+	    failwith "extensible match is not implemented"
+
+  method match_filterstring fstring = self#match_filter (Ldap_filter.of_string fstring)
 end
 
 (*
