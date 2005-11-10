@@ -425,16 +425,16 @@ let integer_ordering_match = numeric_string_ordering_match
 
 (* substring matching rules *)
 
-(* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+(* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_substrings_match subs v = false
 
-(* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+(* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_substrings_match subs v = false
 
-(* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+(* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
 let telephone_number_substrings_match subs v = false
 
-(* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+(* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX  1.3.6.1.4.1.1466.115.121.1.36 *)
 let numeric_string_substrings_match subs v = false
 
 (* 1.3.6.1.4.1.4203.1.2.1 NAME 'caseExactIA5SubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
@@ -501,7 +501,7 @@ let ordering =
      (oid "2.5.13.9", oid "numericStringOrderingMatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.36", numeric_string_ordering_match);
      (oid "2.5.13.15", oid "integerOrderingMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.36", integer_ordering_match)]
+      oid "1.3.6.1.4.1.1466.115.121.1.27", integer_ordering_match)]
 
 let substring = 
   List.fold_left
@@ -510,13 +510,13 @@ let substring =
 	  (Oidmap.add oid (syntax, value) m)))
     Oidmap.empty
     [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.58", case_ignore_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_substrings_match);
      (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.58", telephone_number_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.50", telephone_number_substrings_match);
      (oid "2.5.13.10", oid "numericstringsubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.58", numeric_string_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.36", numeric_string_substrings_match);
      (oid "2.5.13.7", oid "caseExactSubstringsMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.58", case_exact_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", case_exact_substrings_match);
      (oid "1.3.6.1.4.1.4203.1.2.1", oid "caseExactIA5SubstringsMatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.26", case_exact_ia5_substrings_match);
      (oid "1.3.6.1.4.1.1466.109.114.3", oid "caseIgnoreIA5SubstringsMatch", 
