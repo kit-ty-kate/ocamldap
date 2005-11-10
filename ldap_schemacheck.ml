@@ -127,7 +127,9 @@ object (self)
 		 if Oid.compare syn syntax = 0 then Some mrule
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))
-	| None -> None
+	| None -> 
+	    (try Some (Oidmap.find syn Ldap_matchingrules.ordering_bysyntax)
+	     with Not_found -> None)
     in
     let substring_match = 
       match lookupMatchingRule schema `Substring attr with
@@ -137,7 +139,9 @@ object (self)
 		 if Oid.compare syn syntax = 0 then Some mrule
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))
-	| None -> None
+	| None ->
+	    (try Some (Oidmap.find syn Ldap_matchingrules.substring_bysyntax)
+	     with Not_found -> None)
     in
     let attribute_constructor = 
       match lookupMatchingRule schema `Equality attr with
@@ -147,10 +151,15 @@ object (self)
 		 if Oid.compare syn syntax = 0 then constructor
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))	    
-	| None -> (* equality match is special in that it is not optional *)
-	    raise 
-	      (Cannot_construct_attribute 
-		 (List.hd name, "No Equality Matching Rule is Defined"))
+	| None ->
+	    (try Oidmap.find syn Ldap_matchingrules.equality_bysyntax
+	     with Not_found -> (* equality match is special in that it is not optional *)
+	       raise 
+		 (Cannot_construct_attribute 
+		    (List.hd name, 
+		     "No Equality Matching Rule is Defined," ^ 
+		       (" and a compatible one cannot be found for this syntax: " ^
+			  (Oid.to_string syn)))))
     in
       try 
 	attribute_constructor
