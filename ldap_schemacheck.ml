@@ -158,7 +158,7 @@ object (self)
 		 (Cannot_construct_attribute 
 		    (List.hd name, 
 		     "No Equality Matching Rule is Defined," ^ 
-		       (" and a compatible one cannot be found for this syntax: " ^
+		       (" and a compatible one cannot be found for the syntax: " ^
 			  (Oid.to_string syn)))))
     in
       try 
