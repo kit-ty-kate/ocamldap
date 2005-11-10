@@ -134,11 +134,91 @@ let rfc2307_nis_netgroup_triple v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.21 DESC 'Enhanced Guide' *)
 let enhanced_guide v = ()
 
+(* 1.3.6.1.4.1.1466.115.121.1.1 DESC 'ACI Item' *)
+let aci_item v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.2 DESC 'Access Point' *)
+let access_point v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.4 DESC 'Audio' *)
+let audio v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.14 DESC 'Delivery Method' *)
+let delivery_method v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.16 DESC 'DIT Content Rule Description' *)
+let dit_content_rule_description v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.18 DESC 'DL Submit Permission' *)
+let dl_submit_permission v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.19 DESC 'DSA Quality Syntax' *)
+let dsa_quality_syntax v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.20 DESC 'DSE Type' *)
+let dse_type v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.29 DESC 'Master And Shadow Access Points' *)
+let master_and_shadow_access_points v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.32 DESC 'Mail Preference' *)
+let mail_preference v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.42 DESC 'Protocol Information' *)
+let protocol_information v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.45 DESC 'Subtree Specification' *)
+let subtree_specification v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.46 DESC 'Supplier Information' *)
+let supplier_information v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.47 DESC 'Supplier Or Consumer' *)
+let supplier_or_consumer v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.48 DESC 'Supplier And Consumer' *)
+let supplier_and_consumer v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.49 DESC 'Supported Algorithm' *)
+let supported_algorithm v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.55 DESC 'Modify Rights' *)
+let modify_rights v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.56 DESC 'LDAP Schema Definition' *)
+let ldap_schema_definition v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.57 DESC 'LDAP Schema Description' *)
+let ldap_schema_description v = ()
+
+(* 1.3.6.1.4.1.1466.115.121.1.58 DESC 'Substring Assertion' *)
+let substring_assertion v = ()
+
 let syntaxes = 
   List.fold_left
     (fun m (key, (value: string -> unit)) -> Oidmap.add key value m)
     Oidmap.empty
     [(Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40", octet_string);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.58", substring_assertion);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.57", ldap_schema_description);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.56", ldap_schema_definition);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.55", modify_rights);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.49", supported_algorithm);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.48", supplier_and_consumer);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.47", supplier_or_consumer);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.46", supplier_information);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.45", subtree_specification);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.42", protocol_information);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.32", mail_preference);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.29", master_and_shadow_access_points);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.20", dse_type);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.19", dsa_quality_syntax);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.18", dl_submit_permission);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.16", dit_content_rule_description);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.14", delivery_method);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.4", audio);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.2", access_point);
+     (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.1", aci_item);
      (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.21", enhanced_guide);
      (Oid.of_string "1.3.6.1.1.1.0.0", rfc2307_nis_netgroup_triple);
      (Oid.of_string "1.3.6.1.1.1.0.1", rfc2307_boot_paramater_syntax);
