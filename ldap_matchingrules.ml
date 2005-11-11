@@ -79,6 +79,10 @@ object (self)
   method extensible_match (v: string) (r: string -> string -> int) = false
 end
 
+
+
+
+
 (* equality matching rules *)
 
 (* used to normalize whitespace for caseIgnoreMatch and friends *)
@@ -492,6 +496,26 @@ let new_stored_prefix_set ?(ordering=None) ?(substrings=None) syntax =
      StoredPrefixMatch.exists
      ordering substrings syntax :> attribute_t)
 
+(* 2.5.13.32 NAME 'wordMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let word_match = case_ignore_equality_match
+
+module WordMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = word_match
+   end)
+
+let new_word_match_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     WordMatch.add WordMatch.mem
+     WordMatch.remove WordMatch.empty
+     WordMatch.elements WordMatch.cardinal
+     WordMatch.exists
+     ordering substrings syntax :> attribute_t)
+
+
+
+
 (* ordering matching rules used in inequality filters *)
 
 (* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
@@ -521,6 +545,10 @@ let integer_ordering_match = numeric_string_ordering_match
 (* 2.5.13.18 NAME 'octetStringOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
 let octet_string_ordering_match = case_ignore_ordering_match
 
+
+
+
+
 (* substring matching rules *)
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
@@ -545,6 +573,10 @@ let case_ignore_ia5_substrings_match subs v = false
 (* 2.5.13.12 NAME 'caseIgnoreListSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
 let case_ignore_list_substrings_match subs v = false
 
+
+
+
+
 let oid = Oid.of_string
 let (equality, equality_bysyntax) = 
   List.fold_left
@@ -555,6 +587,8 @@ let (equality, equality_bysyntax) =
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.13", oid "booleanMatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.7", true, new_boolean_match);
+     (oid "2.5.13.32", oid "wordMatch", 
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_word_match_set);
      (oid "2.5.13.41", oid "storedPrefixMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_stored_prefix_set);
      (oid "2.5.13.33", oid "keywordMatch",
@@ -600,40 +634,45 @@ let (equality, equality_bysyntax) =
 
 let (ordering, ordering_bysyntax) =
   List.fold_left
-    (fun (m1, m2) (oid, alias, syntax, matchingrule) -> 
-       (Oidmap.add alias (syntax, matchingrule) (Oidmap.add oid (syntax, matchingrule) m1),
+    (fun (m1, m2) (oid, alias, syntax, checksyntax, matchingrule) -> 
+       (Oidmap.add alias (syntax, checksyntax, matchingrule) 
+	  (Oidmap.add oid (syntax, checksyntax, matchingrule) m1),
 	Oidmap.add syntax matchingrule m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.28", oid "generalizedtimeorderingmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.24", generalized_time_ordering_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.24", true, generalized_time_ordering_match);
      (oid "2.5.13.3", oid "caseignoreorderingmatch",
-      oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_ordering_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, case_ignore_ordering_match);
      (oid "2.5.13.18", oid "octetStringOrderingMatch",
-      oid "1.3.6.1.4.1.1466.115.121.1.40", octet_string_ordering_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.40", true, octet_string_ordering_match);
      (oid "2.5.13.6", oid "caseExactOrderingMatch",
-      oid "1.3.6.1.4.1.1466.115.121.1.15", case_exact_ordering_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, case_exact_ordering_match);
      (oid "2.5.13.9", oid "numericStringOrderingMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.36", numeric_string_ordering_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.36", true, numeric_string_ordering_match);
      (oid "2.5.13.15", oid "integerOrderingMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.27", integer_ordering_match)]
+      oid "1.3.6.1.4.1.1466.115.121.1.27", true, integer_ordering_match)]
 
 let (substring, substring_bysyntax) = 
   List.fold_left
-    (fun (m1, m2) (oid, alias, syntax, (value: (Ldap_types.substring_component -> string -> bool))) -> 
-       (Oidmap.add alias (syntax, value) (Oidmap.add oid (syntax, value) m1),
-	Oidmap.add syntax value m2))
+    (fun 
+       (m1, m2) 
+       (oid, alias, syntax, checksyntax, 
+	(value: (Ldap_types.substring_component -> string -> bool))) -> 
+	 (Oidmap.add alias (syntax, checksyntax, value) 
+	    (Oidmap.add oid (syntax, checksyntax, value) m1),
+	  Oidmap.add syntax value m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, case_ignore_substrings_match);
      (oid "2.5.13.12", oid "caseIgnoreListSubstringsMatch",
-      oid "1.3.6.1.4.1.1466.115.121.1.58", case_ignore_list_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.58", true, case_ignore_list_substrings_match);
      (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.50", telephone_number_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.50", true, telephone_number_substrings_match);
      (oid "2.5.13.10", oid "numericstringsubstringsmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.36", numeric_string_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.36", true, numeric_string_substrings_match);
      (oid "2.5.13.7", oid "caseExactSubstringsMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.15", case_exact_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, case_exact_substrings_match);
      (oid "1.3.6.1.4.1.4203.1.2.1", oid "caseExactIA5SubstringsMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.26", case_exact_ia5_substrings_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.26", true, case_exact_ia5_substrings_match);
      (oid "1.3.6.1.4.1.1466.109.114.3", oid "caseIgnoreIA5SubstringsMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.26", case_ignore_ia5_substrings_match)]
+      oid "1.3.6.1.4.1.1466.115.121.1.26", true, case_ignore_ia5_substrings_match)]

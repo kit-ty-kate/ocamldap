@@ -123,8 +123,8 @@ object (self)
       match lookupMatchingRule schema `Ordering attr with
 	  Some oid ->
 	    (try 
-	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
-		 if Oid.compare syn syntax = 0 then Some mrule
+	       let (syntax, check, mrule) = Oidmap.find oid Ldap_matchingrules.ordering in
+		 if (not check) || Oid.compare syn syntax = 0 then Some mrule
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))
 	| None -> 
@@ -135,8 +135,8 @@ object (self)
       match lookupMatchingRule schema `Substring attr with
 	  Some oid ->
 	    (try
-	       let (syntax, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
-		 if Oid.compare syn syntax = 0 then Some mrule
+	       let (syntax, check, mrule) = Oidmap.find oid Ldap_matchingrules.substring in
+		 if (not check) || Oid.compare syn syntax = 0 then Some mrule
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))
 	| None ->
@@ -147,8 +147,8 @@ object (self)
       match lookupMatchingRule schema `Equality attr with
 	  Some oid -> 
 	    (try 
-	       let (syntax, constructor) = Oidmap.find oid Ldap_matchingrules.equality in
-		 if Oid.compare syn syntax = 0 then constructor
+	       let (syntax, check, constructor) = Oidmap.find oid Ldap_matchingrules.equality in
+		 if (not check) || Oid.compare syn syntax = 0 then constructor
 		 else raise (Invalid_matching_rule_syntax (oid, syn))
 	     with Not_found -> raise (Unknown_matching_rule oid))	    
 	| None ->
