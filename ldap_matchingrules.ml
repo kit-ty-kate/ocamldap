@@ -397,6 +397,101 @@ let new_boolean_match ?(ordering=None) ?(substrings=None) syntax =
      BooleanMatch.exists
      ordering substrings syntax :> attribute_t)
 
+(* RFC2252:
+
+   Implementors should note that the assertion syntax of these
+   matching rules, an INTEGER or OID, is different from the value
+   syntax of attributes for which this is the equality matching
+   rule. 
+   
+   What is up with this! *)
+(* 2.5.13.29 NAME 'integerFirstComponentMatch' 
+   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 (wrong!) *)
+let integer_first_component_match = integer_equality_match
+
+module IntegerFirstComponentMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = integer_first_component_match
+   end)
+
+let new_integer_first_component_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     IntegerFirstComponentMatch.add IntegerFirstComponentMatch.mem
+     IntegerFirstComponentMatch.remove IntegerFirstComponentMatch.empty
+     IntegerFirstComponentMatch.elements IntegerFirstComponentMatch.cardinal
+     IntegerFirstComponentMatch.exists
+     ordering substrings syntax :> attribute_t)
+
+(* 2.5.13.30 NAME 'objectIdentifierFirstComponentMatch' 
+   SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 (wrong!) *)
+let object_identifier_first_component_match = object_identifier_equality_match
+
+module ObjectIdentifierFirstComponentMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = object_identifier_first_component_match
+   end)
+
+let new_object_identifier_first_component_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     ObjectIdentifierFirstComponentMatch.add ObjectIdentifierFirstComponentMatch.mem
+     ObjectIdentifierFirstComponentMatch.remove ObjectIdentifierFirstComponentMatch.empty
+     ObjectIdentifierFirstComponentMatch.elements ObjectIdentifierFirstComponentMatch.cardinal
+     ObjectIdentifierFirstComponentMatch.exists
+     ordering substrings syntax :> attribute_t)
+
+(* 2.5.13.31 NAME 'directoryStringFirstComponentMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let directory_string_first_component_match = case_ignore_equality_match
+
+module DirectoryStringFirstComponentMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = directory_string_first_component_match
+   end)
+
+let new_directory_string_first_component_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     DirectoryStringFirstComponentMatch.add DirectoryStringFirstComponentMatch.mem
+     DirectoryStringFirstComponentMatch.remove DirectoryStringFirstComponentMatch.empty
+     DirectoryStringFirstComponentMatch.elements DirectoryStringFirstComponentMatch.cardinal
+     DirectoryStringFirstComponentMatch.exists
+     ordering substrings syntax :> attribute_t)
+
+(* 2.5.13.33 NAME 'keywordMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let keyword_equality_match = case_ignore_equality_match
+
+module KeywordMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = keyword_equality_match
+   end)
+
+let new_keyword_equality_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     KeywordMatch.add KeywordMatch.mem
+     KeywordMatch.remove KeywordMatch.empty
+     KeywordMatch.elements KeywordMatch.cardinal
+     KeywordMatch.exists
+     ordering substrings syntax :> attribute_t)
+
+(* 2.5.13.41 NAME 'storedPrefixMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
+let stored_prefix_match = case_ignore_equality_match
+
+module StoredPrefixMatch = Set.Make
+  (struct
+     type t = String.t
+     let compare = stored_prefix_match
+   end)
+
+let new_stored_prefix_set ?(ordering=None) ?(substrings=None) syntax =
+  (new attribute
+     StoredPrefixMatch.add StoredPrefixMatch.mem
+     StoredPrefixMatch.remove StoredPrefixMatch.empty
+     StoredPrefixMatch.elements StoredPrefixMatch.cardinal
+     StoredPrefixMatch.exists
+     ordering substrings syntax :> attribute_t)
+
 (* ordering matching rules used in inequality filters *)
 
 (* 2.5.13.28 NAME 'generalizedTimeOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.24 *)
@@ -423,6 +518,9 @@ let numeric_string_ordering_match v1 v2 =
 (* 2.5.13.15 NAME 'integerOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 *)
 let integer_ordering_match = numeric_string_ordering_match
 
+(* 2.5.13.18 NAME 'octetStringOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.40 *)
+let octet_string_ordering_match = case_ignore_ordering_match
+
 (* substring matching rules *)
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
@@ -444,47 +542,61 @@ let case_exact_ia5_substrings_match subs v = false
    SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_ignore_ia5_substrings_match subs v = false
 
+(* 2.5.13.12 NAME 'caseIgnoreListSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
+let case_ignore_list_substrings_match subs v = false
+
 let oid = Oid.of_string
 let (equality, equality_bysyntax) = 
   List.fold_left
-    (fun (m1, m2) (oid, alias, syntax, constructor) -> 
-       (Oidmap.add alias (syntax, constructor) (Oidmap.add oid (syntax, constructor) m1),
+    (fun (m1, m2) (oid, alias, syntax, checksyntax, constructor) -> 
+       (Oidmap.add alias (syntax, checksyntax, constructor)
+	  (Oidmap.add oid (syntax, checksyntax, constructor) m1),
 	Oidmap.add syntax constructor m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.13", oid "booleanMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.7", new_boolean_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.7", true, new_boolean_match);
+     (oid "2.5.13.41", oid "storedPrefixMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_stored_prefix_set);
+     (oid "2.5.13.33", oid "keywordMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_keyword_equality_set);
+     (oid "2.5.13.31", oid "directoryStringFirstComponentMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_directory_string_first_component_set);
+     (oid "2.5.13.30", oid "objectIdentifierFirstComponentMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.38", false, new_object_identifier_first_component_set);
+     (oid "2.5.13.29", oid "integerFirstComponentMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.27", false, new_integer_first_component_set);
      (oid "2.5.13.17", oid "octetStringMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.40", new_octet_string_match);
+      oid "1.3.6.1.4.1.1466.115.121.1.40", true, new_octet_string_match);
      (oid "2.5.13.0", oid "objectidentifiermatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.38", new_object_identifier_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.38", true, new_object_identifier_equality_set);
      (oid "2.5.13.1", oid "distinguishednamematch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.12", new_distinguished_name_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.12", true, new_distinguished_name_equality_set);
      (oid "2.5.13.8", oid "numericstringmatch",
-      oid "1.3.6.1.4.1.1466.115.121.1.36", new_numeric_string_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.36", true, new_numeric_string_equality_set);
      (oid "2.5.13.14", oid "integermatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.27", new_integer_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.27", true, new_integer_equality_set);
      (oid "2.5.13.16", oid "bitstringmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.6", new_bit_string_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.6", true, new_bit_string_equality_set);
      (oid "2.5.13.22", oid "presentationaddressmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.43", new_presentation_address_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.43", true, new_presentation_address_equality_set);
      (oid "2.5.13.23", oid "uniquemembermatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.34", new_unique_member_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.34", true, new_unique_member_equality_set);
      (oid "2.5.13.24", oid "protocolinformationmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.42", new_protocol_information_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.42", true, new_protocol_information_equality_set);
      (oid "2.5.13.27", oid "generalizedtimematch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.24", new_generalized_time_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.24", true, new_generalized_time_equality_set);
      (oid "2.5.13.2", oid "caseignorematch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.15", new_case_ignore_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_case_ignore_equality_set);
      (oid "2.5.13.5", oid "caseExactMatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.15", new_case_exact_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.15", true, new_case_exact_equality_set);
      (oid "2.5.13.11", oid "caseignorelistmatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.41", new_case_ignore_list_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.41", true, new_case_ignore_list_equality_set);
      (oid "2.5.13.20", oid "telephonenumbermatch", 
-      oid "1.3.6.1.4.1.1466.115.121.1.50", new_telephone_number_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.50", true, new_telephone_number_equality_set);
      (oid "1.3.6.1.4.1.1466.109.114.1", oid "caseexactia5match", 
-      oid "1.3.6.1.4.1.1466.115.121.1.26", new_case_exact_ia5_equality_set);
+      oid "1.3.6.1.4.1.1466.115.121.1.26", true, new_case_exact_ia5_equality_set);
      (oid "1.3.6.1.4.1.1466.109.114.2", oid "caseignoreia5match", 
-      oid "1.3.6.1.4.1.1466.115.121.1.26", new_case_ignore_ia5_equality_set)]
+      oid "1.3.6.1.4.1.1466.115.121.1.26", true, new_case_ignore_ia5_equality_set)]
 
 let (ordering, ordering_bysyntax) =
   List.fold_left
@@ -496,6 +608,8 @@ let (ordering, ordering_bysyntax) =
       oid "1.3.6.1.4.1.1466.115.121.1.24", generalized_time_ordering_match);
      (oid "2.5.13.3", oid "caseignoreorderingmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_ordering_match);
+     (oid "2.5.13.18", oid "octetStringOrderingMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.40", octet_string_ordering_match);
      (oid "2.5.13.6", oid "caseExactOrderingMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", case_exact_ordering_match);
      (oid "2.5.13.9", oid "numericStringOrderingMatch", 
@@ -511,6 +625,8 @@ let (substring, substring_bysyntax) =
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.15", case_ignore_substrings_match);
+     (oid "2.5.13.12", oid "caseIgnoreListSubstringsMatch",
+      oid "1.3.6.1.4.1.1466.115.121.1.58", case_ignore_list_substrings_match);
      (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
       oid "1.3.6.1.4.1.1466.115.121.1.50", telephone_number_substrings_match);
      (oid "2.5.13.10", oid "numericstringsubstringsmatch", 
