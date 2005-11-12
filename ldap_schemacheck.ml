@@ -199,13 +199,15 @@ object (self)
 	 in
 	   if values = [] then
 	     Oidmap.remove oid data
-	   else begin
-	     List.iter attr_obj#delete values;
-	     if attr_obj#cardinal = 0 then (* remove empty attributes *)
-	       Oidmap.remove oid data
-	     else
-	       Oidmap.add oid attr_obj data
-	   end)
+	   else
+	     let attr_obj' = 
+	       List.fold_left 
+		 (fun attr_obj v -> attr_obj#delete v)
+		 attr_obj
+		 values
+	     in
+	       if attr_obj'#cardinal = 0 then Oidmap.remove oid data
+	       else Oidmap.add oid attr_obj' data)
       data
       (self#normalize_ops ops)
 
@@ -221,12 +223,8 @@ object (self)
 	   with Not_found ->
 	     self#new_attribute attr
 	 in
-	   if values = [] then
-	     Oidmap.remove oid data
-	   else begin
-	     attr_obj#replace values;
-	     Oidmap.add oid attr_obj data
-	   end)
+	   if values = [] then Oidmap.remove oid data
+	   else Oidmap.add oid (attr_obj#replace values) data)
       data
       (self#normalize_ops ops)
 

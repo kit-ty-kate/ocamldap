@@ -6,6 +6,8 @@ exception Value_does_not_exist
 exception Substring_matching_rule_not_defined
 exception Ordering_matching_rule_not_defined
 
+(* imperative implementation *)	  
+(*
 class type attribute_t =
 object
   method add: ?idempotent:bool -> string -> unit
@@ -23,7 +25,7 @@ object
   method approximate_match: string -> bool
   method extensible_match: string -> (string -> string -> int) -> bool
 end
-	  
+
 class ['a] attribute 
   (add: string -> 'a -> 'a) 
   (mem: string -> 'a -> bool)
@@ -58,6 +60,75 @@ object (self)
 	 (fun s v -> syntax v;add v s)
 	 empty
 	 vals)
+  method exists v = mem v data
+  method values = elements data
+  method cardinal = cardinal data
+  method equality_match v = mem v data
+  method substrings_match subs = 
+    match substrings with
+	Some substrings_rule -> exists (substrings_rule subs) data
+      | None -> raise Substring_matching_rule_not_defined
+  method private ordering_match i v =
+    match ordering with
+	Some ordering_rule ->
+	  exists 
+	    (fun elt -> ordering_rule elt v <> i)
+	    data
+      | None -> raise Ordering_matching_rule_not_defined
+  method greater_than_or_equal_match v = self#ordering_match (-1) v
+  method less_than_or_equal_match v = self#ordering_match 1 v
+  method approximate_match (v: string) = false
+  method extensible_match (v: string) (r: string -> string -> int) = false
+end
+*)
+
+(* functional implementation *)
+class type attribute_t =
+object
+  method add: ?idempotent:bool -> string -> attribute_t
+  method delete: ?idempotent:bool -> string -> attribute_t
+  method replace: string list -> attribute_t
+  method exists: string -> bool
+  method values: string list
+  method cardinal: int
+
+  (* for search filter evaluation *)
+  method equality_match: string -> bool
+  method substrings_match: substring_component -> bool
+  method greater_than_or_equal_match: string -> bool
+  method less_than_or_equal_match: string -> bool
+  method approximate_match: string -> bool
+  method extensible_match: string -> (string -> string -> int) -> bool
+end
+
+class ['a] attribute 
+  (add: string -> 'a -> 'a) 
+  (mem: string -> 'a -> bool)
+  (remove: string -> 'a -> 'a)
+  (empty: 'a)
+  (elements: 'a -> string list)
+  (cardinal: 'a -> int)
+  (exists: (string -> bool) -> 'a -> bool)
+  (ordering: (string -> string -> int) option)
+  (substrings: (substring_component -> string -> bool) option)
+  (syntax: string -> unit) =
+object (self)
+  val data = empty
+  method add ?(idempotent=false) v =
+    syntax v;
+    if idempotent then {< data = add v data >}
+    else if mem v data then raise Value_exists
+    else {< data = add v data >}
+  method delete ?(idempotent=false) v =
+    if idempotent then {< data = remove v data >}
+    else if not (mem v data) then raise Value_does_not_exist
+    else {< data = remove v data >}
+  method replace vals =
+    {< data =
+	(List.fold_left
+	   (fun s v -> syntax v;add v s)
+	   empty
+	   vals) >}
   method exists v = mem v data
   method values = elements data
   method cardinal = cardinal data
