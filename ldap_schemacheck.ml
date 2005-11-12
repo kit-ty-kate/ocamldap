@@ -10,6 +10,7 @@
 
 open Ldap_schema
 open Ldap_types
+open Ldap_matchingrules
 
 type oc_violation_data = {
   missing_attributes: Oidset.t;
@@ -180,8 +181,13 @@ object (self)
 		 with Not_found ->
 		   self#new_attribute attr
 	       in
-		 List.iter attr_object#add values;
-		 Oidmap.add oid attr_object data)
+	       let attr_object' = 
+		 List.fold_left 
+		   (fun (attr_object: attribute_t) v -> attr_object#add v)
+		   attr_object
+		   values
+	       in
+		 Oidmap.add oid attr_object' data)
       data
       (self#normalize_ops ops)
 
@@ -202,7 +208,7 @@ object (self)
 	   else
 	     let attr_obj' = 
 	       List.fold_left 
-		 (fun attr_obj v -> attr_obj#delete v)
+		 (fun (attr_obj: attribute_t) v -> attr_obj#delete v)
 		 attr_obj
 		 values
 	     in
