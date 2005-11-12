@@ -153,13 +153,10 @@ object (self)
 	     with Not_found -> raise (Unknown_matching_rule oid))	    
 	| None ->
 	    (try Oidmap.find syn Ldap_matchingrules.equality_bysyntax
-	     with Not_found -> (* equality match is special in that it is not optional *)
-	       raise 
-		 (Cannot_construct_attribute 
-		    (List.hd name, 
-		     "No Equality Matching Rule is Defined," ^ 
-		       (" and a compatible one cannot be found for the syntax: " ^
-			  (Oid.to_string syn)))))
+	     with Not_found -> (* use a binary compare as the rule of last resort *)
+	       Oidmap.find 
+		 (Oid.of_string "1.3.6.1.4.1.1466.115.121.1.40")
+		 Ldap_matchingrules.equality_bysyntax)
     in
       try 
 	attribute_constructor
