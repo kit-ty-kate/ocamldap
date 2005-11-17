@@ -150,10 +150,6 @@ object (self)
   method extensible_match (v: string) (r: string -> string -> int) = false
 end
 
-
-
-
-
 (* equality matching rules *)
 
 (* used to normalize whitespace for caseIgnoreMatch and friends *)

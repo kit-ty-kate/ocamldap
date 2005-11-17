@@ -171,6 +171,7 @@ object (self)
     if not (changetype = `ADD) then changes <- ops @ changes;
     data <- data'
 
+  (* functional *)
   method private add' data ops =
     List.fold_left
       (fun data -> 
@@ -191,10 +192,31 @@ object (self)
       data
       (self#normalize_ops ops)
 
+  (* imperative *)
+(*
+  method private add' data ops =
+    List.fold_left
+      (fun data -> 
+	 function (attr, []) -> data
+	   | ({at_oid=oid} as attr, values) ->
+	       let attr_object = 
+		 try Oidmap.find oid data
+		 with Not_found ->
+		   self#new_attribute attr
+	       in
+		 List.iter
+		   (fun v -> attr_object#add v)
+		   values;
+		 Oidmap.add oid attr_object data)
+      data
+      (self#normalize_ops ops)
+*)
+
   method add ops = 
     let data' = self#add' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`ADD, a, v)) ops)
 
+  (* functional *)
   method private delete' data ops = 
     List.fold_left
       (fun data ({at_oid=oid}, (values: string list)) ->
@@ -217,10 +239,33 @@ object (self)
       data
       (self#normalize_ops ops)
 
+  (* imperative *)
+(*
+  method private delete' data ops = 
+    List.fold_left
+      (fun data ({at_oid=oid}, (values: string list)) ->
+	 let (attr_obj: Ldap_matchingrules.attribute_t) = 
+	   try Oidmap.find oid data
+	   with Not_found -> 
+	     raise (No_such_attribute (oidToAttrName schema oid))
+	 in
+	   if values = [] then
+	     Oidmap.remove oid data
+	   else begin
+	     List.iter
+	       (fun v -> attr_obj#delete v)
+	       values;
+	     if attr_obj#cardinal = 0 then Oidmap.remove oid data
+	     else data
+	   end)
+      data
+      (self#normalize_ops ops)
+*)
   method delete ops = 
     let data' = self#delete' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`DELETE, a, v)) ops)
 
+  (* functional *)
   method private replace' data ops = 		   
     List.fold_left
       (fun data ({at_oid=oid} as attr, values) ->
@@ -233,6 +278,25 @@ object (self)
 	   else Oidmap.add oid (attr_obj#replace values) data)
       data
       (self#normalize_ops ops)
+
+  (* imperative *)
+(*
+  method private replace' data ops = 		   
+    List.fold_left
+      (fun data ({at_oid=oid} as attr, values) ->
+	 let attr_obj =
+	   try Oidmap.find oid data
+	   with Not_found ->
+	     self#new_attribute attr
+	 in	   
+	   if values = [] then Oidmap.remove oid data
+	   else begin 
+	     attr_obj#replace values;
+	     data
+	   end)
+      data
+      (self#normalize_ops ops)
+*)
 
   method replace ops =
     let data' = self#replace' data ops in
