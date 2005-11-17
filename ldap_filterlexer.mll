@@ -57,6 +57,7 @@ let andop = '&'
 let orop = '|'
 let notop = '!'
 let equalop = '='
+let colonequalop = ":="
 let approxop = '~' equalop
 let gteop = '>' equalop
 let lteop = '<' equalop
@@ -67,11 +68,11 @@ let escape = '\\' hexdigit hexdigit
 let value = escape | ( [ '\t' ' ' '!' - '~' ] # [ '(' ')' '&' '|' '*' ] )
 let values = value +
 let colon = ':'
-let oid = ( [ '0' - '9' '.' ] + as oid) colon
-let dn = colon "dn" ( colon ) ?
+let oid = ( [ '0' - '9' '.' ] + as oid)
+let dn = colon "dn"
 let matchingrule = colon oid
 let extendedmatchattr = (attr as a) matchingrule
-let extendeddnattr = (attr as a) dn (oid)?
+let extendeddnattr = (attr as a) dn (matchingrule)?
 let substrany = star (values star) +
 let substr = 
     substrany
@@ -94,6 +95,6 @@ rule lexfilter = parse
   | (attr as a) gteop (values as v) {ATTRGTE (a, v)}
   | (attr as a) lteop (values as v) {ATTRLTE (a, v)}
   | (attr as a) approxop (values as v) {ATTRAPPROX (a, v)}
-  | extendedmatchattr equalop (values as v) {ATTREXTENDEDMATCH (a, oid, v)}
-  | extendeddnattr equalop (values as v) {ATTREXTENDEDDN (a, oid, v)}
+  | extendedmatchattr colonequalop (values as v) {ATTREXTENDEDMATCH (a, oid, v)}
+  | extendeddnattr colonequalop (values as v) {ATTREXTENDEDDN (a, oid, v)}
   | eof {EOF}
