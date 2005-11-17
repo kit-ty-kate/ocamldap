@@ -36,12 +36,15 @@
 		(Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
 %}
 
-%token WHSP LPAREN RPAREN AND OR NOT EQUAL APPROX GTE LTE STAR EOF
-%token <string> ATTR
-%token <string * string> EXTENDEDMATCHATTR
-%token <string * string option> EXTENDEDDNATTR
-%token <Ldap_types.substring_component> SUBSTRINGS
-%token <string> VALUE
+%token WHSP LPAREN RPAREN AND OR NOT EOF
+%token <string * string> ATTREQUAL
+%token <string * Ldap_types.substring_component> ATTREQUALSUB
+%token <string * string> ATTRGTE
+%token <string * string> ATTRLTE
+%token <string * string> ATTRAPPROX
+%token <string> ATTRPRESENT
+%token <string * string * string> ATTREXTENDEDMATCH
+%token <string * string option * string> ATTREXTENDEDDN
 %start filter_and_eof
 %type <Ldap_types.filter> filter_and_eof
 %%
@@ -51,34 +54,31 @@ filterlist:
 | filter {[$1]}
 ;
 
-extvalue:
-  ATTR {$1}
-| VALUE {$1}
-;
-
 filter:
   LPAREN AND filterlist RPAREN {`And $3}
 | LPAREN OR filterlist RPAREN {`Or $3}
 | LPAREN NOT filter RPAREN {`Not $3}
 | LPAREN filter RPAREN {$2}
-| ATTR EQUAL SUBSTRINGS {`Substrings {attrtype=$1;substrings=$3}}
-| ATTR EQUAL extvalue {`EqualityMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
-| EXTENDEDMATCHATTR EQUAL extvalue {`ExtensibleMatch 
-				      {matchingRule=(Some (unescape (snd $1)));
-				       ruletype=(Some (unescape (fst $1)));
-				       matchValue=(unescape $3);
-				       dnAttributes=false}}
-| EXTENDEDDNATTR EQUAL extvalue {`ExtensibleMatch 
-				   {matchingRule=(match (snd $1) with
-						      Some s -> Some (unescape s)
-						    | None -> None);
-				    ruletype=(Some (unescape (fst $1)));
-				    matchValue=(unescape $3);
-				    dnAttributes=true}}
-| ATTR APPROX extvalue {`ApproxMatch {attributeDesc=$1;assertionValue=(unescape $3)}}
-| ATTR GTE extvalue {`GreaterOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
-| ATTR LTE extvalue {`LessOrEqual {attributeDesc=$1;assertionValue=(unescape $3)}}
-| ATTR EQUAL STAR {`Present $1}
+| ATTREQUALSUB {`Substrings {attrtype=(fst $1);substrings=(snd $1)}}
+| ATTREQUAL {`EqualityMatch {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTRGTE {`GreaterOrEqual {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTRLTE {`LessOrEqual {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTRPRESENT {`Present $1}
+| ATTRAPPROX {`ApproxMatch {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTREXTENDEDMATCH {let (a, oid, v) = $1 in
+		       `ExtensibleMatch 
+			 {matchingRule=(Some (unescape oid));
+			  ruletype=(Some (unescape a));
+			  matchValue=(unescape v);
+			  dnAttributes=false}}
+| ATTREXTENDEDDN {let (a, oid, v) = $1 in
+		    `ExtensibleMatch 
+		      {matchingRule=(match oid with
+					 Some s -> Some (unescape s)
+				       | None -> None);
+		       ruletype=(Some (unescape a));
+		       matchValue=(unescape v);
+		       dnAttributes=true}}
 ;
 
 /* used to enforce EOF at the end of the filter */
