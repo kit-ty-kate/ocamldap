@@ -1,4 +1,4 @@
-2.1.6
+2.2.0
 	* fixed several bugs in the output of ldif change records
 	* Ldap_ooclient.fold now runs in constant stack space 
 	in the presence of arbitrarially complex exception 
@@ -19,6 +19,27 @@
 	by a serious error.
 	* Fixed a bug in the filter parser, it was rejecting
 	filters of the form uid=cn=... which are valid filters.
+	* Major reworking of the experimental client side schema
+	checking, and account managment. Seperated it into it's own
+	module (which will be explicitly marked as experimental).
+	The implementation now includes all the common matching rules
+	and syntaxes I could find (though not all of them are implemented
+	perfectly I admit), and uses those rules to perform schema
+	checking, and fundamentally to store data in a scldapentry.
+	This brings with it a host of benefits, perhaps the most
+	impressive is that search filters can be correctly evaluated
+	on the client side, and of course for building ldap servers
+	this capibility is essential. Some rethinking of the basic
+	division of work has also been undertaken. The class higharchy
+	is now 3 levels deep, with scldapentry at the top. scldapentry
+	now ONLY performs schema checking, it behaves just as an ldap
+	server would, raising Objectclass_violation, Invalid_syntax,
+	Value_exists, ..., when errors are encountered. Each of these
+	exceptions aims to carry enough information such that the user
+	can make an informed decision about what to do next, scldapentry
+	will no longer make any changes explicitly to the object, it will
+	only signal errors. Making informed decisions is left to the user,
+	or to one of scldapentries' subclasses.
 2.1.5
 	* Fixed a bug in the delete method of ldapentry, it would not 
 	correctly process a list of deleteions in a certian case
