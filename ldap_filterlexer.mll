@@ -64,7 +64,7 @@ let star = '*'
 let attr = [ '0' - '9' 'a' - 'z' 'A' - 'Z' ] +
 let hexdigit = [ '0' - '9' 'a' - 'f' 'A' - 'F' ]
 let escape = '\\' hexdigit hexdigit
-let value = escape | ( [ '\t' ' ' '!' - '~' ] # [ '(' ')' '&' '|' '=' '~' '>' '<' '*' ] )
+let value = escape | ( [ '\t' ' ' '!' - '~' ] # [ '(' ')' '&' '|' '*' ] )
 let values = value +
 let colon = ':'
 let oid = ( [ '0' - '9' '.' ] + as oid) colon
@@ -94,6 +94,6 @@ rule lexfilter = parse
   | (attr as a) gteop (values as v) {ATTRGTE (a, v)}
   | (attr as a) lteop (values as v) {ATTRLTE (a, v)}
   | (attr as a) approxop (values as v) {ATTRAPPROX (a, v)}
-  | extendedmatchattr (values as v) {ATTREXTENDEDMATCH (a, oid, v)}
-  | extendeddnattr (values as v) {ATTREXTENDEDDN (a, oid, v)}
+  | extendedmatchattr equalop (values as v) {ATTREXTENDEDMATCH (a, oid, v)}
+  | extendeddnattr equalop (values as v) {ATTREXTENDEDDN (a, oid, v)}
   | eof {EOF}
