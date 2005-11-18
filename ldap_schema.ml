@@ -22,7 +22,8 @@
 
 open Ldap_schemalexer;;
 
-exception Different of int
+(*
+exception Different
 let caseIgnoreCompare v1 v2 =
   (* does not cons unless v1 and v2 are different, 
      then only conses a small amount *)
@@ -32,20 +33,24 @@ let caseIgnoreCompare v1 v2 =
     else if lv1 = lv2 then begin
       if String.compare v1 v2 = 0 then 0
       else
-	try
-	  for i=0 to lv1 - 1
-	  do
-	    if v1.[i] <> v2.[i] then
-	      if (Char.lowercase v1.[i]) <> (Char.lowercase v2.[i]) then
-		raise 
-		  (Different 
-		     (Char.compare 
-			(Char.lowercase v1.[i])
-			(Char.lowercase v2.[i])))
-	  done;
-	  0
-	with Different i -> i
+	let result = ref 0 in
+	  try
+	    for i=0 to lv1 - 1
+	    do
+	      if v1.[i] <> v2.[i] then
+		let v1lc = Char.lowercase v1.[i]
+		and v2lc = Char.lowercase v2.[i] in
+		  if v1lc <> v2lc then begin
+		    result := Char.compare v1lc v2lc;
+		    raise Different
+		  end
+	    done;
+	    0
+	  with Different -> !result
     end else 1
+*)
+
+external caseIgnoreCompare : string -> string -> int = "caseIgnoreCompare"
 
 module Oid = 
   (struct
