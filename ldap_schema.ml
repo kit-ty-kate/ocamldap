@@ -22,15 +22,37 @@
 
 open Ldap_schemalexer;;
 
+exception Different of int
+let caseIgnoreCompare v1 v2 =
+  (* does not cons unless v1 and v2 are different, 
+     then only conses a small amount *)
+  let lv1 = String.length v1 in
+  let lv2 = String.length v2 in
+    if lv1 < lv2 then -1
+    else if lv1 = lv2 then begin
+      if String.compare v1 v2 = 0 then 0
+      else
+	try
+	  for i=0 to lv1 - 1
+	  do
+	    if v1.[i] <> v2.[i] then
+	      if (Char.lowercase v1.[i]) <> (Char.lowercase v2.[i]) then
+		raise 
+		  (Different 
+		     (Char.compare 
+			(Char.lowercase v1.[i])
+			(Char.lowercase v2.[i])))
+	  done;
+	  0
+	with Different i -> i
+    end else 1
+
 module Oid = 
   (struct
      type t = string
      let of_string s = s
      let to_string oid = oid
-     let compare x y = 
-       String.compare 
-	 (String.lowercase (to_string x))
-	 (String.lowercase (to_string y))
+     let compare = caseIgnoreCompare
    end
      :
    sig
@@ -63,32 +85,9 @@ let format_oidset set =
 module Lcstring =
   (struct
      type t = string
-     exception Different of int
      let of_string s = s
      let to_string x = x
-     let compare v1 v2 =
-       (* does not cons unless v1 and v2 are different, 
-	  then only conses a small amount *)
-       let lv1 = String.length v1 in
-       let lv2 = String.length v2 in
-	 if lv1 < lv2 then -1
-	 else if lv1 = lv2 then begin
-	   if String.compare v1 v2 = 0 then 0
-	   else
-	     try
-	       for i=0 to lv1 - 1
-	       do
-		 if v1.[i] <> v2.[i] then
-		   if (Char.lowercase v1.[i]) <> (Char.lowercase v2.[i]) then
-		     raise 
-		       (Different 
-			  (Char.compare 
-			     (Char.lowercase v1.[i])
-			     (Char.lowercase v2.[i])))
-	       done;
-	       0
-	     with Different i -> i
-	 end else 1
+     let compare = caseIgnoreCompare
    end
      :
    sig
