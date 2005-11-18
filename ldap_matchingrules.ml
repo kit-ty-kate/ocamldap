@@ -153,14 +153,33 @@ end
 (* equality matching rules *)
 
 (* used to normalize whitespace for caseIgnoreMatch and friends *)
+exception Break of int
+let strip_edge_whitespace s =
+  let isspace c = 
+    if (c = '\t' || c = '\n' || c = '\011' || c = '\012' || c = '\r' || c = ' ') then true
+    else false
+  in
+  let l = String.length s in
+  let first_non_space_char =
+    try for i=0 to l - 1 do if not (isspace s.[i]) then raise (Break i) done;l
+    with Break i -> i
+  in
+  let last_non_space_char = 
+    try for i=(l - 1) downto 0 do if not (isspace s.[i]) then raise (Break i) done;0
+    with Break i -> i
+  in
+    if first_non_space_char <= last_non_space_char then
+      String.sub s first_non_space_char (last_non_space_char - first_non_space_char + 1)
+    else ""
+      
+
 let whsp = Pcre.regexp ~study:true "\\s+"
 let leading_or_trailing_whsp = Pcre.regexp ~study:true "(^\\s+|\\s+$)"
-let collapse_whitespace v = v
-  (* 
+let collapse_whitespace v =
   (Pcre.replace ~rex:leading_or_trailing_whsp ~templ:""
-     (Pcre.replace ~rex:whsp ~templ:" " v)) *)
-
-let remove_whitespace v = v (* Pcre.replace ~rex:whsp ~templ:"" v *)
+     (Pcre.replace ~rex:whsp ~templ:" " v))
+    
+let remove_whitespace v = Pcre.replace ~rex:whsp ~templ:"" v
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
 let object_identifier_equality_match v1 v2 = String.compare v1 v2

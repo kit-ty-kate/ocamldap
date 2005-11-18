@@ -19,6 +19,7 @@ char to_lowercase(long c) {
 
 CAMLprim value caseIgnoreCompare(value v1, value v2)
 {
+    /* based on byterun/compare.c */
     long res = 0;
     mlsize_t len1, len2, len;
     unsigned char * p1, * p2;
