@@ -363,7 +363,7 @@ object (self)
   method may_byoid = may
 
   method attributes_not_allowed_byoid = 
-    let oids = setOfList (Hashtbl.fold (fun k v l -> k :: l) schema.attributes_byoid []) in
+    let oids = setOfList (Oidmap.fold (fun k v l -> k :: l) schema.attributes_byoid []) in
       Oidset.diff oids (Oidset.union must may)
 
   method attributes_not_allowed =

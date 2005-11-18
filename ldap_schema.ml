@@ -63,9 +63,32 @@ let format_oidset set =
 module Lcstring =
   (struct
      type t = string
-     let of_string s = String.lowercase s
+     exception Different of int
+     let of_string s = s
      let to_string x = x
-     let compare x y = String.compare x y
+     let compare v1 v2 =
+       (* does not cons unless v1 and v2 are different, 
+	  then only conses a small amount *)
+       let lv1 = String.length v1 in
+       let lv2 = String.length v2 in
+	 if lv1 < lv2 then -1
+	 else if lv1 = lv2 then begin
+	   if String.compare v1 v2 = 0 then 0
+	   else
+	     try
+	       for i=0 to lv1 - 1
+	       do
+		 if v1.[i] <> v2.[i] then
+		   if (Char.lowercase v1.[i]) <> (Char.lowercase v2.[i]) then
+		     raise 
+		       (Different 
+			  (Char.compare 
+			     (Char.lowercase v1.[i])
+			     (Char.lowercase v2.[i])))
+	       done;
+	       0
+	     with Different i -> i
+	 end else 1
    end
      :
    sig
@@ -74,6 +97,8 @@ module Lcstring =
      val to_string: t -> string
      val compare: t -> t -> int
    end);;
+
+module Lcmap = Map.Make (Lcstring)
 
 let format_lcstring id = 
   Format.open_box 0;
@@ -112,10 +137,10 @@ type attribute = {
 }
 		  
 type schema = {
-  objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
-  objectclasses_byoid: (Oid.t, objectclass) Hashtbl.t;
-  attributes: (Lcstring.t, attribute) Hashtbl.t;
-  attributes_byoid: (Oid.t, attribute) Hashtbl.t
+  objectclasses: objectclass Lcmap.t;
+  objectclasses_byoid: objectclass Oidmap.t;
+  attributes: attribute Lcmap.t;
+  attributes_byoid: attribute Oidmap.t
 }
 
 exception Invalid_objectclass of string
@@ -126,10 +151,10 @@ exception Non_unique_attribute_alias of string
 (* lookup functions *)
 let attrNameToAttr schema attr =
   let attr = Lcstring.of_string attr in
-    try (Hashtbl.find schema.attributes attr) (* try canonical name first *)
+    try (Lcmap.find attr schema.attributes) (* try canonical name first *)
     with Not_found ->
       (match 
-	 Hashtbl.fold
+	 Lcmap.fold
 	   (fun k v matches ->
 	      if (List.exists 
 		    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
@@ -145,10 +170,10 @@ let attrNameToAttr schema attr =
 
 let ocNameToOc schema oc =
   let oc = Lcstring.of_string oc in
-    try Hashtbl.find schema.objectclasses oc
+    try Lcmap.find oc schema.objectclasses
     with Not_found ->
       (match 
-	 Hashtbl.fold
+	 Lcmap.fold
 	   (fun k v matches ->
 	      if (List.exists 
 		    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
@@ -164,14 +189,14 @@ let ocNameToOc schema oc =
 
 let attrNameToOid schema attr = (attrNameToAttr schema attr).at_oid
 
-let oidToAttr schema attr = Hashtbl.find schema.attributes_byoid attr
+let oidToAttr schema attr = Oidmap.find attr schema.attributes_byoid
 
 let oidToAttrName schema attr = 
-  List.hd (Hashtbl.find schema.attributes_byoid attr).at_name
+  List.hd (Oidmap.find attr schema.attributes_byoid).at_name
 
 let ocNameToOid schema oc = (ocNameToOc schema oc).oc_oid
 
-let oidToOc schema oc = Hashtbl.find schema.objectclasses_byoid oc
+let oidToOc schema oc = Oidmap.find oc schema.objectclasses_byoid
 
 let oidToOcName schema oc = List.hd (oidToOc schema oc).oc_name
 
@@ -205,7 +230,7 @@ let format_schema s =
   let printtbl tbl = 
     let i = ref 0 in
       try
-	Hashtbl.iter
+	Lcmap.iter
 	  (fun aname aval -> 
 	     if !i < !schema_print_depth then begin
 	       Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
@@ -282,13 +307,6 @@ let rec readSchema oclst attrlst =
     in
       readLparen lxbuf oc
   in
-  let rec readOcs oclst schema =
-    match oclst with
-	a :: l -> let oc = readOc (Lexing.from_string a) empty_oc in 
-	  List.iter (fun n -> Hashtbl.add schema.objectclasses (Lcstring.of_string n) oc) oc.oc_name; 
-	  Hashtbl.add schema.objectclasses_byoid oc.oc_oid oc;readOcs l schema
-      | [] -> () 
-  in
   let rec readAttr lxbuf attr =
     let rec readOptionalFields lxbuf attr =
       try match (lexattr lxbuf) with	  
@@ -333,17 +351,34 @@ let rec readSchema oclst attrlst =
     in
       readLparen lxbuf attr
   in
-  let rec readAttrs attrlst schema =
-    match attrlst with
-	a :: l -> let attr = readAttr (Lexing.from_string a) empty_attr in
-	  List.iter (fun n -> Hashtbl.add schema.attributes (Lcstring.of_string n) attr) attr.at_name;
-	  Hashtbl.add schema.attributes_byoid attr.at_oid attr;readAttrs l schema
-      | [] -> ()
+  let schema = 
+    {objectclasses=Lcmap.empty;
+     objectclasses_byoid=Oidmap.empty;		
+     attributes=Lcmap.empty;
+     attributes_byoid=Oidmap.empty} 
   in
-  let schema = {objectclasses=Hashtbl.create 500;
-		objectclasses_byoid=Hashtbl.create 500;		
-		attributes=Hashtbl.create 5000;
-		attributes_byoid=Hashtbl.create 5000} in
-    readAttrs attrlst schema;
-    readOcs oclst schema;
-    schema
+    List.fold_left (* add attributes to the map *)
+      (fun schema a ->
+	 let attr = readAttr (Lexing.from_string a) empty_attr in
+	   {schema with
+	      attributes=
+	       (List.fold_left 
+		  (fun map n -> Lcmap.add (Lcstring.of_string n) attr map)
+		  schema.attributes
+		  attr.at_name);
+	      attributes_byoid=
+	       (Oidmap.add attr.at_oid attr schema.attributes_byoid)})
+      (List.fold_left (* add objectclasses to the map *)
+	 (fun schema a ->
+	    let oc = readOc (Lexing.from_string a) empty_oc in 
+	      {schema with
+		 objectclasses=
+		  (List.fold_left 
+		     (fun map n -> Lcmap.add (Lcstring.of_string n) oc map)
+		     schema.objectclasses
+		     oc.oc_name);
+		 objectclasses_byoid=
+		  (Oidmap.add oc.oc_oid oc schema.objectclasses_byoid)})
+	 schema
+	 oclst)
+      attrlst
