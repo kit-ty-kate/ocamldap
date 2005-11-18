@@ -319,9 +319,9 @@ let new_generalized_time_equality_set ?(ordering=None) ?(substrings=None) syntax
      
 (* 2.5.13.2 NAME 'caseIgnoreMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_equality_match v1 v2 = 
-  String.compare 
-    (String.lowercase (collapse_whitespace v1))
-    (String.lowercase (collapse_whitespace v2))
+  Lcstring.compare 
+    (Lcstring.of_string (collapse_whitespace v1))
+    (Lcstring.of_string (collapse_whitespace v2))
 
 module CaseIgnoreMatch = Set.Make
   (struct
@@ -416,9 +416,9 @@ let new_case_exact_ia5_equality_set ?(ordering=None) ?(substrings=None) syntax =
 
 (* 1.3.6.1.4.1.1466.109.114.2 NAME 'caseIgnoreIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_ignore_ia5_equality_match v1 v2 = 
-  String.compare 
-    (String.lowercase (collapse_whitespace v1))
-    (String.lowercase (collapse_whitespace v2))
+  Lcstring.compare 
+    (Lcstring.of_string (collapse_whitespace v1))
+    (Lcstring.of_string (collapse_whitespace v2))
 
 module CaseIgnoreIA5Match = Set.Make
   (struct
@@ -590,9 +590,9 @@ let generalized_time_ordering_match v1 v2 = String.compare v1 v2
 
 (* 2.5.13.3 NAME 'caseIgnoreOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_ordering_match v1 v2 = 
-  String.compare
-    (String.lowercase (collapse_whitespace v1))
-    (String.lowercase (collapse_whitespace v2))
+  Lcstring.compare
+    (Lcstring.of_string (collapse_whitespace v1))
+    (Lcstring.of_string (collapse_whitespace v2))
 
 (* 2.5.13.6 NAME 'caseExactOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_ordering_match v1 v2 = 
