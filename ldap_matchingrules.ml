@@ -153,12 +153,12 @@ end
 (* equality matching rules *)
 
 (* used to normalize whitespace for caseIgnoreMatch and friends *)
+let isspace c = 
+  if (c = '\t' || c = '\n' || c = '\011' || c = '\012' || c = '\r' || c = ' ') then true
+  else false
+
 exception Break of int
 let strip_edge_whitespace s =
-  let isspace c = 
-    if (c = '\t' || c = '\n' || c = '\011' || c = '\012' || c = '\r' || c = ' ') then true
-    else false
-  in
   let l = String.length s in
   let first_non_space_char =
     try for i=0 to l - 1 do if not (isspace s.[i]) then raise (Break i) done;l
@@ -168,16 +168,20 @@ let strip_edge_whitespace s =
     try for i=(l - 1) downto 0 do if not (isspace s.[i]) then raise (Break i) done;0
     with Break i -> i
   in
-    if first_non_space_char <= last_non_space_char then
+    if first_non_space_char = 0 && last_non_space_char = l - 1 then s
+    else if first_non_space_char <= last_non_space_char then
       String.sub s first_non_space_char (last_non_space_char - first_non_space_char + 1)
     else ""
-      
 
 let whsp = Pcre.regexp ~study:true "\\s+"
-let leading_or_trailing_whsp = Pcre.regexp ~study:true "(^\\s+|\\s+$)"
+let longwhsp = Pcre.regexp ~study:true "\\s\\s+"
+let collapse_whitespace_if_necessary s = 
+  if Pcre.pmatch ~rex:longwhsp s then
+    Pcre.replace ~rex:longwhsp ~templ:" " s
+  else s
+
 let collapse_whitespace v =
-  (Pcre.replace ~rex:leading_or_trailing_whsp ~templ:""
-     (Pcre.replace ~rex:whsp ~templ:" " v))
+  collapse_whitespace_if_necessary (strip_edge_whitespace v)
     
 let remove_whitespace v = Pcre.replace ~rex:whsp ~templ:"" v
 
