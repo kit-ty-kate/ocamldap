@@ -566,9 +566,45 @@ let octet_string_ordering_match = case_ignore_ordering_match
 
 
 (* substring matching rules *)
+let begins_with case v initial = 
+  let l = String.length v in
+  let il = String.length initial in
+  let lc = Char.lowercase in
+    if l < il then false
+    else
+      try
+	for i=0 to il - 1 do 
+	  if v.[i] <> initial.[i] then
+	    match case with
+		`Ignore -> if lc v.[i] <> lc initial.[i] then failwith ""
+	      | `Exact -> failwith ""
+	done;
+	true
+      with Failure "" -> false
+
+let ends_with case v ends = 
+  let l = String.length v in
+  let el = String.length ends in
+  let lc = Char.lowercase in
+    if l < el then false
+    else
+      try
+	for i = el - 1 downto 0 do 
+	  if v.[i] <> ends.[i] then
+	    match case with
+		`Ignore -> if lc v.[i] <> lc ends.[i] then failwith ""
+	      | `Exact -> failwith ""
+	done;
+	true
+      with Failure "" -> false
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_ignore_substrings_match subs v = false
+let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
+  let v = collapse_whitespace v in
+  let initial_matches =
+    match i with
+	[] -> true
+      | lst -> 
 
 (* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_substrings_match subs v = false
