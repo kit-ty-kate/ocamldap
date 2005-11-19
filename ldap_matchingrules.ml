@@ -610,7 +610,7 @@ let contains case v sub =
   let sl = String.length sub in
   let test_position i =
     let i = ref i in
-      if !i + sl > l - 1 then false
+      if !i + sl > l then false
       else
 	try
 	  for j=0 to sl - 1 do
