@@ -567,10 +567,11 @@ let octet_string_ordering_match = case_ignore_ordering_match
 
 (* substring matching rules *)
 let begins_with case v initial = 
+  let lc = Char.lowercase in
   let l = String.length v in
   let il = String.length initial in
-  let lc = Char.lowercase in
-    if l < il then false
+    if il = 0 then true
+    else if l < il then false
     else
       try
 	for i=0 to il - 1 do 
@@ -583,20 +584,77 @@ let begins_with case v initial =
       with Failure "" -> false
 
 let ends_with case v ends = 
+  let lc = Char.lowercase in
   let l = String.length v in
   let el = String.length ends in
-  let lc = Char.lowercase in
-    if l < el then false
+    if el = 0 then true
+    else if l < el then false
     else
       try
-	for i = el - 1 downto 0 do 
-	  if v.[i] <> ends.[i] then
-	    match case with
-		`Ignore -> if lc v.[i] <> lc ends.[i] then failwith ""
-	      | `Exact -> failwith ""
-	done;
-	true
+	let j = ref (l - 1) in
+	  for i = el - 1 downto 0 do 
+	    if v.[!j] <> ends.[i] then
+	      match case with
+		  `Ignore -> 
+		    if lc v.[!j] <> lc ends.[i] then failwith ""
+		    else j := !j - 1
+		| `Exact -> failwith ""
+	    else j := !j - 1
+	  done;
+	  true
       with Failure "" -> false
+
+let contains case v sub =
+  let lc = Char.lowercase in
+  let l = String.length v in
+  let sl = String.length sub in
+  let test_position i =
+    let i = ref i in
+      if !i + sl > l - 1 then false
+      else
+	try
+	  for j=0 to sl - 1 do
+	    if sub.[j] <> v.[!i] then
+	      match case with
+		  `Ignore ->
+		    if lc sub.[j] <> lc v.[!i] then failwith ""
+		    else i := !i + 1
+		| `Exact -> failwith ""
+	    else i := !i + 1
+	  done;
+	  true
+	with Failure "" -> false
+  in
+  let index_from case v i c =
+    let lc_c = lc c in
+    let p = ref i in
+      if i < l then
+	try
+	  for i = i to l - 1 do
+	    if v.[i] = c then ( p := i;failwith "" )
+	    else
+	      match case with
+		  `Ignore -> if lc v.[i] = lc_c then ( p := i;failwith "" )
+		| `Exact -> ()
+	  done;
+	  raise Not_found
+	with Failure "" -> !p
+      else raise Not_found
+  in
+    if sl = 0 then true
+    else 
+      let last_p = ref 0 in
+      let initial_c = sub.[0] in
+	try
+	  while true do
+	    let index = index_from case v !last_p initial_c in
+	      last_p := index + 1;
+	      if test_position index then failwith ""
+	  done;
+	  false
+	with 
+	    Not_found -> false
+	  | Failure "" -> true
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
