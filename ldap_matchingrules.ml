@@ -659,29 +659,44 @@ let contains case v sub =
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
   let v = collapse_whitespace v in
-  let initial_matches =
-    match i with
-	[] -> true
-      | lst -> 
+    (match i with
+	 [] -> true
+       | lst -> List.exists (begins_with `Ignore v) lst) ||
+    (match a with
+	 [] -> true
+       | lst -> List.exists (contains `Ignore v) lst) ||
+    (match f with
+	 [] -> true
+       | lst -> List.exists (ends_with `Ignore v) lst)
 
 (* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_exact_substrings_match subs v = false
+let case_exact_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
+  let v = collapse_whitespace v in
+    (match i with
+	 [] -> true
+       | lst -> List.exists (begins_with `Exact v) lst) ||
+    (match a with
+	 [] -> true
+       | lst -> List.exists (contains `Exact v) lst) ||
+    (match f with
+	 [] -> true
+       | lst -> List.exists (ends_with `Exact v) lst)
 
 (* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
-let telephone_number_substrings_match subs v = false
+let telephone_number_substrings_match = case_ignore_substrings_match
 
 (* 2.5.13.10 NAME 'numericStringSubstringsMatch' SYNTAX  1.3.6.1.4.1.1466.115.121.1.36 *)
-let numeric_string_substrings_match subs v = false
+let numeric_string_substrings_match = case_ignore_substrings_match
 
 (* 1.3.6.1.4.1.4203.1.2.1 NAME 'caseExactIA5SubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
-let case_exact_ia5_substrings_match subs v = false
+let case_exact_ia5_substrings_match = case_exact_substrings_match
 
 (* 1.3.6.1.4.1.1466.109.114.3 NAME 'caseIgnoreIA5SubstringsMatch' 
    SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
-let case_ignore_ia5_substrings_match subs v = false
+let case_ignore_ia5_substrings_match = case_ignore_substrings_match
 
 (* 2.5.13.12 NAME 'caseIgnoreListSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.58 *)
-let case_ignore_list_substrings_match subs v = false
+let case_ignore_list_substrings_match = case_ignore_substrings_match
 
 
 
