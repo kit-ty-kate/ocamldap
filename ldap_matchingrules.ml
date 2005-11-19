@@ -660,26 +660,26 @@ let contains case v sub =
 let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
   let v = collapse_whitespace v in
     (match i with
-	 [] -> false
-       | lst -> List.exists (begins_with `Ignore v) lst) ||
+	 [] -> true
+       | lst -> List.exists (begins_with `Ignore v) lst) &&
     (match a with
-	 [] -> false
-       | lst -> List.exists (contains `Ignore v) lst) ||
+	 [] -> true
+       | lst -> List.exists (contains `Ignore v) lst) &&
     (match f with
-	 [] -> false
+	 [] -> true
        | lst -> List.exists (ends_with `Ignore v) lst)
 
 (* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
   let v = collapse_whitespace v in
     (match i with
-	 [] -> false
-       | lst -> List.exists (begins_with `Exact v) lst) ||
+	 [] -> true
+       | lst -> List.exists (begins_with `Exact v) lst) &&
     (match a with
-	 [] -> false
-       | lst -> List.exists (contains `Exact v) lst) ||
+	 [] -> true
+       | lst -> List.exists (contains `Exact v) lst) &&
     (match f with
-	 [] -> false
+	 [] -> true
        | lst -> List.exists (ends_with `Exact v) lst)
 
 (* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
