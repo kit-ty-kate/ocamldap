@@ -19,10 +19,10 @@ type oc_violation_data = {
   illegal_objectclasses: Oidset.t
 }
 
-exception Single_value of string
 exception Cannot_construct_attribute of string * string
 exception No_such_attribute of string
 exception Objectclass_is_required
+exception Single_value of Oid.t list
 exception Objectclass_violation of oc_violation_data
 exception Invalid_matching_rule_syntax of Oid.t * Oid.t
 exception Unknown_syntax of Oid.t
@@ -54,7 +54,16 @@ object (self)
 	    with Not_found -> raise Objectclass_is_required))
     in
     let presentOcslst = Oidset.elements presentOcs in
-    let present = (Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty) in
+    let (present, singleValue) = 
+      Oidmap.fold 
+	(fun k v (attrs, svattrs) -> 
+	   (Oidset.add k attrs,
+	    if (oidToAttr schema k).at_single_value && v#cardinal > 1 then
+	      Oidset.add k svattrs (* violations of single value assertions *)
+	    else svattrs))
+	data 
+	(Oidset.empty, Oidset.empty)
+    in
     let (must', may') =
       List.fold_left
 	(fun (must, may) oc ->
@@ -109,6 +118,8 @@ object (self)
 		  illegal_attributes=illegalAttrs;
 		  missing_objectclasses=missingOcs;
 		  illegal_objectclasses=illegalOcs})
+      else if not (Oidset.is_empty singleValue) then
+	raise (Single_value (Oidset.elements singleValue))
       else begin
 	must <- must';
 	may <- may'
@@ -350,39 +361,6 @@ type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
 class adaptivescldapentry schema =
 object (self)
   inherit scldapentry as super
-  val schemaAttrs = Hashtbl.create 50
-  val schema = schema
-  val mutable consistent = false
-
-  (* the set of all attibutes actually present *)
-  val mutable present       = Setstr.empty
-
-    (* the set of all musts from all objectclasses on the entry *)
-  val mutable must          = Setstr.empty
-
-    (* the set of all mays from all objectclasses on the entry *)
-  val mutable may           = Setstr.empty
-
-    (* the set of required objectclasses *)
-  val mutable requiredOcs   = Setstr.empty
-
-    (* present objectclasses *)
-  val mutable presentOcs    = Setstr.empty
-
-  (* must + may *)
-  val mutable all_allowed   = Setstr.empty
-
-    (* must - (present * must) *)
-  val mutable missingAttrs  = Setstr.empty
-
-    (* requiredOcs - (presentOcs * requiredOcs) *)
-  val mutable missingOcs    = Setstr.empty
-
-    (* any objectclass which depends on a missing objectclass *)
-  val mutable illegalOcs    = Setstr.empty
-
-    (* present - (present * all_allowed) *)
-  val mutable illegalAttrs  = Setstr.empty
 
   method private drive_updatecon =
     try self#update_condition
@@ -441,55 +419,7 @@ object (self)
        self#drive_updatecon;
        self#drive_reconsile flavor)
 
-  (* for debugging *)
-  method private getCondition = 
-    let printLst lst = List.iter print_endline lst in
-      print_endline "MAY";
-      printLst (List.rev_map (oidToAttr schema) (Setstr.elements may));
-      print_endline "PRESENT";
-      printLst (List.rev_map (oidToAttr schema) (Setstr.elements present));
-      (*      printLst (Setstr.elements present);*)
-      print_endline "MUST";
-      printLst (List.rev_map (oidToAttr schema) (Setstr.elements must));
-      (*      printLst (Setstr.elements must);*)
-      print_endline "MISSING";
-      printLst (List.rev_map (oidToAttr schema) (Setstr.elements missingAttrs));
-      (*      printLst (Setstr.elements missingAttrs);*)
-      print_endline "ILLEGAL";
-      printLst (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs));
-      print_endline "REQUIREDOCS";
-      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements requiredOcs));*)
-      printLst (List.rev_map Oid.to_string (Setstr.elements requiredOcs));
-      print_endline "PRESENTOCS";
-      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements presentOcs));*)
-      printLst (List.rev_map Oid.to_string (Setstr.elements presentOcs));
-      print_endline "MISSINGOCS";
-      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements missingOcs));*)
-      printLst (List.rev_map Oid.to_string (Setstr.elements missingOcs));
-      print_endline "ILLEGALOCS";
-      (*      printLst (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs))*)
-      printLst (List.rev_map Oid.to_string (Setstr.elements illegalOcs));
-
-  (* for debugging *)
-  method private getData = (must, may, present, missingOcs)
-
   method of_entry ?(scflavor=Pessimistic) (e:ldapentry) =
-    super#set_dn (e#dn);
-    super#set_changetype `ADD;
-    (List.iter
-       (fun attr -> 
-	  try
-	    let oid = Oid.to_string (attrToOid schema (Lcstring.of_string attr)) in
-	      (super#add 
-		 (try 
-		    self#single_val_check [(oid, (e#get_value attr))] true;
-		    [(oid, (e#get_value attr))]
-		  with (* remove single valued attributes *)
-		      Single_value _ -> [(oid, [List.hd (e#get_value attr)])]))
-	  with (* single_val_check may encounter unknown attributes *)
-	      Invalid_attribute _ | Invalid_objectclass _ -> ())
-       e#attributes);
-    self#drive_updatecon;
     self#drive_reconsile scflavor
 
   (* raise an exception if the user attempts to have more than
@@ -568,7 +498,8 @@ object (self)
   method is_allowed x = 
     Setstr.mem (attrToOid schema (Lcstring.of_string x)) all_allowed
 end;;
-
+*)
+(*
 (********************************************************************************)
 (********************************************************************************)
 (********************************************************************************)
