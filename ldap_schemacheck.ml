@@ -12,18 +12,18 @@ open Ldap_schema
 open Ldap_types
 open Ldap_matchingrules
 
-type oc_violation_data = {
+type sc_violation_data = {
   missing_attributes: Oidset.t;
   illegal_attributes: Oidset.t;
   missing_objectclasses: Oidset.t;
-  illegal_objectclasses: Oidset.t
+  illegal_objectclasses: Oidset.t;
+  single_value_violations: Oidset.t
 }
 
 exception Cannot_construct_attribute of string * string
 exception No_such_attribute of string
 exception Objectclass_is_required
-exception Single_value of Oid.t list
-exception Objectclass_violation of oc_violation_data
+exception Schema_violation of sc_violation_data
 exception Invalid_matching_rule_syntax of Oid.t * Oid.t
 exception Unknown_syntax of Oid.t
 exception Unknown_matching_rule of Oid.t
@@ -110,16 +110,17 @@ object (self)
 	      (Oidset.union 
 		 (Oidset.union 
 		    missingAttrs 
-		    illegalAttrs) 
-		 illegalOcs))) 
+		    (Oidset.union
+		       illegalAttrs
+		       singleValue))
+		 illegalOcs)))
       then
-	raise (Objectclass_violation 
+	raise (Schema_violation 
 		 {missing_attributes=missingAttrs;
 		  illegal_attributes=illegalAttrs;
 		  missing_objectclasses=missingOcs;
-		  illegal_objectclasses=illegalOcs})
-      else if not (Oidset.is_empty singleValue) then
-	raise (Single_value (Oidset.elements singleValue))
+		  illegal_objectclasses=illegalOcs;
+		  single_value_violations=singleValue})
       else begin
 	must <- must';
 	may <- may'
