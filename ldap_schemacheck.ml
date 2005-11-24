@@ -430,20 +430,31 @@ object (self)
 	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
 	     single_value_violations=singleValue} ->
 	      check_single_value singleValue;
-	      let proposed_changes' =
+	      let (proposed_changes', missing, missingOc) =
 		List.fold_left
-		  (fun mods op ->
+		  (fun (mods, missing, missingOc) op ->
 		     match op with
 			 (`DELETE, attrname, vals) when 
-			   (Oidset.mem (attrNameToOid schema attrname) missing) -> mods
+			   (Oidset.mem (attrNameToOid schema attrname) missing) -> 
+			     (mods, Oidset.remove (attrNameToOid schema attrname) missing,
+			      missingOc)
 		       | (`DELETE, attrname, vals) when 
 			   compareAttrs schema "objectClass" attrname = 0 ->
-			   (`DELETE, "objectClass", 
-			    (List.filter
-			       (fun v -> not (Oidset.mem (ocNameToOid schema v) missingOc))
-			       vals)) :: mods
-		       | _ -> op :: mods)
-		  []
+			   let (vals, missingOc) = 
+			     List.fold_left
+			       (fun (vals, missingOc) (v: string) -> 
+				  let oid = ocNameToOid schema v in
+				    if (Oidset.mem oid missingOc) then
+				      (vals, Oidset.remove oid missingOc)
+				    else
+				      (v :: vals, missingOc))
+			       ([], missingOc)
+			       vals
+			   in
+			     if vals = [] then (mods, missing, missingOc)
+			     else ((`DELETE, "objectClass", vals) :: mods, missing, missingOc)
+		       | _ -> (op :: mods, missing, missingOc))
+		  ([], missing, missingOc)
 		  proposed_changes
 	      in
 		(List.rev_append
