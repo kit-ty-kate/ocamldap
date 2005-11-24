@@ -378,12 +378,14 @@ object (self)
     (* find an objectclass which allows attr *)
     let find_oc schema attr = 
       let find_in_oc oc attr = 
-	(List.exists
-	   (fun must -> compareAttrs schema attr must = 0)
-	   oc.oc_must) || 
+	try
 	  (List.exists
-	     (fun may -> compareAttrs schema attr may = 0)
-	     oc.oc_may) 
+	     (fun must -> compareAttrs schema attr must = 0)
+	     oc.oc_must) || 
+	    (List.exists
+	       (fun may -> compareAttrs schema attr may = 0)
+	       oc.oc_may) 
+	with Invalid_attribute _ -> false
       in
 	match
 	  Oidmap.fold
