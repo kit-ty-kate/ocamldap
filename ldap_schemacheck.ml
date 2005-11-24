@@ -373,8 +373,8 @@ class adaptivescldapentry ?(from_entry=new ldapentry) schema =
 object (self)
   inherit scldapentry schema ~from_entry as super
   val mutable proposed_changes = []
-  method apply_proposed_changes flavor 
-    (proposed_changes': (modify_optype * string * string list) list) =
+  method adapt_proposed_changes flavor 
+    (proposed_changes: (modify_optype * string * string list) list) =
     (* find an objectclass which allows attr *)
     let find_oc schema attr = 
       let find_in_oc oc attr = 
@@ -391,7 +391,7 @@ object (self)
 	    schema.objectclasses_byoid
 	    None
 	with
-	    Some oc -> oc
+	    Some oc -> oidToOcName schema oc
 	  | None -> raise Not_found
     in
     let check_single_value singleValue =
@@ -422,73 +422,102 @@ object (self)
 	   (function (`REPLACE, attrname, []) -> (`DELETE, attrname, []) | op -> op)
 	   proposed_changes)
     in
-      match flavor with 
-	  Optimistic ->
-	    begin 
-	      try super#modify proposed_changes;[]
-	      with 
-		  Schema_violation 
-		    {missing_attributes=missing;illegal_attributes=illegal;
-		     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
-		     single_value_violations=singleValue} ->
-		      check_single_value singleValue;
+    let optimistic_adapt (proposed_changes: (modify_optype * string * string list) list) =
+      try super#propose_modify proposed_changes;proposed_changes
+      with 
+	  Schema_violation 
+	    {missing_attributes=missing;illegal_attributes=illegal;
+	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+	     single_value_violations=singleValue} ->
+	      check_single_value singleValue;
+	      let proposed_changes' =
+		List.fold_left
+		  (fun mods op ->
+		     match op with
+			 (`DELETE, attrname, vals) when 
+			   (Oidset.mem (attrNameToOid schema attrname) missing) -> mods
+		       | (`DELETE, attrname, vals) when 
+			   compareAttrs schema "objectClass" attrname = 0 ->
+			   (`DELETE, "objectClass", 
+			    (List.filter
+			       (fun v -> not (Oidset.mem (ocNameToOid schema v) missingOc))
+			       vals)) :: mods
+		       | _ -> op :: mods)
+		  []
+		  proposed_changes
+	      in
+		(List.rev_append
+		   (if not (Oidset.is_empty illegal) then
+		      [(`ADD, "objectClass",
+			(List.rev_map 
+			   (find_oc schema) 
+			   (List.rev_map 
+			      (oidToAttrName schema)
+			      (Oidset.elements illegal))))]
+		    else [])
+		   (if not (Oidset.is_empty missingOc) then
 		      (`ADD, "objectClass", 
 		       List.rev_map 
 			 (oidToOcName schema)
-			 (Oidset.elements missingOc)) :: proposed_changes
-	    end
-	| Pessimistic ->
-	    begin
-	      try super#modify proposed_changes;[]
-	      with
-		  Schema_violation
-		    {missing_attributes=missing;illegal_attributes=illegal;
-		     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
-		     single_value_violations=singleValue} ->
-		      check_single_value singleValue;
-		      let (proposed_changes', attrsDeleting) =
-			List.fold_left
-			  (fun (modifications, attrs) ((op, attrname, values) as modification) ->
-			     match op with
-				 `ADD | `REPLACE ->
-				   if compareAttrs schema attrname "objectclass" = 0 then
-				     ((op, attrname, 
-				       List.filter 
-					 (fun value -> 
-					    not (Oidset.mem (ocNameToOid schema value) illegalOc))
-					 values) :: modifications,
-				      attrs)
-				   else if Oidset.mem (attrNameToOid schema attrname) illegal then
-				     (modifications, attrs)
-				   else 
-				     (modification :: modifications, attrs)
-			       | `DELETE ->
-				   if compareAttrs schema attrname "objectclass" = 0 then
-				     ((op, attrname,
-				       List.rev_map
-					 (oidToOcName schema)
-					 (Oidset.elements
-					    (Oidset.union 
-					       illegalOc
-					       (setOfList 
-						  (List.rev_map 
-						     (ocNameToOid schema) 
-						     values))))) :: modifications,
-				      attrs)
-				   else 
-				     (modification :: modifications,
-				      if values = [] then 
-					Oidset.add (attrNameToOid schema attrname) attrs
-				      else attrs))
-			  ([], Oidset.empty)
-			  (normalize_proposed_changes proposed_changes)
-		      in
-			List.rev_append
-			  (List.rev_map
-			     (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
-			     (Oidset.elements (Oidset.diff illegal attrsDeleting)))
-			  proposed_changes'
-	    end
+			 (Oidset.elements missingOc)) :: proposed_changes'
+		    else proposed_changes'))
+    in
+    let pessimistic_adapt proposed_changes = 
+      try super#propose_modify proposed_changes;[]
+      with
+	  Schema_violation
+	    {missing_attributes=missing;illegal_attributes=illegal;
+	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+	     single_value_violations=singleValue} ->
+	      check_single_value singleValue;
+	      let (proposed_changes', attrsDeleting) =
+		List.fold_left
+		  (fun (modifications, attrs) ((op, attrname, values) as modification) ->
+		     match op with
+			 `ADD | `REPLACE ->
+			   if compareAttrs schema attrname "objectclass" = 0 then
+			     ((op, attrname, 
+			       List.filter 
+				 (fun value -> 
+				    not (Oidset.mem (ocNameToOid schema value) illegalOc))
+				 values) :: modifications,
+			      attrs)
+			   else if Oidset.mem (attrNameToOid schema attrname) illegal then
+			     (modifications, attrs)
+			   else 
+			     (modification :: modifications, attrs)
+		       | `DELETE ->
+			   if compareAttrs schema attrname "objectclass" = 0 then
+			     ((op, attrname,
+			       List.rev_map
+				 (oidToOcName schema)
+				 (Oidset.elements
+				    (Oidset.union 
+				       illegalOc
+				       (setOfList 
+					  (List.rev_map 
+					     (ocNameToOid schema) 
+					     values))))) :: modifications,
+			      attrs)
+			   else 
+			     (modification :: modifications,
+			      if values = [] then 
+				Oidset.add (attrNameToOid schema attrname) attrs
+			      else attrs))
+		  ([], Oidset.empty)
+		  (normalize_proposed_changes proposed_changes)
+	      in
+		List.rev_append
+		  (List.rev_map
+		     (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
+		     (Oidset.elements (Oidset.diff illegal attrsDeleting)))
+		  proposed_changes'
+
+    in
+      match flavor with 
+	  Optimistic -> optimistic_adapt proposed_changes
+	| Pessimistic -> pessimistic_adapt proposed_changes
+
 end;;
 
 (*
