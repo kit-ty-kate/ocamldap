@@ -349,7 +349,8 @@ object (self)
   method match_filterstring fstring = self#match_filter (Ldap_filter.of_string fstring)
 end
 
-(*
+exception Single_value of string list
+
 (* schema checking flavor *)
 type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
 				    which make illegal attributes
@@ -362,57 +363,131 @@ type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
 class adaptivescldapentry schema =
 object (self)
   inherit scldapentry as super
+  val mutable proposed_changes = []
 
-  method private drive_updatecon =
-    try self#update_condition
-    with 
-	Invalid_objectclass(s) -> super#delete [("2.5.4.0",[s])];self#drive_updatecon
-      | Invalid_attribute(s) -> super#delete [(s,[])];self#drive_updatecon
-      | Objectclass_is_required -> super#add [("2.5.4.0", ["top"])]
-
-  method private reconsile_illegal flavor =
-    let find_in_oc oc attr = (List.exists
-				((=) (Lcstring.of_string attr)) 
-				oc.oc_must) || 
-      (List.exists
-	 ((=) (Lcstring.of_string attr))
-	 oc.oc_may) in
+  method apply_proposed_changes flavor proposed_changes' =
+    (* find an objectclass which allows attr *)
     let find_oc schema attr = 
-      let oc = ref (Lcstring.of_string "") in
-	Hashtbl.iter 
-	  (fun key valu -> 
-	     if (find_in_oc valu attr) then oc := key)
-	  schema.objectclasses;
-	if !oc = (Lcstring.of_string "") then raise Not_found;
-	!oc
+      let find_in_oc oc attr = 
+	(List.exists
+	   (fun must -> compareAttrs schema attr must = 0)
+	   oc.oc_must) || 
+	  (List.exists
+	     (fun may -> compareAttrs schema attr may = 0)
+	     oc.oc_may) 
+      in
+	match
+	  Oidmap.fold
+	    (fun key valu oc -> if (find_in_oc valu attr) then Some key else oc)
+	    None
+	    schema.objectclasses
+	with
+	    Some oc -> oc
+	  | None -> raise Not_found
+    in
+    let check_single_value singleValue =
+      if not (Oidset.is_empty singleValue) then 
+	raise 
+	  (Single_value
+	     (Oidset.fold 
+		(fun elt l -> (oidToAttrName schema elt) :: l)
+		singleValue))
+    in
+    let normalize_porposed_changes proposed_changes =
+      List.fold_left
+	(fun proposed_changes (op', attrname', vals') ->
+	   let (matchingOps, rest) =
+	     List.partition
+	       (fun (op, attrname, _) -> 
+		  op = op' && (compareAttrs schema attrname' attrname = 0))
+	       proposed_changes
+	   in
+	     (List.fold_left
+		(fun (op, attrname, vals) (_, _, newvals) -> 
+		   (op, attrname, List.rev_append newvals vals))
+		(op', attrname', vals')
+		matchingOps) :: rest)
+	[]
+	proposed_changes
     in
       match flavor with 
 	  Optimistic ->
-	    if not (Setstr.is_empty illegalAttrs) then
-	      ((List.iter (* add necessary objectclasses *)
-		  (fun oc -> super#add [("objectclass",[(Lcstring.to_string oc)])])
-		  (List.rev_map
-		     (fun attr -> 
-			try find_oc schema attr 
-			with Not_found -> raise (Invalid_attribute attr))
-		     (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs))));
-	       self#drive_updatecon);
-	    (* add any objectclasses the ones we just added are dependant on *)
-	    if not (Setstr.is_empty missingOcs) then
-	      ((List.iter
-		  (fun oc -> super#add [("objectclass", [oc])])
-		  (List.rev_map (oidToOc schema) (Setstr.elements missingOcs)));
-	       self#drive_updatecon);
+	    try super#modify proposed_changes;[]
+	    with 
+		Schema_violation 
+		  {missing_attributes=missing;
+		   illegal_attributes=illegal;
+		   missing_objectclasses=missingOc;
+		   illegal_objectclasses=illegalOc;
+		   single_value_violations=singleValue} ->
+		    check_single_value singleValue;
+		    (`ADD, "objectClass", 
+		     List.rev_map 
+		       (oidToOcName schema)
+		       (Oidset.elements missingOc)) :: proposed_changes
 	| Pessimistic ->
-	    (List.iter
-	       (fun oc -> super#delete [("objectclass",[oc])])
-	       (List.rev_map (oidToOc schema) (Setstr.elements illegalOcs)));
-	    self#drive_updatecon;
-	    (List.iter (* remove disallowed attributes *)
-	       (fun attr -> super#delete [(attr, [])])
-	       (List.rev_map (oidToAttr schema) (Setstr.elements illegalAttrs)));
-	    self#drive_updatecon
+	    try super#modify proposed_changes;[]
+	    with
+		Schema_violation
+		  {missing_attributes=missing;
+		   illegal_attributes=illegal;
+		   missing_objectclasses=missingOc;
+		   illegal_objectclasses=illegalOc;
+		   single_value_violations=singleValue} ->
+		    check_single_value singleValue;
+		    let (proposed_changes', attrsDeleting) =
+		      List.fold_left
+			(fun (modifications, attrs) (op, attrname, values) as modification ->
+			   match op with
+			       `ADD as op | `REPLACE as op ->
+				 if compareAttr schema attrname "objectclass" = 0 then
+				   ((op, attrname, 
+				     List.filter 
+				       (fun value -> 
+					  not (Oidset.mem (ocNameToOid schema value) illegalOc))
+				       values) :: modifications,
+				    attrs)
+				 else if Oidset.mem (attrNameToOid schema attrname) illegal then
+				   (modifications, attrs)
+				 else 
+				   (modification :: modifications, attrs)
+			     | `DELETE ->
+				 if compareAttr schema attrname "objectclass" = 0 then
+				   ((op, attrname,
+				     List.rev_map
+				       (oidToOcName schema)
+				       (Oidset.elements
+					  (Oidset.union 
+					     illegalOc
+					     (setOfList 
+						(List.rev_map 
+						   (ocNameToOid schema) 
+						   values))))) :: modifications,
+				    attrs)
+				 else 
+				   (modification :: modifications,
+				    if values = [] then 
+				      Oidset.add (attrNameToOid schema attrname) attrs
+				    else attrs))
+			[]
+			(proposed_changes, Oidset.empty)
+		    in
+		      List.rev_append
+			(List.rev_map
+			   (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
+			   (Oidset.elements (Oidset.diff illegal attrsDeleting)))
+			proposed_changes'
 
+(*
+  method private drive_updatecon =
+    try self#update_condition
+    with 
+	Invalid_objectclass(s) -> super#delete [("objectClass",[s])];self#drive_updatecon
+      | Invalid_attribute(s) -> super#delete [(s,[])];self#drive_updatecon
+      | Objectclass_is_required -> super#add [("objectClass", ["top"])]
+*)	  
+
+(*
   method private drive_reconsile flavor =
     try self#reconsile_illegal flavor
     with Invalid_attribute(a) -> (* remove attributes for which there is no objectclass *)
@@ -498,8 +573,9 @@ object (self)
     Setstr.mem (attrToOid schema (Lcstring.of_string x)) missingAttrs
   method is_allowed x = 
     Setstr.mem (attrToOid schema (Lcstring.of_string x)) all_allowed
-end;;
 *)
+end;;
+
 (*
 (********************************************************************************)
 (********************************************************************************)

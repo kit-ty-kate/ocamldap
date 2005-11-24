@@ -22,7 +22,8 @@
 
 open Ldap_schemalexer;;
 
-(*
+(* Uncomment this, and comment out the external to use the Ocaml implementation
+(* pure Ocaml *)
 exception Different
 let caseIgnoreCompare v1 v2 =
   (* does not cons unless v1 and v2 are different, 
@@ -50,6 +51,13 @@ let caseIgnoreCompare v1 v2 =
     end else 1
 *)
 
+(* The C implementation is 10 times faster, almost as fast as
+   Pervasives.compare. As a point of interest, the C implementation is
+   actually slower than the Ocaml implementation unless it is compiled
+   with -O, at at which point it gains an order of magnitude. I
+   suspect this may be due to gcc's ability to optimize loops, which
+   are not used much on Ocaml code. It gains its maximum (cross
+   platform) performance when compiled with -O3 *)
 external caseIgnoreCompare : string -> string -> int = "caseIgnoreCompare"
 
 module Oid = 
@@ -60,12 +68,12 @@ module Oid =
      let compare = caseIgnoreCompare
    end
      :
-   sig
-     type t
-     val of_string: string -> t
-     val to_string: t -> string
-     val compare: t -> t -> int
-   end);;
+    sig
+      type t
+      val of_string: string -> t
+      val to_string: t -> string
+      val compare: t -> t -> int
+    end);;
 
 module Oidset = Set.Make (Oid)
 module Oidmap = Map.Make (Oid)
@@ -95,12 +103,12 @@ module Lcstring =
      let compare = caseIgnoreCompare
    end
      :
-   sig
-     type t
-     val of_string: string -> t
-     val to_string: t -> string
-     val compare: t -> t -> int
-   end);;
+    sig
+      type t
+      val of_string: string -> t
+      val to_string: t -> string
+      val compare: t -> t -> int
+    end);;
 
 module Lcmap = Map.Make (Lcstring)
 
@@ -139,7 +147,7 @@ type attribute = {
   at_sup: string list;
   at_xattr: string list
 }
-		  
+    
 type schema = {
   objectclasses: objectclass Lcmap.t;
   objectclasses_byoid: objectclass Oidmap.t;
