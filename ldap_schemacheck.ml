@@ -177,7 +177,7 @@ object (self)
 	  ~substrings:substring_match
 	  (Oidmap.find syn Ldap_syntaxes.syntaxes)
       with Not_found -> raise (Unknown_syntax syn)
-	    
+
   method private commit_changes data' ops =
     self#check data';
     if not (changetype = `ADD) then changes <- ops @ changes;
@@ -207,6 +207,8 @@ object (self)
     let data' = self#add' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`ADD, a, v)) ops)
 
+  method propose_add ops = self#check (self#add' data ops)
+
   method private delete' data ops = 
     List.fold_left
       (fun data ({at_oid=oid}, (values: string list)) ->
@@ -233,6 +235,8 @@ object (self)
     let data' = self#delete' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`DELETE, a, v)) ops)
 
+  method propose_delete ops = self#check (self#delete' data ops)
+
   method private replace' data ops = 		   
     List.fold_left
       (fun data ({at_oid=oid} as attr, values) ->
@@ -250,6 +254,8 @@ object (self)
     let data' = self#replace' data ops in
       self#commit_changes data' (List.rev_map (fun (a, v) -> (`REPLACE, a, v)) ops)
 
+  method propose_replace ops = self#check (self#replace' data ops)
+
   method private modify' data ops = 
     List.fold_left
       (fun data ->
@@ -262,6 +268,8 @@ object (self)
   method modify ops = 
     let data' = self#modify' data ops in
       self#commit_changes data' ops
+
+  method propose_modify ops = self#check (self#modify' data ops)
 
   method attributes = 
     Oidmap.fold
