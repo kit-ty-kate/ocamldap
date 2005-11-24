@@ -360,12 +360,13 @@ type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
 		      | Pessimistic (* delete any illegal attributes,
 				       do not add objectclasses to
 				       make them legal*)
-class adaptivescldapentry schema =
-object (self)
-  inherit scldapentry as super
-  val mutable proposed_changes = []
 
-  method apply_proposed_changes flavor proposed_changes' =
+class adaptivescldapentry ?(from_entry=new ldapentry) schema =
+object (self)
+  inherit scldapentry schema ~from_entry as super
+  val mutable proposed_changes = []
+  method apply_proposed_changes flavor 
+    (proposed_changes': (modify_optype * string * string list) list) =
     (* find an objectclass which allows attr *)
     let find_oc schema attr = 
       let find_in_oc oc attr = 
@@ -379,8 +380,8 @@ object (self)
 	match
 	  Oidmap.fold
 	    (fun key valu oc -> if (find_in_oc valu attr) then Some key else oc)
+	    schema.objectclasses_byoid
 	    None
-	    schema.objectclasses
 	with
 	    Some oc -> oc
 	  | None -> raise Not_found
@@ -391,9 +392,10 @@ object (self)
 	  (Single_value
 	     (Oidset.fold 
 		(fun elt l -> (oidToAttrName schema elt) :: l)
-		singleValue))
+		singleValue
+		[]))
     in
-    let normalize_porposed_changes proposed_changes =
+    let normalize_proposed_changes proposed_changes =
       List.fold_left
 	(fun proposed_changes (op', attrname', vals') ->
 	   let (matchingOps, rest) =
@@ -408,75 +410,78 @@ object (self)
 		(op', attrname', vals')
 		matchingOps) :: rest)
 	[]
-	proposed_changes
+	(List.rev_map
+	   (function (`REPLACE, attrname, []) -> (`DELETE, attrname, []) | op -> op)
+	   proposed_changes)
     in
       match flavor with 
 	  Optimistic ->
-	    try super#modify proposed_changes;[]
-	    with 
-		Schema_violation 
-		  {missing_attributes=missing;
-		   illegal_attributes=illegal;
-		   missing_objectclasses=missingOc;
-		   illegal_objectclasses=illegalOc;
-		   single_value_violations=singleValue} ->
-		    check_single_value singleValue;
-		    (`ADD, "objectClass", 
-		     List.rev_map 
-		       (oidToOcName schema)
-		       (Oidset.elements missingOc)) :: proposed_changes
+	    begin 
+	      try super#modify proposed_changes;[]
+	      with 
+		  Schema_violation 
+		    {missing_attributes=missing;illegal_attributes=illegal;
+		     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+		     single_value_violations=singleValue} ->
+		      check_single_value singleValue;
+		      (`ADD, "objectClass", 
+		       List.rev_map 
+			 (oidToOcName schema)
+			 (Oidset.elements missingOc)) :: proposed_changes
+	    end
 	| Pessimistic ->
-	    try super#modify proposed_changes;[]
-	    with
-		Schema_violation
-		  {missing_attributes=missing;
-		   illegal_attributes=illegal;
-		   missing_objectclasses=missingOc;
-		   illegal_objectclasses=illegalOc;
-		   single_value_violations=singleValue} ->
-		    check_single_value singleValue;
-		    let (proposed_changes', attrsDeleting) =
-		      List.fold_left
-			(fun (modifications, attrs) (op, attrname, values) as modification ->
-			   match op with
-			       `ADD as op | `REPLACE as op ->
-				 if compareAttr schema attrname "objectclass" = 0 then
-				   ((op, attrname, 
-				     List.filter 
-				       (fun value -> 
-					  not (Oidset.mem (ocNameToOid schema value) illegalOc))
-				       values) :: modifications,
-				    attrs)
-				 else if Oidset.mem (attrNameToOid schema attrname) illegal then
-				   (modifications, attrs)
-				 else 
-				   (modification :: modifications, attrs)
-			     | `DELETE ->
-				 if compareAttr schema attrname "objectclass" = 0 then
-				   ((op, attrname,
-				     List.rev_map
-				       (oidToOcName schema)
-				       (Oidset.elements
-					  (Oidset.union 
-					     illegalOc
-					     (setOfList 
-						(List.rev_map 
-						   (ocNameToOid schema) 
-						   values))))) :: modifications,
-				    attrs)
-				 else 
-				   (modification :: modifications,
-				    if values = [] then 
-				      Oidset.add (attrNameToOid schema attrname) attrs
-				    else attrs))
-			[]
-			(proposed_changes, Oidset.empty)
-		    in
-		      List.rev_append
-			(List.rev_map
-			   (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
-			   (Oidset.elements (Oidset.diff illegal attrsDeleting)))
-			proposed_changes'
+	    begin
+	      try super#modify proposed_changes;[]
+	      with
+		  Schema_violation
+		    {missing_attributes=missing;illegal_attributes=illegal;
+		     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+		     single_value_violations=singleValue} ->
+		      check_single_value singleValue;
+		      let (proposed_changes', attrsDeleting) =
+			List.fold_left
+			  (fun (modifications, attrs) ((op, attrname, values) as modification) ->
+			     match op with
+				 `ADD | `REPLACE ->
+				   if compareAttrs schema attrname "objectclass" = 0 then
+				     ((op, attrname, 
+				       List.filter 
+					 (fun value -> 
+					    not (Oidset.mem (ocNameToOid schema value) illegalOc))
+					 values) :: modifications,
+				      attrs)
+				   else if Oidset.mem (attrNameToOid schema attrname) illegal then
+				     (modifications, attrs)
+				   else 
+				     (modification :: modifications, attrs)
+			       | `DELETE ->
+				   if compareAttrs schema attrname "objectclass" = 0 then
+				     ((op, attrname,
+				       List.rev_map
+					 (oidToOcName schema)
+					 (Oidset.elements
+					    (Oidset.union 
+					       illegalOc
+					       (setOfList 
+						  (List.rev_map 
+						     (ocNameToOid schema) 
+						     values))))) :: modifications,
+				      attrs)
+				   else 
+				     (modification :: modifications,
+				      if values = [] then 
+					Oidset.add (attrNameToOid schema attrname) attrs
+				      else attrs))
+			  ([], Oidset.empty)
+			  (normalize_proposed_changes proposed_changes)
+		      in
+			List.rev_append
+			  (List.rev_map
+			     (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
+			     (Oidset.elements (Oidset.diff illegal attrsDeleting)))
+			  proposed_changes'
+	    end
+end;;
 
 (*
   method private drive_updatecon =
@@ -574,7 +579,7 @@ object (self)
   method is_allowed x = 
     Setstr.mem (attrToOid schema (Lcstring.of_string x)) all_allowed
 *)
-end;;
+
 
 (*
 (********************************************************************************)
