@@ -41,19 +41,20 @@ object (self)
   val mutable changetype = `ADD
   val mutable must = Oidset.empty
   val mutable may = Oidset.empty
+  val mutable presentOcs = Oidset.empty
 
   initializer
     self#of_entry from_entry
 
   method private check data =
-    let presentOcs =
+    let presentOcs' =
       setOfList 
 	(List.rev_map 
 	   (ocNameToOid schema)
 	   (try (Oidmap.find (Oid.of_string "2.5.4.0") data)#values (* objectclass *)
 	    with Not_found -> raise Objectclass_is_required))
     in
-    let presentOcslst = Oidset.elements presentOcs in
+    let presentOcslst = Oidset.elements presentOcs' in
     let (present, singleValue) = 
       Oidmap.fold 
 	(fun k v (attrs, svattrs) -> 
@@ -89,7 +90,7 @@ object (self)
 	      (lstRequired schema) 
 	      presentOcslst))
     in
-    let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs) in
+    let missingOcs = Oidset.diff requiredOcs (Oidset.inter requiredOcs presentOcs') in
     let missingOcslst = Oidset.elements missingOcs in
     let illegalOcs = 
       setOfList
@@ -123,7 +124,8 @@ object (self)
 		  single_value_violations=singleValue})
       else begin
 	must <- must';
-	may <- may'
+	may <- may';
+	presentOcs <- presentOcs'
       end
 
   method private normalize_ops ops =
@@ -271,12 +273,6 @@ object (self)
 
   method propose_modify ops = self#check (self#modify' data ops)
 
-  method attributes = 
-    Oidmap.fold
-      (fun k v l -> (oidToAttrName schema k) :: l)
-      data
-      []
-
   method exists a = 
     try ignore (Oidmap.find (attrNameToOid schema a) data);true
     with Not_found -> false
@@ -312,6 +308,13 @@ object (self)
     List.rev_map
       (fun oid -> oidToAttrName schema oid)
       lst
+
+  method attributes_byoid =
+    Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty
+  method attributes = self#oid_lst_to_name_lst (Oidset.elements self#attributes_byoid)
+
+  method objectclasses_byoid = presentOcs
+  method objectclasses = self#oid_lst_to_name_lst (Oidset.elements self#objectclasses_byoid)
 
   method must = self#oid_lst_to_name_lst (Oidset.elements must)      
   method must_byoid = must
@@ -360,16 +363,14 @@ end
 exception Single_value of string list
 
 (* schema checking flavor *)
-type adaptiveflavor = Optimistic (* attempt to find and add objectclasses
-				    which make illegal attributes
-				    legal. If no such objectclass can
-				    be found then delete the illegal
-				    attributes *)
-		      | Pessimistic (* delete any illegal attributes,
-				       do not add objectclasses to
-				       make them legal*)
+type adaptiveflavor = Expansive (* Favor expansion of the object in order to make it legal. 
+				   Attempt to find and add objectclasses
+				   which make illegal attributes legal. *)
+		      | Reductive (* delete any illegal attributes,
+				     do not add objectclasses to
+				     make them legal*)
 
-class adaptivescldapentry ?(from_entry=new ldapentry) schema =
+class adaptivescldapentry ?(from_entry=new Ldap_ooclient.ldapentry) schema =
 object (self)
   inherit scldapentry schema ~from_entry as super
   val mutable proposed_changes = []
@@ -424,7 +425,13 @@ object (self)
 	   (function (`REPLACE, attrname, []) -> (`DELETE, attrname, []) | op -> op)
 	   proposed_changes)
     in
-    let optimistic_adapt (proposed_changes: (modify_optype * string * string list) list) =
+      (* Expansive adaptation means that we add things to the object
+	 to make it fit the schema. This may mean that we simply don't
+	 apply our proposed changes, for example, if we proposed the
+	 deletion of objectclass: person, but it is required by
+	 objectclasses or attributes on the object we should not
+	 process that delete operation. *)
+    let expansive_adapt (proposed_changes: (modify_optype * string * string list) list) =
       try super#propose_modify proposed_changes;proposed_changes
       with 
 	  Schema_violation 
@@ -432,31 +439,42 @@ object (self)
 	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
 	     single_value_violations=singleValue} ->
 	      check_single_value singleValue;
-	      let (proposed_changes', missing, missingOc) =
+	      let (proposed_changes', missing, missingOc, illegal) =
 		List.fold_left
-		  (fun (mods, missing, missingOc) op ->
+		  (fun (mods, missing, missingOc, illegal) op ->
 		     match op with
 			 (`DELETE, attrname, vals) when 
 			   (Oidset.mem (attrNameToOid schema attrname) missing) -> 
 			     (mods, Oidset.remove (attrNameToOid schema attrname) missing,
-			      missingOc)
+			      missingOc, illegal)
 		       | (`DELETE, attrname, vals) when 
 			   compareAttrs schema "objectClass" attrname = 0 ->
-			   let (vals, missingOc) = 
+			   let (vals, missingOc, illegal) = 
 			     List.fold_left
-			       (fun (vals, missingOc) (v: string) -> 
-				  let oid = ocNameToOid schema v in
+			       (fun (vals, missingOc, illegal) (v: string) -> 
+				  let {oc_oid=oid;oc_must=must;oc_may=may} = ocNameToOc schema v in
+				  let allowed = 
+				    setOfList 
+				      (List.rev_map
+					 (attrNameToOid schema)
+					 (List.rev_append must may))
+				  in
 				    if (Oidset.mem oid missingOc) then
-				      (vals, Oidset.remove oid missingOc)
+				      (vals, Oidset.remove oid missingOc, illegal)
+				    else if not (Oidset.is_empty (Oidset.inter allowed illegal)) then
+				      (vals, missingOc, Oidset.diff illegal allowed)
 				    else
-				      (v :: vals, missingOc))
-			       ([], missingOc)
+				      (v :: vals, missingOc, illegal))
+			       ([], missingOc, illegal)
 			       vals
 			   in
-			     if vals = [] then (mods, missing, missingOc)
-			     else ((`DELETE, "objectClass", vals) :: mods, missing, missingOc)
-		       | _ -> (op :: mods, missing, missingOc))
-		  ([], missing, missingOc)
+			     if vals = [] then 
+			       (mods, missing, missingOc, illegal)
+			     else 
+			       ((`DELETE, "objectClass", vals) :: mods, 
+				missing, missingOc, illegal)
+		       | _ -> (op :: mods, missing, missingOc, illegal))
+		  ([], missing, missingOc, illegal)
 		  proposed_changes
 	      in
 		(List.rev_append
@@ -475,7 +493,7 @@ object (self)
 			 (Oidset.elements missingOc)) :: proposed_changes'
 		    else proposed_changes'))
     in
-    let pessimistic_adapt proposed_changes = 
+    let reductive_adapt proposed_changes = 
       try super#propose_modify proposed_changes;[]
       with
 	  Schema_violation
@@ -528,18 +546,18 @@ object (self)
 
     in
       match flavor with 
-	  Optimistic -> optimistic_adapt proposed_changes
-	| Pessimistic -> pessimistic_adapt proposed_changes
+	  Expansive -> expansive_adapt proposed_changes
+	| Reductive -> reductive_adapt proposed_changes
 
 end;;
 
 (*
   method private drive_updatecon =
-    try self#update_condition
-    with 
-	Invalid_objectclass(s) -> super#delete [("objectClass",[s])];self#drive_updatecon
-      | Invalid_attribute(s) -> super#delete [(s,[])];self#drive_updatecon
-      | Objectclass_is_required -> super#add [("objectClass", ["top"])]
+  try self#update_condition
+  with 
+  Invalid_objectclass(s) -> super#delete [("objectClass",[s])];self#drive_updatecon
+  | Invalid_attribute(s) -> super#delete [(s,[])];self#drive_updatecon
+  | Objectclass_is_required -> super#add [("objectClass", ["top"])]
 *)	  
 
 (*
