@@ -314,7 +314,10 @@ object (self)
   method attributes = self#oid_lst_to_name_lst (Oidset.elements self#attributes_byoid)
 
   method objectclasses_byoid = presentOcs
-  method objectclasses = self#oid_lst_to_name_lst (Oidset.elements self#objectclasses_byoid)
+  method objectclasses = 
+    List.rev_map
+      (oidToOcName schema)
+      (Oidset.elements self#objectclasses_byoid)
 
   method must = self#oid_lst_to_name_lst (Oidset.elements must)      
   method must_byoid = must
@@ -376,27 +379,6 @@ object (self)
   val mutable proposed_changes = []
   method adapt_proposed_changes flavor 
     (proposed_changes: (modify_optype * string * string list) list) =
-    (* find an objectclass which allows attr *)
-    let find_oc schema attr = 
-      let find_in_oc oc attr = 
-	try
-	  (List.exists
-	     (fun must -> compareAttrs schema attr must = 0)
-	     oc.oc_must) || 
-	    (List.exists
-	       (fun may -> compareAttrs schema attr may = 0)
-	       oc.oc_may) 
-	with Invalid_attribute _ -> false
-      in
-	match
-	  Oidmap.fold
-	    (fun key valu oc -> if (find_in_oc valu attr) then Some key else oc)
-	    schema.objectclasses_byoid
-	    None
-	with
-	    Some oc -> oidToOcName schema oc
-	  | None -> raise Not_found
-    in
     let check_single_value singleValue =
       if not (Oidset.is_empty singleValue) then 
 	raise 
@@ -432,66 +414,101 @@ object (self)
 	 objectclasses or attributes on the object we should not
 	 process that delete operation. *)
     let expansive_adapt (proposed_changes: (modify_optype * string * string list) list) =
-      try super#propose_modify proposed_changes;proposed_changes
-      with 
-	  Schema_violation 
-	    {missing_attributes=missing;illegal_attributes=illegal;
-	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
-	     single_value_violations=singleValue} ->
-	      check_single_value singleValue;
-	      let (proposed_changes', missing, missingOc, illegal) =
-		List.fold_left
-		  (fun (mods, missing, missingOc, illegal) op ->
-		     match op with
-			 (`DELETE, attrname, vals) when 
-			   (Oidset.mem (attrNameToOid schema attrname) missing) -> 
-			     (mods, Oidset.remove (attrNameToOid schema attrname) missing,
-			      missingOc, illegal)
-		       | (`DELETE, attrname, vals) when 
-			   compareAttrs schema "objectClass" attrname = 0 ->
-			   let (vals, missingOc, illegal) = 
-			     List.fold_left
-			       (fun (vals, missingOc, illegal) (v: string) -> 
-				  let {oc_oid=oid;oc_must=must;oc_may=may} = ocNameToOc schema v in
-				  let allowed = 
-				    setOfList 
-				      (List.rev_map
-					 (attrNameToOid schema)
-					 (List.rev_append must may))
-				  in
-				    if (Oidset.mem oid missingOc) then
-				      (vals, Oidset.remove oid missingOc, illegal)
-				    else if not (Oidset.is_empty (Oidset.inter allowed illegal)) then
-				      (vals, missingOc, Oidset.diff illegal allowed)
-				    else
-				      (v :: vals, missingOc, illegal))
-			       ([], missingOc, illegal)
-			       vals
-			   in
-			     if vals = [] then 
-			       (mods, missing, missingOc, illegal)
-			     else 
-			       ((`DELETE, "objectClass", vals) :: mods, 
-				missing, missingOc, illegal)
-		       | _ -> (op :: mods, missing, missingOc, illegal))
-		  ([], missing, missingOc, illegal)
-		  proposed_changes
-	      in
-		(List.rev_append
-		   (if not (Oidset.is_empty illegal) then
-		      [(`ADD, "objectClass",
-			(List.rev_map 
-			   (find_oc schema) 
+      (* find an objectclass chain which allows attr *)
+      let find_oc schema presentOcs attr = 
+	let is_allowed_by_oc oc attr = 
+	  try
+	    (List.exists
+	       (fun must -> compareAttrs schema attr must = 0)
+	       oc.oc_must) || 
+	      (List.exists
+		 (fun may -> compareAttrs schema attr may = 0)
+		 oc.oc_may) 
+	  with Invalid_attribute _ -> false
+	in
+	let rec sup oc =
+	  let {oc_sup=sups} = oidToOc schema oc in
+	    (List.flatten
+	       (List.rev_map
+		  (fun s -> 
+		     let oid = ocNameToOid schema s in
+		       if not (Oidset.mem oid presentOcs) then
+			 oid :: (sup oid)
+		       else [])
+		  sups))
+	in
+	  match
+	    Oidmap.fold
+	      (fun key valu oc -> if (is_allowed_by_oc valu attr) then Some key else oc)
+	      schema.objectclasses_byoid
+	      None
+	  with
+	      Some oc -> oc :: (sup oc)
+	    | None -> raise Not_found
+      in
+	try super#propose_modify proposed_changes;proposed_changes
+	with 
+	    Schema_violation 
+	      {missing_attributes=missing;illegal_attributes=illegal;
+	       missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+	       single_value_violations=singleValue} ->
+		check_single_value singleValue;
+		let (proposed_changes', missing, missingOc, illegal) =
+		  List.fold_left
+		    (fun (mods, missing, missingOc, illegal) op ->
+		       match op with
+			   (`DELETE, attrname, vals) when 
+			     (Oidset.mem (attrNameToOid schema attrname) missing) -> 
+			       (mods, Oidset.remove (attrNameToOid schema attrname) missing,
+				missingOc, illegal)
+			 | (`DELETE, attrname, vals) when 
+			     compareAttrs schema "objectClass" attrname = 0 ->
+			     let (vals, missingOc, illegal) = 
+			       List.fold_left
+				 (fun (vals, missingOc, illegal) (v: string) -> 
+				    let {oc_oid=oid;oc_must=must;oc_may=may} = ocNameToOc schema v in
+				    let allowed = 
+				      setOfList 
+					(List.rev_map
+					   (attrNameToOid schema)
+					   (List.rev_append must may))
+				    in
+				      if (Oidset.mem oid missingOc) then
+					(vals, Oidset.remove oid missingOc, illegal)
+				      else if not (Oidset.is_empty (Oidset.inter allowed illegal)) then
+					(vals, missingOc, Oidset.diff illegal allowed)
+				      else
+					(v :: vals, missingOc, illegal))
+				 ([], missingOc, illegal)
+				 vals
+			     in
+			       if vals = [] then 
+				 (mods, missing, missingOc, illegal)
+			       else 
+				 ((`DELETE, "objectClass", vals) :: mods, 
+				  missing, missingOc, illegal)
+			 | _ -> (op :: mods, missing, missingOc, illegal))
+		    ([], missing, missingOc, illegal)
+		    proposed_changes
+		in
+		let ocs_to_add =
+		  (Oidset.union
+		     (List.fold_left
+			(fun s oidlst -> Oidset.union s (setOfList oidlst))
+			Oidset.empty
+			(List.rev_map
+			   (find_oc schema self#objectclasses_byoid)
 			   (List.rev_map 
 			      (oidToAttrName schema)
-			      (Oidset.elements illegal))))]
-		    else [])
-		   (if not (Oidset.is_empty missingOc) then
-		      (`ADD, "objectClass", 
-		       List.rev_map 
-			 (oidToOcName schema)
-			 (Oidset.elements missingOc)) :: proposed_changes'
-		    else proposed_changes'))
+			      (Oidset.elements illegal))))
+		     missingOc)
+		in
+		  if not (Oidset.is_empty ocs_to_add) then
+		    (`ADD, "objectClass", 
+		     List.rev_map
+		       (oidToOcName schema)
+		       ocs_to_add) :: proposed_changes'
+		  else proposed_changes'
     in
     let reductive_adapt proposed_changes = 
       try super#propose_modify proposed_changes;[]
