@@ -366,10 +366,10 @@ end
 exception Single_value of string list
 
 (* schema checking flavor *)
-type adaptiveflavor = Expansive (* Favor expansion of the object in order to make it legal. 
-				   Attempt to find and add objectclasses
-				   which make illegal attributes legal. *)
-		      | Reductive (* delete any illegal attributes,
+type adaptivetactics = Expansive (* Tactic, expansion of the object in order to make it legal. 
+				    Attempt to find and add objectclasses
+				    which make illegal attributes legal. *)
+		       | Reductive (* delete any illegal attributes,
 				     do not add objectclasses to
 				     make them legal*)
 
@@ -377,19 +377,19 @@ class adaptivescldapentry ?(from_entry=new Ldap_ooclient.ldapentry) schema =
 object (self)
   inherit scldapentry schema ~from_entry as super
   val mutable proposed_changes = []
-
+    
   (* This method works in a somewhat interesting way. In order to make
      intellegant decisions about what should be done to an object
      based on a goal, and a tactic. The goal is the proposed changes +
-     the object, while the tactic is the flavor. The rules come from
-     the database schema. In cases where the goal is completely
-     realistic within the rules (i.e. Legal) nothing is done to the
-     proposed changes, they are simply returned. In the case that the
-     goal is not realistic in light of the rules the tactic is used to
-     find a goal which is realistic, and a list of changes necessary
-     to reach that goal are returned. This method is purely
-     applicative, it does not modify the object in any way. *)
-  method adapt_proposed_changes flavor 
+     the object. The rules come from the database schema. In cases
+     where the goal is completely realistic within the rules
+     (i.e. Legal) nothing is done to the proposed changes, they are
+     simply returned. In the case that the goal is not realistic in
+     light of the rules the tactic is used to find a goal which is
+     realistic, and a list of changes necessary to reach that goal are
+     returned. This method is purely applicative, it does not modify
+     the object in any way. *)
+  method adapt_proposed_changes tactic
     (proposed_changes: (modify_optype * string * string list) list) =
     let check_single_value singleValue =
       if not (Oidset.is_empty singleValue) then 
@@ -525,7 +525,7 @@ object (self)
       (* Reductive adaptation is a tactic which means that we remove
 	 things from the object until it is legal. *)
     let reductive_adapt proposed_changes = 
-      try super#propose_modify proposed_changes;[]
+      try super#propose_modify proposed_changes;proposed_changes
       with
 	  Schema_violation
 	    {missing_attributes=missing;illegal_attributes=illegal;
@@ -534,7 +534,7 @@ object (self)
 	      check_single_value singleValue;
 	      let (proposed_changes', attrsDeleting) =
 		List.fold_left
-		  (fun (modifications, attrs) ((op, attrname, values) as modification) ->
+		  (fun (modifications, deleting) ((op, attrname, values) as modification) ->
 		     match op with
 			 `ADD | `REPLACE ->
 			   if compareAttrs schema attrname "objectclass" = 0 then
@@ -543,11 +543,11 @@ object (self)
 				 (fun value -> 
 				    not (Oidset.mem (ocNameToOid schema value) illegalOc))
 				 values) :: modifications,
-			      attrs)
+			      deleting)
 			   else if Oidset.mem (attrNameToOid schema attrname) illegal then
-			     (modifications, attrs)
+			     (modifications, deleting)
 			   else 
-			     (modification :: modifications, attrs)
+			     (modification :: modifications, deleting)
 		       | `DELETE ->
 			   if compareAttrs schema attrname "objectclass" = 0 then
 			     ((op, attrname,
@@ -560,12 +560,12 @@ object (self)
 					  (List.rev_map 
 					     (ocNameToOid schema) 
 					     values))))) :: modifications,
-			      attrs)
+			      deleting)
 			   else 
 			     (modification :: modifications,
 			      if values = [] then 
-				Oidset.add (attrNameToOid schema attrname) attrs
-			      else attrs))
+				Oidset.add (attrNameToOid schema attrname) deleting
+			      else deleting))
 		  ([], Oidset.empty)
 		  (normalize_proposed_changes proposed_changes)
 	      in
@@ -574,9 +574,8 @@ object (self)
 		     (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
 		     (Oidset.elements (Oidset.diff illegal attrsDeleting)))
 		  proposed_changes'
-
     in
-      match flavor with 
+      match tactic with 
 	  Expansive -> expansive_adapt proposed_changes
 	| Reductive -> reductive_adapt proposed_changes
 
