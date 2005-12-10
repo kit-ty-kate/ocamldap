@@ -84,18 +84,15 @@ let iter (f: ('a -> unit)) ldif =
     done
   with End -> ()
 
-let fold f ldif v = 
-  let objects = 
-    let objects = ref [] in
-      try
-	while true
-	do
-	  objects := (ldif#read_entry) :: !objects
-	done;
-	!objects
-      with End -> !objects
-  in
-    List.fold_left f v objects
+let fold f v ldif = 
+  let res = ref v in
+    try
+      while true
+      do
+	res := f !res ldif#read_entry
+      done;
+      !objects
+    with End -> !res
 
 class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)

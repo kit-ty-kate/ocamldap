@@ -28,7 +28,7 @@ val iter : ('a -> unit) -> < read_entry : 'a; .. > -> unit
 
 (** Ldif_oo.fold f ldif value, for each ldif entry en in the ldif
     object fold computes f (... (f (f value e1) e2) ...) en *)
-val fold : ('a -> 'b -> 'a) -> < read_entry : 'b; .. > -> 'a -> 'a
+val fold : ('a -> 'b -> 'a) -> 'a -> < read_entry : 'b; .. > -> 'a
 
 (** if you need a fast, low level interface to to_string, this
     function will write ldif directly into a buffer. Setting ext to
