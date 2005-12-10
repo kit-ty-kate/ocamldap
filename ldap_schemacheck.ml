@@ -377,6 +377,18 @@ class adaptivescldapentry ?(from_entry=new Ldap_ooclient.ldapentry) schema =
 object (self)
   inherit scldapentry schema ~from_entry as super
   val mutable proposed_changes = []
+
+  (* This method works in a somewhat interesting way. In order to make
+     intellegant decisions about what should be done to an object
+     based on a goal, and a tactic. The goal is the proposed changes +
+     the object, while the tactic is the flavor. The rules come from
+     the database schema. In cases where the goal is completely
+     realistic within the rules (i.e. Legal) nothing is done to the
+     proposed changes, they are simply returned. In the case that the
+     goal is not realistic in light of the rules the tactic is used to
+     find a goal which is realistic, and a list of changes necessary
+     to reach that goal are returned. This method is purely
+     applicative, it does not modify the object in any way. *)
   method adapt_proposed_changes flavor 
     (proposed_changes: (modify_optype * string * string list) list) =
     let check_single_value singleValue =
@@ -407,12 +419,12 @@ object (self)
 	   (function (`REPLACE, attrname, []) -> (`DELETE, attrname, []) | op -> op)
 	   proposed_changes)
     in
-      (* Expansive adaptation means that we add things to the object
-	 to make it fit the schema. This may mean that we simply don't
-	 apply our proposed changes, for example, if we proposed the
-	 deletion of objectclass: person, but it is required by
-	 objectclasses or attributes on the object we should not
-	 process that delete operation. *)
+      (* Expansive adaptation is a tactic which means that we add
+	 things to the object to make it fit the schema. This may mean
+	 that we simply don't apply our proposed changes, for example,
+	 if we proposed the deletion of objectclass: person, but it is
+	 required by objectclasses or attributes on the object we
+	 should not process that delete operation. *)
     let expansive_adapt (proposed_changes: (modify_optype * string * string list) list) =
       (* find an objectclass chain which allows attr *)
       let find_oc schema presentOcs attr = 
@@ -507,9 +519,11 @@ object (self)
 		    (`ADD, "objectClass", 
 		     List.rev_map
 		       (oidToOcName schema)
-		       ocs_to_add) :: proposed_changes'
+		       (Oidset.elements ocs_to_add)) :: proposed_changes'
 		  else proposed_changes'
     in
+      (* Reductive adaptation is a tactic which means that we remove
+	 things from the object until it is legal. *)
     let reductive_adapt proposed_changes = 
       try super#propose_modify proposed_changes;[]
       with
