@@ -1,5 +1,5 @@
 (* An object oriented interface for parsing Lightweight Directory
-   Interchange Format file
+   Interchange Format files
 
    Copyright (C) 2004 Eric Stokes, Matthew Backes, and The California
    State University at Northridge
@@ -91,7 +91,7 @@ let fold f v ldif =
       do
 	res := f !res ldif#read_entry
       done;
-      !objects
+      !res
     with End -> !res
 
 class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
@@ -128,7 +128,7 @@ let read_ldif_file file =
   let fd = open_in file in
     try
       let ldif = new ldif ~in_ch:fd () in
-      let entries = fold (fun l e -> e :: l) ldif [] in
+      let entries = fold (fun l e -> e :: l) [] ldif in
 	close_in fd;
 	entries
     with exn -> close_in fd;raise exn
