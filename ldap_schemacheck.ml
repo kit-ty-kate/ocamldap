@@ -575,10 +575,11 @@ object (self)
 		     (Oidset.elements (Oidset.diff illegal attrsDeleting)))
 		  proposed_changes'
     in
+      (* should return a tuple with missing attributes included,
+	 eg. (proposed_changes', missing) *)
       match tactic with 
-	  Expansive -> expansive_adapt proposed_changes
+	  Expansive -> expansive_adapt proposed_changes 
 	| Reductive -> reductive_adapt proposed_changes
-
 end;;
 
 (*
