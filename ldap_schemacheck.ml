@@ -391,6 +391,19 @@ object (self)
      the object in any way. *)
   method adapt_proposed_changes tactic
     (proposed_changes: (modify_optype * string * string list) list) =
+
+    let eval_proposed_changes obj proposed_changes =
+      try 
+	obj#propose_modify proposed_changes;
+	(Oidset.empty, Oidset.empty, Oidset.empty, Oidset.empty, Oidset.empty)
+      with
+	  Schema_violation 
+	    {missing_attributes=missing;illegal_attributes=illegal;
+	     missing_objectclasses=missingOc;illegal_objectclasses=illegalOc;
+	     single_value_violations=singleValue} ->
+	      (missing, illegal, missingOc, illegalOc, singleValue)
+    in
+
     let check_single_value singleValue =
       if not (Oidset.is_empty singleValue) then 
 	raise 
@@ -419,6 +432,7 @@ object (self)
 	   (function (`REPLACE, attrname, []) -> (`DELETE, attrname, []) | op -> op)
 	   proposed_changes)
     in
+
       (* Expansive adaptation is a tactic which means that we add
 	 things to the object to make it fit the schema. This may mean
 	 that we simply don't apply our proposed changes, for example,
@@ -509,7 +523,7 @@ object (self)
 			(fun s oidlst -> Oidset.union s (setOfList oidlst))
 			Oidset.empty
 			(List.rev_map
-			   (find_oc schema self#objectclasses_byoid)
+			   (find_oc schema super#objectclasses_byoid)
 			   (List.rev_map 
 			      (oidToAttrName schema)
 			      (Oidset.elements illegal))))
@@ -524,6 +538,7 @@ object (self)
     in
       (* Reductive adaptation is a tactic which means that we remove
 	 things from the object until it is legal. *)
+
     let reductive_adapt proposed_changes = 
       try super#propose_modify proposed_changes;proposed_changes
       with
