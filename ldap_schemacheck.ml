@@ -515,25 +515,26 @@ object (self)
 	  proposed_changes
       in
       let proposed_changes' = 
-	(`ADD, "objectClass", 
-	 List.rev_map
-	   (oidToOcName schema)
-	   missingOc) :: proposed_changes'
+	if not (Oidset.is_empty missingOc) then
+	  (`ADD, "objectClass", 
+	   List.rev_map
+	     (oidToOcName schema)
+	     (Oidset.elements missingOc)) :: proposed_changes'
+	else
+	  proposed_changes
       in
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
-	eval_proposed_changes self proposed_changes
+	eval_proposed_changes self proposed_changes'
       in
       let ocs_to_add =
-	(Oidset.union
-	   (List.fold_left
-	      (fun s oidlst -> Oidset.union s (setOfList oidlst))
-	      Oidset.empty
-	      (List.rev_map
-		 (find_oc schema super#objectclasses_byoid)
-		 (List.rev_map 
-		    (oidToAttrName schema)
-		    (Oidset.elements illegal))))
-	   missingOc)
+	List.fold_left
+	  (fun s oidlst -> Oidset.union s (setOfList oidlst))
+	  Oidset.empty
+	  (List.rev_map
+	     (find_oc schema super#objectclasses_byoid)
+	     (List.rev_map 
+		(oidToAttrName schema)
+		(Oidset.elements illegal)))
       in
 	if not (Oidset.is_empty ocs_to_add) then
 	  (`ADD, "objectClass", 
