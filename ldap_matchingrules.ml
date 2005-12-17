@@ -111,7 +111,10 @@ let collapse_whitespace v =
 let remove_whitespace v = Pcre.replace ~rex:whsp ~templ:"" v
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
-let object_identifier_equality_match v1 v2 = String.compare v1 v2
+let object_identifier_equality_match v1 v2 =
+  Lcstring.compare
+    (Lcstring.of_string v1)
+    (Lcstring.of_string v2)
 
 module ObjectIdentifierMatch = Set.Make
   (struct

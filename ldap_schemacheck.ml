@@ -537,11 +537,13 @@ object (self)
 		(Oidset.elements illegal)))
       in
 	if not (Oidset.is_empty ocs_to_add) then
-	  (`ADD, "objectClass", 
-	   List.rev_map
-	     (oidToOcName schema)
-	     (Oidset.elements ocs_to_add)) :: proposed_changes'
-	else proposed_changes'
+	  (normalize_proposed_changes
+	     ((`ADD, "objectClass", 
+	       List.rev_map
+		 (oidToOcName schema)
+		 (Oidset.elements ocs_to_add)) :: proposed_changes'),
+	   missing)
+	else (normalize_proposed_changes proposed_changes', missing)
     in
       (* Reductive adaptation is a tactic which means that we remove
 	 things from the object until it is legal. *)
