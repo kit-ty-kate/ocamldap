@@ -476,19 +476,21 @@ object (self)
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
 	eval_proposed_changes self proposed_changes 
       in
-      let (proposed_changes', missing, missingOc, illegal) =
+      let (proposed_changes, missing, missingOc, illegal) =
 	List.fold_left
 	  (fun (mods, missing, missingOc, illegal) op ->
 	     match op with
+		 (* deleted an attribute which is required *)
 		 (`DELETE, attrname, vals) when 
 		   (Oidset.mem (attrNameToOid schema attrname) missing) -> 
 		     (mods, Oidset.remove (attrNameToOid schema attrname) missing,
 		      missingOc, illegal)
+		 (* objectclass deletes *)
 	       | (`DELETE, attrname, vals) when 
 		   compareAttrs schema "objectClass" attrname = 0 ->
 		   let (vals, missingOc, illegal) = 
 		     List.fold_left
-		       (fun (vals, missingOc, illegal) (v: string) -> 
+		       (fun (vals, missingOc, illegal) v -> 
 			  let {oc_oid=oid;oc_must=must;oc_may=may} = ocNameToOc schema v in
 			  let allowed = 
 			    setOfList 
@@ -496,8 +498,10 @@ object (self)
 				 (attrNameToOid schema)
 				 (List.rev_append must may))
 			  in
+			    (* deleted a required objectclass *)
 			    if (Oidset.mem oid missingOc) then
 			      (vals, Oidset.remove oid missingOc, illegal)
+			    (* deleted an objectclass which made attributes illegal *)
 			    else if not (Oidset.is_empty (Oidset.inter allowed illegal)) then
 			      (vals, missingOc, Oidset.diff illegal allowed)
 			    else
@@ -514,17 +518,17 @@ object (self)
 	  ([], missing, missingOc, illegal)
 	  proposed_changes
       in
-      let proposed_changes' = 
+      let proposed_changes = 
 	if not (Oidset.is_empty missingOc) then
 	  (`ADD, "objectClass", 
 	   List.rev_map
 	     (oidToOcName schema)
-	     (Oidset.elements missingOc)) :: proposed_changes'
+	     (Oidset.elements missingOc)) :: proposed_changes
 	else
 	  proposed_changes
       in
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
-	eval_proposed_changes self proposed_changes'
+	eval_proposed_changes self proposed_changes
       in
       let ocs_to_add =
 	List.fold_left
@@ -541,9 +545,9 @@ object (self)
 	     ((`ADD, "objectClass", 
 	       List.rev_map
 		 (oidToOcName schema)
-		 (Oidset.elements ocs_to_add)) :: proposed_changes'),
+		 (Oidset.elements ocs_to_add)) :: proposed_changes),
 	   missing)
-	else (normalize_proposed_changes proposed_changes', missing)
+	else (normalize_proposed_changes proposed_changes, missing)
     in
       (* Reductive adaptation is a tactic which means that we remove
 	 things from the object until it is legal. *)
