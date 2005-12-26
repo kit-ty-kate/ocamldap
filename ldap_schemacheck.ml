@@ -607,7 +607,7 @@ object (self)
 	 eg. (proposed_changes', missing) *)
       match tactic with 
 	  Expansive -> expansive_adapt proposed_changes 
-	| Reductive -> reductive_adapt proposed_changes
+	| Reductive -> (reductive_adapt proposed_changes, Oidset.empty)
 end;;
 
 (*
