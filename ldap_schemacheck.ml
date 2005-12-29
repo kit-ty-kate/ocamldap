@@ -320,6 +320,38 @@ object (self)
       (oidToOcName schema)
       (Oidset.elements self#objectclasses_byoid)
 
+  method objectclasses_allowed_byoid =
+    Oidmap.fold
+      (fun oc _ allowed -> 
+	 try
+	   self#propose_add [("objectclass", [oidToOcName schema oc])];
+	   Oidset.add oc allowed
+	 with 
+	     Schema_violation _ -> allowed
+	   | Ldap_matchingrules.Value_exists -> Oidset.add oc allowed
+	   | Ldap_schema.Invalid_attribute _ -> allowed)
+      schema.objectclasses_byoid
+      Oidset.empty
+
+  method objectclasses_allowed = 
+    List.rev_map
+      (oidToOcName schema)
+      (Oidset.elements self#objectclasses_allowed_byoid)
+
+  method objectclasses_not_allowed_byoid = 
+    let all_ocs = 
+      Oidmap.fold 
+	(fun k v s -> Oidset.add k s)
+	schema.objectclasses_byoid
+	Oidset.empty
+    in
+      Oidset.diff all_ocs self#objectclasses_allowed_byoid
+
+  method objectclasses_not_allowed = 
+    List.rev_map
+      (oidToOcName schema)
+      (Oidset.elements self#objectclasses_not_allowed_byoid)
+	
   method must = self#oid_lst_to_name_lst (Oidset.elements must)      
   method must_byoid = must
   method may = self#oid_lst_to_name_lst (Oidset.elements may)
