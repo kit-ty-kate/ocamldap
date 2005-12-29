@@ -440,7 +440,7 @@ object (self)
 	 if we proposed the deletion of objectclass: person, but it is
 	 required by objectclasses or attributes on the object we
 	 should not process that delete operation. *)
-    let expansive_adapt (proposed_changes: (modify_optype * string * string list) list) =
+    let expansive_adapt obj (proposed_changes: (modify_optype * string * string list) list) =
       (* find an objectclass chain which allows attr *)
       let find_oc schema presentOcs attr = 
 	let is_allowed_by_oc oc attr = 
@@ -474,7 +474,7 @@ object (self)
 	    | None -> raise Not_found
       in
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
-	eval_proposed_changes self proposed_changes 
+	eval_proposed_changes obj proposed_changes 
       in
       let (proposed_changes, missing, missingOc, illegal) =
 	List.fold_left
@@ -528,7 +528,7 @@ object (self)
 	  proposed_changes
       in
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
-	eval_proposed_changes self proposed_changes
+	eval_proposed_changes obj proposed_changes
       in
       let ocs_to_add =
 	List.fold_left
@@ -552,9 +552,9 @@ object (self)
       (* Reductive adaptation is a tactic which means that we remove
 	 things from the object until it is legal. *)
 
-    let reductive_adapt proposed_changes = 
+    let rec reductive_adapt obj proposed_changes = 
       let (missing, illegal, missingOc, illegalOc, singleValue) = 
-	eval_proposed_changes self proposed_changes 
+	eval_proposed_changes obj proposed_changes 
       in
 	check_single_value singleValue;
 	let (proposed_changes', attrsDeleting) =
@@ -594,17 +594,26 @@ object (self)
 	    ([], Oidset.empty)
 	    (normalize_proposed_changes proposed_changes)
 	in
+	let proposed_changes' =
 	  List.rev_append
 	    (List.rev_map
 	       (fun attroid -> (`DELETE, oidToAttrName schema attroid, []))
 	       (Oidset.elements (Oidset.diff illegal attrsDeleting)))
 	    proposed_changes'
+	in
+	let (missing, illegal, missingOc, illegalOc, singleValue) = 
+	  eval_proposed_changes obj proposed_changes'
+	in
+	  if Oidset.is_empty illegal && Oidset.is_empty illegalOc then
+	    proposed_changes'
+	  else
+	    reductive_adapt obj proposed_changes'
     in
       (* should return a tuple with missing attributes included,
 	 eg. (proposed_changes', missing) *)
       match tactic with 
-	  Expansive -> expansive_adapt proposed_changes 
-	| Reductive -> (reductive_adapt proposed_changes, Oidset.empty)
+	  Expansive -> expansive_adapt self proposed_changes 
+	| Reductive -> (reductive_adapt self proposed_changes, Oidset.empty)
 end;;
 
 (*
