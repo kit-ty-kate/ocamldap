@@ -520,7 +520,7 @@ object (self)
 	  (try first_entry := `Yes (get_search_entry con msgid)
 	   with LDAP_Failure (`SUCCESS, _, _) -> 
 	     (* the search is already complete and has no results *)
-	     `NoResults);
+	     first_entry := `NoResults);
 	  fetch_result con msgid first_entry
       with LDAP_Failure(`SERVER_DOWN, _, _) ->
 	self#reconnect;
