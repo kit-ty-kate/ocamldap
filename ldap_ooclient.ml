@@ -430,10 +430,10 @@ object (self)
     bdn <- dn; pwd <- cred; mth <- meth
 
   method add (entry: ldapentry) = 
-      if not (reconnect_successful && bound) then self#reconnect;
-      try add_s con (of_entry entry)
-      with LDAP_Failure(`SERVER_DOWN, _, _) ->
-	self#reconnect;self#add entry
+    if not (reconnect_successful && bound) then self#reconnect;
+    try add_s con (of_entry entry)
+    with LDAP_Failure(`SERVER_DOWN, _, _) ->
+      self#reconnect;self#add entry
 	
   method delete dn =
     if not (reconnect_successful && bound) then self#reconnect;

@@ -86,15 +86,15 @@ let send_message con msg =
     try
       while !written < len
       do
-	written := ((write con.socket e_msg 
-		       !written (len - !written)) + 
-		    !written)
+	written := 
+	  ((write con.socket e_msg !written (len - !written)) + !written)
       done
     with 
 	Unix_error (EBADF, _, _)
       | Unix_error (EPIPE, _, _)
       | Unix_error (ECONNRESET, _, _)
-      | Unix_error (ECONNABORTED, _, _) ->
+      | Unix_error (ECONNABORTED, _, _) 
+      | Sys_error _ ->
 	  (raise 
 	     (LDAP_Failure 
 		(`SERVER_DOWN, 
