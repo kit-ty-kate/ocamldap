@@ -94,7 +94,7 @@ let send_message con msg =
       | Unix_error (EPIPE, _, _)
       | Unix_error (ECONNRESET, _, _)
       | Unix_error (ECONNABORTED, _, _) 
-      | Sys_error _ ->
+      | exn ->
 	  (raise 
 	     (LDAP_Failure 
 		(`SERVER_DOWN, 
