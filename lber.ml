@@ -676,5 +676,10 @@ let rec encode_berval_list ?(buf=Buffer.create 50) efun lst =
     | [] -> Buffer.contents buf
 
 let rec decode_berval_list ?(lst=[]) dfun (readbyte:readbyte) =
-  try decode_berval_list ~lst:((dfun readbyte) :: lst) dfun readbyte
-  with Readbyte_error End_of_stream -> lst
+  let res = 
+    try Some (dfun readbyte)
+    with Readbyte_error End_of_stream -> None
+  in
+    match res with
+	Some item -> decode_berval_list ~lst:(item :: lst) dfun readbyte
+      | None -> lst
