@@ -16,6 +16,7 @@ ldap_toplevel.ml
 RESULT=ocamldap
 PACKS=netstring str ssl
 CFLAGS=-O3
+OCAMLFLAGS=-w y
 
 LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.o *.cmx ldap_toplevel.cmo)
 OCAMLDOCFLAGS=-colorize-code
