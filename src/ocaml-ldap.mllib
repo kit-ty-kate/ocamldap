@@ -1,0 +1,21 @@
+# OASIS_START
+# DO NOT EDIT (digest: adb1bfea5a4bd66f86e9b741cab893a0)
+Lber
+Ldap_types
+Ldap_error
+Ldap_protocol
+Ulist
+Ldap_url
+Ldap_filter
+Ldap_funclient
+Ldap_schemaparser
+Ldap_dn
+Ldap_ooclient
+Ldap_mutex
+Ldap_txooclient
+Ldif_parser
+Ldif_oo
+Ldap_funserver
+Ldif_changerec_oo
+Ldap_toplevel
+# OASIS_STOP

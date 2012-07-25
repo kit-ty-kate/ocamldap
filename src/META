@@ -1,0 +1,13 @@
+# OASIS_START
+# DO NOT EDIT (digest: 5c1f00345d2a6fda18c198d2bded58ee)
+version = "2.1.6"
+description =
+"Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+requires = "ssl pcre netstring"
+archive(byte) = "ocaml-ldap.cma"
+archive(byte, plugin) = "ocaml-ldap.cma"
+archive(native) = "ocaml-ldap.cmxa"
+archive(native, plugin) = "ocaml-ldap.cmxs"
+exists_if = "ocaml-ldap.cma"
+# OASIS_STOP
+

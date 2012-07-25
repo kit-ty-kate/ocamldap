@@ -1,0 +1,5 @@
+(* OASIS_START *)
+(* DO NOT EDIT (digest: 1e264d59618ac89beefa42632a77453a) *)
+Authors of ocaml-ldap
+Eric Stockes
+(* OASIS_STOP *)

@@ -20,7 +20,6 @@
 
 
 %{
-  open Ldap_filterlexer
   open Ldap_types
 
   let star_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\2a")

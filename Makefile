@@ -1,30 +1,38 @@
--include Makefile.conf
+# OASIS_START
+# DO NOT EDIT (digest: bc1e05bfc8b39b664f29dae8dbd3ebbb)
 
-SOURCES=lber.mli lber.ml ldap_types.mli ldap_types.ml ldap_error.mli	\
-ldap_error.ml ldap_protocol.mli ldap_protocol.ml ulist.ml		\
-ldap_urllexer.mll ldap_url.mli ldap_url.ml ldap_filterparser.mly	\
-ldap_filterlexer.mll ldap_filter.mli ldap_filter.ml ldap_funclient.mli	\
-ldap_funclient.ml ldap_schemalexer.mll ldap_schemaparser.mli		\
-ldap_schemaparser.ml ldap_dnparser.mly ldap_dnlexer.mll ldap_dn.mli	\
-ldap_dn.ml ldap_ooclient.mli ldap_ooclient.ml ldap_mutex.mli		\
-ldap_mutex.ml ldap_txooclient.mli ldap_txooclient.ml ldif_parser.ml	\
-ldif_oo.ml ldif_oo.mli ldap_funserver.mli ldap_funserver.ml		\
-ldif_changerec_parser.mly ldif_changerec_lexer.mll			\
-ldif_changerec_oo.mli ldif_changerec_oo.ml ldap_toplevel.ml
-RESULT=ocamldap
-PACKS=netstring str ssl
-#OCAMLFLAGS=-rectypes
+SETUP = ocaml setup.ml
 
-LIBINSTALL_FILES=$(wildcard *.mli *.cmi *.cma *.cmxa *.a *.so *.o *.cmx ldap_toplevel.cmo)
-OCAMLDOCFLAGS=-colorize-code
+build: setup.data
+	$(SETUP) -build $(BUILDFLAGS)
 
-all: debug-code-library
-opt: native-code-library
-reallyall: byte-code-library native-code-library
-install: libinstall
-uninstall: libuninstall
+doc: setup.data build
+	$(SETUP) -doc $(DOCFLAGS)
 
-documentation:
-	ocamlfind ocamldoc -d doc/ocamldap/html -colorize-code -html -package netstring,str,ssl lber.mli ldap_types.mli ldap_error.mli ldap_protocol.mli ldap_url.mli ldap_filter.mli ldap_dn.mli ldap_funclient.mli ldap_ooclient.mli ldap_schemaparser.mli ldap_funserver.mli ldif_oo.mli ldap_toplevel.mli ldap_mutex.mli ldif_changerec_oo.mli ldap_txooclient.mli
+test: setup.data build
+	$(SETUP) -test $(TESTFLAGS)
 
--include OCamlMakefile
+all: 
+	$(SETUP) -all $(ALLFLAGS)
+
+install: setup.data
+	$(SETUP) -install $(INSTALLFLAGS)
+
+uninstall: setup.data
+	$(SETUP) -uninstall $(UNINSTALLFLAGS)
+
+reinstall: setup.data
+	$(SETUP) -reinstall $(REINSTALLFLAGS)
+
+clean: 
+	$(SETUP) -clean $(CLEANFLAGS)
+
+distclean: 
+	$(SETUP) -distclean $(DISTCLEANFLAGS)
+
+setup.data:
+	$(SETUP) -configure $(CONFIGUREFLAGS)
+
+.PHONY: build doc test all install uninstall reinstall clean distclean configure
+
+# OASIS_STOP

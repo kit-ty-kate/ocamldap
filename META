@@ -1,4 +1,0 @@
-requires="netstring str ssl"
-version="2.1.5"
-archive(byte)="ocamldap.cma"
-archive(native)="ocamldap.cmxa"

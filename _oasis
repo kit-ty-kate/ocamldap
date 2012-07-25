@@ -1,0 +1,32 @@
+OASISFormat: 0.3
+Name:        ocaml-ldap
+Version:     2.1.6
+Synopsis:    Ocamldap is an implementation of the Light Weight Directory
+  Access Protocol
+Authors:     Eric Stockes
+License:     LGPL-2.1 with OCaml linking exception
+Plugins:     DevFiles (0.3), META (0.3), StdFiles (0.3)
+
+Library "ocaml-ldap"
+  Path:       src
+  BuildTools: ocamlbuild
+  Modules:
+    Lber,
+    Ldap_types,
+    Ldap_error,
+    Ldap_protocol,
+    Ulist,
+    Ldap_url,
+    Ldap_filter,
+    Ldap_funclient,
+    Ldap_schemaparser,
+    Ldap_dn,
+    Ldap_ooclient,
+    Ldap_mutex,
+    Ldap_txooclient,
+    Ldif_parser,
+    Ldif_oo,
+    Ldap_funserver,
+    Ldif_changerec_oo,
+    Ldap_toplevel
+  BuildDepends: ssl, pcre, netstring
