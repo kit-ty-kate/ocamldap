@@ -6,27 +6,54 @@ Synopsis:    Ocamldap is an implementation of the Light Weight Directory
 Authors:     Eric Stockes
 License:     LGPL-2.1 with OCaml linking exception
 Plugins:     DevFiles (0.3), META (0.3), StdFiles (0.3)
+BuildTools:  ocamlbuild
 
-Library "ocaml-ldap"
-  Path:       src
-  BuildTools: ocamlbuild
+Library "ldap"
+  Path: src
   Modules:
     Lber,
     Ldap_types,
     Ldap_error,
     Ldap_protocol,
-    Ulist,
     Ldap_url,
     Ldap_filter,
-    Ldap_funclient,
-    Ldap_schemaparser,
     Ldap_dn,
-    Ldap_ooclient,
-    Ldap_mutex,
-    Ldap_txooclient,
-    Ldif_parser,
-    Ldif_oo,
-    Ldap_funserver,
-    Ldif_changerec_oo,
-    Ldap_toplevel
+    Ldap_schemaparser
+  InternalModules:
+    Ldap_urllexer,
+    Ldap_filterlexer,
+    Ldap_filterparser,
+    Ldap_dnlexer,
+    Ldap_dnparser,
+    Ldap_schemalexer,
+    Ldif_parser
   BuildDepends: ssl, pcre, netstring
+
+Library "client"
+  Path: src
+  Modules:
+    Ldap_funclient,
+    Ldap_ooclient,
+    Ldap_txooclient
+  InternalModules:
+    Ldap_mutex,
+    Ldif_oo,
+    Ldif_changerec_oo,
+    Ldif_changerec_lexer,
+    Ldif_changerec_parser,
+    Ulist
+  FindlibParent: ldap
+  BuildDepends: ldap
+
+Library "server"
+  Path: src
+  Modules: Ldap_funserver
+  FindlibParent: ldap
+  BuildDepends: ldap.client
+
+Library "toplevel"
+  Path: src
+  Modules: Ldap_toplevel
+  FindlibParent: ldap
+  BuildDepends: ldap.client
+  CompiledObject: byte

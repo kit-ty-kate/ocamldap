@@ -1,13 +1,46 @@
 # OASIS_START
-# DO NOT EDIT (digest: 5c1f00345d2a6fda18c198d2bded58ee)
+# DO NOT EDIT (digest: 68ff5a20e89142151935c02886a4a1f7)
 version = "2.1.6"
 description =
 "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
 requires = "ssl pcre netstring"
-archive(byte) = "ocaml-ldap.cma"
-archive(byte, plugin) = "ocaml-ldap.cma"
-archive(native) = "ocaml-ldap.cmxa"
-archive(native, plugin) = "ocaml-ldap.cmxs"
-exists_if = "ocaml-ldap.cma"
+archive(byte) = "ldap.cma"
+archive(byte, plugin) = "ldap.cma"
+archive(native) = "ldap.cmxa"
+archive(native, plugin) = "ldap.cmxs"
+exists_if = "ldap.cma"
+package "toplevel" (
+ version = "2.1.6"
+ description =
+ "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+ requires = "ldap.client"
+ archive(byte) = "toplevel.cma"
+ archive(byte, plugin) = "toplevel.cma"
+ exists_if = "toplevel.cma"
+)
+
+package "server" (
+ version = "2.1.6"
+ description =
+ "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+ requires = "ldap.client"
+ archive(byte) = "server.cma"
+ archive(byte, plugin) = "server.cma"
+ archive(native) = "server.cmxa"
+ archive(native, plugin) = "server.cmxs"
+ exists_if = "server.cma"
+)
+
+package "client" (
+ version = "2.1.6"
+ description =
+ "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+ requires = "ldap"
+ archive(byte) = "client.cma"
+ archive(byte, plugin) = "client.cma"
+ archive(native) = "client.cmxa"
+ archive(native, plugin) = "client.cmxs"
+ exists_if = "client.cma"
+)
 # OASIS_STOP
 

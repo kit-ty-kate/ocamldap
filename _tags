@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: fa693b30e0fa6d3bf962eabbfd99caa9)
+# DO NOT EDIT (digest: eb6a1c0e521a3cb092582ec18e726ebf)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -13,8 +13,16 @@
 ".git": not_hygienic
 "_darcs": -traverse
 "_darcs": not_hygienic
-# Library ocaml-ldap
-"src/ocaml-ldap.cmxs": use_ocaml-ldap
+# Library ldap
+"src/ldap.cmxs": use_ldap
+# Library client
+"src/client.cmxs": use_client
+# Library server
+"src/server.cmxs": use_server
+# Library toplevel
+"src/toplevel.cmxs": use_toplevel
+<src/*.ml{,i}>: use_client
+<src/*.ml{,i}>: use_ldap
 <src/*.ml{,i}>: pkg_ssl
 <src/*.ml{,i}>: pkg_pcre
 <src/*.ml{,i}>: pkg_netstring
