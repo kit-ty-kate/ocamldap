@@ -76,7 +76,7 @@ let space = ' ' +
 let descr = keystring
 let qdescr = whsp ''' (descr as qdescrval) ''' whsp
 let qdescrlist = qdescr ( ''' descr ''' whsp ) *
-let numericoid = numericstring ( '.' numericstring ) * 		 
+let numericoid = numericstring ( '.' numericstring ) *                  
 let oid = descr | numericoid
 let woid = ( whsp )? oid ( whsp )?
 let oidlist = ( woid ( '$' woid ) * ) as oidlst
@@ -84,8 +84,8 @@ let oids = woid as oidlst | whsp '(' ( oidlist as oidlst ) ')' whsp
 
 (* violates rfc2252 to support Microsoft Active Directory, but at least is not ambigous *)
 let noidlen = whsp ( ( numericoid ( '{' numericstring '}' ) ? ) as oid )
-	      | whsp ''' ( ( numericoid ( '{' numericstring '}' ) ? ) as oid ) '''
-	      | whsp ''' ( keystring as oid ) '''
+              | whsp ''' ( ( numericoid ( '{' numericstring '}' ) ? ) as oid ) '''
+              | whsp ''' ( keystring as oid ) '''
 
 let attributeUsage = "userApplication" | "directoryOperation" | "distributedOperation" | "dSAOperation"
 
@@ -93,9 +93,9 @@ rule lexattr = parse
     '(' whsp {Lparen}
   | "NAME" qdescr {Name [qdescrval]}
   | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes 
-						 (splitoidlst 
-						    namelst
-						    (Str.regexp "  *")))}
+                                                 (splitoidlst 
+                                                    namelst
+                                                    (Str.regexp "  *")))}
   | "DESC" qdstring {Desc qdstringval}
   | "OBSOLETE" whsp {Obsolete}
   | "SUP" whsp (woid as sup) {Sup [(stripspace sup)]}
@@ -103,11 +103,11 @@ rule lexattr = parse
   | "ORDERING" whsp (woid as ord) {Ordering (stripspace ord)}
   | "SUBSTR" whsp (woid as substr) {Substr (stripspace substr)}
   | "SYNTAX" noidlen whsp {match (splitoidlst oid (Str.regexp "{")) with
-			       [syntax]        -> Syntax (syntax, Int64.zero)
-			     | [syntax;length] -> Syntax (syntax, 
-							  Int64.of_string
-							    (extract length 0 1))
-			     | _               -> failwith "syntax error"}
+                               [syntax]        -> Syntax (syntax, Int64.zero)
+                             | [syntax;length] -> Syntax (syntax, 
+                                                          Int64.of_string
+                                                            (extract length 0 1))
+                             | _               -> failwith "syntax error"}
   | "SINGLE-VALUE" whsp {Single_value}
   | "COLLECTIVE" whsp {Collective}
   | "NO-USER-MODIFICATION" whsp {No_user_modification}
@@ -120,26 +120,26 @@ and lexoc = parse
     '(' whsp {Lparen}
   | "NAME" qdescr {Name [qdescrval]}
   | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes
-							      (splitoidlst 
-								 namelst
-								 (Str.regexp "  *")))}
+                                                              (splitoidlst 
+                                                                 namelst
+                                                                 (Str.regexp "  *")))}
   | "DESC" qdstring {Desc qdstringval}
   | "OBSOLETE" whsp {Obsolete}
   | "SUP" whsp (woid as sup) {Sup [(stripspace sup)]}
   | "SUP" whsp '(' oidlist ')' whsp {Sup (List.rev_map stripspace
-					    (splitoidlst oidlst 
-					       (Str.regexp " *\\$ *")))}
+                                            (splitoidlst oidlst 
+                                               (Str.regexp " *\\$ *")))}
   | "ABSTRACT" whsp {Abstract}
   | "STRUCTURAL" whsp {Structural}
   | "AUXILIARY" whsp {Auxiliary}
   | "MUST" whsp (woid as must) {Must [(stripspace must)]}
   | "MUST" whsp '(' oidlist ')' whsp {Must (List.rev_map stripspace
-					      (splitoidlst oidlst
-						 (Str.regexp " *\\$ *")))}
+                                              (splitoidlst oidlst
+                                                 (Str.regexp " *\\$ *")))}
   | "MAY" whsp (woid as may) {May [(stripspace may)]}
   | "MAY" whsp '(' oidlist ')' whsp {May (List.rev_map stripspace
-					    (splitoidlst oidlst
-					       (Str.regexp " *\\$ *")))}
+                                            (splitoidlst oidlst
+                                               (Str.regexp " *\\$ *")))}
   | "X-" xstring qdstrings {Xstring (Lexing.lexeme lexbuf)}
   | oid whsp {Numericoid (extract (Lexing.lexeme lexbuf) 0 1)}
   | ')' {Rparen}

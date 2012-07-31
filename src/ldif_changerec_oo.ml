@@ -42,32 +42,32 @@ let rec fold f cr a =
 let insert_change buf cr = 
   match cr with
       `Modification (dn, mod_op) ->
-	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
-	Buffer.add_string buf "changetype: modify\n";
-	List.iter
-	  (fun (op, attr, vals) ->
-	     (match op with
-		  `ADD -> Buffer.add_string buf ("add: " ^ attr ^ "\n")
-		| `DELETE -> Buffer.add_string buf ("delete: " ^ attr ^ "\n")
-		| `REPLACE -> Buffer.add_string buf ("replace: " ^ attr ^ "\n"));
-	     List.iter
-	       (fun valu -> Buffer.add_string buf (attr ^ ": " ^ valu ^ "\n"))
-	       vals;
-	     Buffer.add_string buf "-\n")
-	  mod_op;
-	Buffer.add_string buf "\n";
-	buf
+        Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+        Buffer.add_string buf "changetype: modify\n";
+        List.iter
+          (fun (op, attr, vals) ->
+             (match op with
+                  `ADD -> Buffer.add_string buf ("add: " ^ attr ^ "\n")
+                | `DELETE -> Buffer.add_string buf ("delete: " ^ attr ^ "\n")
+                | `REPLACE -> Buffer.add_string buf ("replace: " ^ attr ^ "\n"));
+             List.iter
+               (fun valu -> Buffer.add_string buf (attr ^ ": " ^ valu ^ "\n"))
+               vals;
+             Buffer.add_string buf "-\n")
+          mod_op;
+        Buffer.add_string buf "\n";
+        buf
     | `Addition e -> Ldif_oo.entry2ldif ~ext:true buf e;
     | `Delete dn ->
-	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
-	Buffer.add_string buf "changetype: delete\n";
-	buf
+        Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+        Buffer.add_string buf "changetype: delete\n";
+        buf
     | `Modrdn (dn, deleteoldrdn, newrdn) ->
-	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
-	Buffer.add_string buf "changetype: modrdn\n";
-	Buffer.add_string buf ("deleteoldrdn: " ^ (string_of_int deleteoldrdn) ^ "\n");
-	Buffer.add_string buf ("newrdn: " ^ newrdn ^ "\n");
-	buf
+        Buffer.add_string buf ("dn: " ^ dn ^ "\n");
+        Buffer.add_string buf "changetype: modrdn\n";
+        Buffer.add_string buf ("deleteoldrdn: " ^ (string_of_int deleteoldrdn) ^ "\n");
+        Buffer.add_string buf ("newrdn: " ^ newrdn ^ "\n");
+        buf
 
 class change ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
@@ -76,14 +76,14 @@ object (self)
   method read_changerec =       
     try changerec lexcr lxbuf
     with
-	Failure "end" -> raise End_of_changerecs
+        Failure "end" -> raise End_of_changerecs
       | Failure s -> raise (Invalid_changerec s)
   method of_string (s:string) =
     let lx = Lexing.from_string s in
       try changerec lexcr lx
       with
-	  Failure "end" -> raise End_of_changerecs
-	| Failure s -> raise (Invalid_changerec s)
+          Failure "end" -> raise End_of_changerecs
+        | Failure s -> raise (Invalid_changerec s)
   method to_string (e:changerec) =
     let res = Buffer.contents (insert_change buf e) in
       Buffer.clear buf;res

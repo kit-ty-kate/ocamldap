@@ -27,7 +27,7 @@ let of_string s =
   let lx = Lexing.from_string s in
     try lexurl lx
     with 
-	Failure "lexing: empty token" -> 
-	  raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, "syntax error"))
+        Failure "lexing: empty token" -> 
+          raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, "syntax error"))
       | exn ->
-	  raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, Printexc.to_string exn))
+          raise (Invalid_ldap_url (lx.Lexing.lex_last_pos, Printexc.to_string exn))

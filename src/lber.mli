@@ -27,10 +27,10 @@ exception Decoding_error of string
 exception Encoding_error of string
 
 type readbyte_error = End_of_stream
-		      | Transport_error
-		      | Peek_error
-		      | Request_too_large
-		      | Not_implemented
+                      | Transport_error
+                      | Peek_error
+                      | Request_too_large
+                      | Not_implemented
 exception Readbyte_error of readbyte_error
 
 type readbyte = ?peek:bool -> int -> string

@@ -24,7 +24,7 @@ let addmutex ldap mutexdn =
 
 
     mt#add [("objectclass", ["top";"mutex"]);
-	    (mtrdn.attr_type, mtrdn.attr_vals)];
+            (mtrdn.attr_type, mtrdn.attr_vals)];
     try ldap#add mt
     with exn -> raise (Ldap_mutex ("addmutex", exn))
 
@@ -32,28 +32,28 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
   try
     let obj = 
       try
-	ldap#search 
-	  ~base:mutexdn
-	  ~scope:`BASE
-	  "objectclass=*"
+        ldap#search 
+          ~base:mutexdn
+          ~scope:`BASE
+          "objectclass=*"
       with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
     in
       if List.length obj = 0 then begin
-	addmutex ldap mutexdn;
-	lock ldap mutexdn lockval
+        addmutex ldap mutexdn;
+        lock ldap mutexdn lockval
       end
       else if List.length obj = 1 then
-	while true
-	do
-	  try 
-	    ldap#modify (List.hd obj)#dn lockval;
-	    failwith "locked"
-	  with (* the mutex is locked already *)
-	      LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
-	    | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) ->
-		(* this is so evil *)
-		ignore (Unix.select [] [] [] 0.25) (* wait 1/4 of a second *)
-	done
+        while true
+        do
+          try 
+            ldap#modify (List.hd obj)#dn lockval;
+            failwith "locked"
+          with (* the mutex is locked already *)
+              LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
+            | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) ->
+                (* this is so evil *)
+                ignore (Unix.select [] [] [] 0.25) (* wait 1/4 of a second *)
+        done
       else failwith "huge error, multiple objects with the same dn"
   with
       Failure "locked" -> ()
@@ -64,21 +64,21 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
   try
     let obj = 
       try
-	ldap#search 
-	  ~base:mutexdn
-	  ~scope:`BASE
-	  "objectclass=*"
+        ldap#search 
+          ~base:mutexdn
+          ~scope:`BASE
+          "objectclass=*"
       with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
     in
       if List.length obj = 0 then begin
-	addmutex ldap mutexdn;
-	unlock ldap mutexdn unlockval
+        addmutex ldap mutexdn;
+        unlock ldap mutexdn unlockval
       end
       else if List.length obj = 1 then
-	try 
-	  ldap#modify 
-	    (List.hd obj)#dn unlockval
-	with LDAP_Failure (`NO_SUCH_ATTRIBUTE, _, _) -> ()
+        try 
+          ldap#modify 
+            (List.hd obj)#dn unlockval
+        with LDAP_Failure (`NO_SUCH_ATTRIBUTE, _, _) -> ()
   with
       (Ldap_mutex _) as exn -> raise exn
     | exn -> raise (Ldap_mutex ("unlock", exn))
