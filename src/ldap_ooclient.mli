@@ -3,16 +3,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -145,7 +145,7 @@ val format_entries :
    unit
 
 (** The type of an ldap change record, used by extended LDIF *)
-type changerec = 
+type changerec =
     [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
     | `Addition of ldapentry
     | `Delete of string
@@ -155,8 +155,8 @@ type changerec =
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
-val to_entry : 
-  [< `Entry of Ldap_types.search_result_entry | `Referral of string list ] 
+val to_entry :
+  [< `Entry of Ldap_types.search_result_entry | `Referral of string list ]
   -> ldapentry
 
 (** given an ldapentry as returned by ldapcon, or constructed manually,
@@ -168,12 +168,12 @@ val of_entry : ldapentry -> search_result_entry
 
 (** This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
-    used to perform operations on that server. 
+    used to perform operations on that server.
 
-    {0 Example} 
+    {0 Example}
 
     [new ldapcon ~connect_timeout:5 ~version:3
-    ["ldap://first.ldap.server";"ldap://second.ldap.server"]]. 
+    ["ldap://first.ldap.server";"ldap://second.ldap.server"]].
 
     In addition to specifying multiple urls, if DNS names are given,
     and those names are bound to multiple addresses, then all possible
@@ -181,15 +181,15 @@ val of_entry : ldapentry -> search_result_entry
 
     {0 Example}
 
-    [new ldapcon ["ldaps://rrldap.csun.edu"]] 
+    [new ldapcon ["ldaps://rrldap.csun.edu"]]
 
-    is equivelant to 
-    
+    is equivelant to
+
     [new ldapcon ["ldap://130.166.1.30";"ldap://130.166.1.31";"ldap://130.166.1.32"]]
 
     This means that if any host in the rr fails, the ldapcon will
     transparently move on to the next host, and you will never know
-    the difference. 
+    the difference.
 
     @raise LDAP_Failure All methods raise {!Ldap_types.LDAP_Failure} on error
 
@@ -215,7 +215,7 @@ class ldapcon :
 object
   (** {2 Authentication} *)
 
-  (** bind to the database using dn. 
+  (** bind to the database using dn.
 
       {0 Simple Bind Example}
 
@@ -227,7 +227,7 @@ object
 
       [ldap#bind ""]
 
-      @param cred The credentials to provide for binding. Default [""]. 
+      @param cred The credentials to provide for binding. Default [""].
 
       @param meth The method to use when binding See
       {!Ldap_funclient.authmethod} the default is [`SIMPLE]. If
@@ -250,17 +250,17 @@ object
       [ldap#search ~base:"dc=foo,dc=bar" ~attrs:["cn"] "uid=*"]
 
       @param scope Default [`SUBTREE], defines the scope of the
-      search. see {!Ldap_types.search_scope} 
+      search. see {!Ldap_types.search_scope}
 
-      @param attrs Default [[]] (means all attributes) 
+      @param attrs Default [[]] (means all attributes)
 
       @param attrsonly Default [false] If true, asks the server to return
-      only the attribute names, not their values. 
+      only the attribute names, not their values.
 
       @param base Default [""], The search base, which is the dn of the
       object from which you want to start your search. Only that
       object, and it's children will be included in the
-      search. Further controlled by [~scope]. 
+      search. Further controlled by [~scope].
 
       @param timelimit The time limit (in seconds) to allow the search
       to run for. Default [0l], which means there is no user specified
@@ -271,8 +271,8 @@ object
   method search :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> 
-    ?sizelimit:Int32.t -> ?timelimit:Int32.t -> 
+    ?attrsonly:bool -> ?base:string ->
+    ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
     string -> ldapentry list
 
   (** Search the directory asyncronously, otherwise the same as
@@ -280,8 +280,8 @@ object
   method search_a :
     ?scope:Ldap_types.search_scope ->
     ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> 
-    ?sizelimit:Int32.t -> ?timelimit:Int32.t -> 
+    ?attrsonly:bool -> ?base:string ->
+    ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
     string -> (?abandon:bool -> unit -> ldapentry)
 
   (** Fetch the raw (unparsed) schema from the directory using the
@@ -301,7 +301,7 @@ object
   (** Delete the object named by dn from the database *)
   method delete : string -> unit
 
-  (** Modify the entry named by dn, applying mods 
+  (** Modify the entry named by dn, applying mods
 
       {0 Example}
 
@@ -318,7 +318,7 @@ object
   (** Modify the rdn of the object named by dn, if the protocol
       version is 3 you may additionally change the superior, the rdn
       will be changed to the attribute represented (as a string) by
-      newrdn, 
+      newrdn,
 
       {0 Example With New Superior}
 
@@ -327,7 +327,7 @@ object
       After this example "cn=bob,ou=people,o=org" will end up as "uid=bperson,o=csun".
 
       @param deleteoldrdn Default [true], delete
-      the old rdn value as part of the modrdn. 
+      the old rdn value as part of the modrdn.
 
       @param newsup Default [None], only valid when the protocol
       version is 3, change the object's location in the tree, making
@@ -408,8 +408,8 @@ end
 (** The type of schema checking to perform in
     {!Ldap_ooclient.scldapentry}. Normally this is picked
     automatically, however it can be overridden in some cases. *)
-type scflavor = 
-    Optimistic 
+type scflavor =
+    Optimistic
       (** Add missing attributes to make the object consistant, or add
           objectclasses in order to make illegal attribues legal *)
   | Pessimistic
@@ -461,7 +461,7 @@ val getAttr :
 val equateAttrs :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Lcstring.t -> bool
- 
+
 exception Invalid_objectclass of string
 exception Invalid_attribute of string
 exception Single_value of string
@@ -560,7 +560,7 @@ object
       that it prints attributes which may not yet be present on the
       object. For example, if the object has unsatisfied musts, it will
       print "attrname: required" for that attribute. *)
-  method print : unit 
+  method print : unit
 
   (** Same as {!Ldap_ooclient.ldapentry.set_changetype} *)
   method set_changetype : changetype -> unit
@@ -572,10 +572,10 @@ end
 (** {1 Schema Aware Entry for Account Managment} A derivative of
     {!Ldap_ooclient.scldapentry} which includes abstractions for
     managing user accounts in the directory. This class is
-    experimantal, and may be drastically changed in the next version. 
+    experimantal, and may be drastically changed in the next version.
     As with all experimental code, use with caution. A few of its features.
 
-    {ul 
+    {ul
     {- Loosely dependant attributes: Many attributes are derived
     from others via a function. ldapaccount allows you to codify
     that relationship by providing an attribute generator
@@ -585,16 +585,16 @@ end
     {- Attribute and Generator Grouping: via the service abstraction.
     Allows you to group attributes together with generators and
     default values in interesting ways. You can then assign the
-    whole grouping a name, and refer to it by that name. See 
+    whole grouping a name, and refer to it by that name. See
     {!Ldap_ooclient.service}}
     {- Difference Based: Service operations are difference based,
     all applications of service operations compute the delta between
     the current object, and what the service requires. The minumum set
     of changes necessary to satisfy the service are applied to the object.}
-    {- Idempotentcy: As a result of being difference based, 
-    Service operations are itempotent. For example, 
-    adding a service twice has no effect on the object. It will 
-    not queue changes for modification to the directory, and it 
+    {- Idempotentcy: As a result of being difference based,
+    Service operations are itempotent. For example,
+    adding a service twice has no effect on the object. It will
+    not queue changes for modification to the directory, and it
     will not change the object in memory. Deleting a service
     twice has no effect...etc}}
 
@@ -603,7 +603,7 @@ end
 (** The structure of a generator *)
 type generator = {
   (** The name of the generator, this should also be its key in the hashtbl *)
-  gen_name : string; 
+  gen_name : string;
 
   (** A list of names of attributes which are required by this
       generator. The names need not be canonical. *)
@@ -726,5 +726,5 @@ object
   method print : unit
   method replace : op_lst -> unit
   method set_changetype : changetype -> unit
-  method set_dn : string -> unit      
+  method set_dn : string -> unit
 end

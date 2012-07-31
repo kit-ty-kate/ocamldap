@@ -30,9 +30,9 @@ let addmutex ldap mutexdn =
 
 let rec lock (ldap:ldapcon) mutexdn lockval =
   try
-    let obj = 
+    let obj =
       try
-        ldap#search 
+        ldap#search
           ~base:mutexdn
           ~scope:`BASE
           "objectclass=*"
@@ -45,7 +45,7 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
       else if List.length obj = 1 then
         while true
         do
-          try 
+          try
             ldap#modify (List.hd obj)#dn lockval;
             failwith "locked"
           with (* the mutex is locked already *)
@@ -62,9 +62,9 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
 
 let rec unlock (ldap:ldapcon) mutexdn unlockval =
   try
-    let obj = 
+    let obj =
       try
-        ldap#search 
+        ldap#search
           ~base:mutexdn
           ~scope:`BASE
           "objectclass=*"
@@ -75,8 +75,8 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
         unlock ldap mutexdn unlockval
       end
       else if List.length obj = 1 then
-        try 
-          ldap#modify 
+        try
+          ldap#modify
             (List.hd obj)#dn unlockval
         with LDAP_Failure (`NO_SUCH_ATTRIBUTE, _, _) -> ()
   with
@@ -84,9 +84,9 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
     | exn -> raise (Ldap_mutex ("unlock", exn))
 
 
-class mutex ldapurls binddn bindpw mutexdn = 
+class mutex ldapurls binddn bindpw mutexdn =
 object (self)
-  val ldap = 
+  val ldap =
     let ldap = new ldapcon ldapurls in
       ldap#bind binddn ~cred:bindpw;
       ldap
@@ -96,7 +96,7 @@ object (self)
   method unlock = unlock ldap mutexdn [(`DELETE, "mutexlocked", [])]
 end
 
-let apply_with_mutex mutex f = 
+let apply_with_mutex mutex f =
   mutex#lock;
   try
     let result = f () in
@@ -106,7 +106,7 @@ let apply_with_mutex mutex f =
 
 class object_lock_table ldapurls binddn bindpw mutextbldn =
 object (self)
-  val ldap = 
+  val ldap =
     let ldap = new ldapcon ldapurls in
       ldap#bind binddn ~cred:bindpw;
       ldap

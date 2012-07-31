@@ -3,19 +3,19 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
-   You should have received a copy of the GNU Lesser General Public            
-   License along with this library; if not, write to the Free Software         
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *)
 
 
@@ -76,7 +76,7 @@ let space = ' ' +
 let descr = keystring
 let qdescr = whsp ''' (descr as qdescrval) ''' whsp
 let qdescrlist = qdescr ( ''' descr ''' whsp ) *
-let numericoid = numericstring ( '.' numericstring ) *                  
+let numericoid = numericstring ( '.' numericstring ) *
 let oid = descr | numericoid
 let woid = ( whsp )? oid ( whsp )?
 let oidlist = ( woid ( '$' woid ) * ) as oidlst
@@ -92,8 +92,8 @@ let attributeUsage = "userApplication" | "directoryOperation" | "distributedOper
 rule lexattr = parse
     '(' whsp {Lparen}
   | "NAME" qdescr {Name [qdescrval]}
-  | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes 
-                                                 (splitoidlst 
+  | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes
+                                                 (splitoidlst
                                                     namelst
                                                     (Str.regexp "  *")))}
   | "DESC" qdstring {Desc qdstringval}
@@ -104,7 +104,7 @@ rule lexattr = parse
   | "SUBSTR" whsp (woid as substr) {Substr (stripspace substr)}
   | "SYNTAX" noidlen whsp {match (splitoidlst oid (Str.regexp "{")) with
                                [syntax]        -> Syntax (syntax, Int64.zero)
-                             | [syntax;length] -> Syntax (syntax, 
+                             | [syntax;length] -> Syntax (syntax,
                                                           Int64.of_string
                                                             (extract length 0 1))
                              | _               -> failwith "syntax error"}
@@ -120,14 +120,14 @@ and lexoc = parse
     '(' whsp {Lparen}
   | "NAME" qdescr {Name [qdescrval]}
   | "NAME" whsp '(' (qdescrlist as namelst) ')' whsp {Name (stripquotes
-                                                              (splitoidlst 
+                                                              (splitoidlst
                                                                  namelst
                                                                  (Str.regexp "  *")))}
   | "DESC" qdstring {Desc qdstringval}
   | "OBSOLETE" whsp {Obsolete}
   | "SUP" whsp (woid as sup) {Sup [(stripspace sup)]}
   | "SUP" whsp '(' oidlist ')' whsp {Sup (List.rev_map stripspace
-                                            (splitoidlst oidlst 
+                                            (splitoidlst oidlst
                                                (Str.regexp " *\\$ *")))}
   | "ABSTRACT" whsp {Abstract}
   | "STRUCTURAL" whsp {Structural}

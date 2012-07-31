@@ -4,16 +4,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -37,7 +37,7 @@ eval "#install_printer Ldap_schemaparser.format_oid;;";;
 eval "#install_printer Ldap_schemaparser.format_lcstring;;";;
 eval "#install_printer Ldap_schemaparser.format_schema;;";;
 
-let ldap_cmd_harness ~h ~d ~w f = 
+let ldap_cmd_harness ~h ~d ~w f =
   let ldap = new ldapcon [h] in
     try
       ldap#bind d ~cred:w;
@@ -49,23 +49,23 @@ let ldap_cmd_harness ~h ~d ~w f =
 
 let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
   ldap_cmd_harness ~h ~d ~w
-    (fun ldap -> 
-       ldap#search 
-         ~base:b ~scope:s 
+    (fun ldap ->
+       ldap#search
+         ~base:b ~scope:s
          ~attrs:a filter)
 ;;
 
-let ldapmodify ~h ~d ~w mods = 
-  ldap_cmd_harness ~h ~d ~w 
-    (fun ldap -> 
+let ldapmodify ~h ~d ~w mods =
+  ldap_cmd_harness ~h ~d ~w
+    (fun ldap ->
        List.iter
          (fun (dn, ldmod) -> ldap#modify dn ldmod)
          mods)
 ;;
 
-let ldapadd ~h ~d ~w entries = 
+let ldapadd ~h ~d ~w entries =
   ldap_cmd_harness ~h ~d ~w
-    (fun ldap -> 
+    (fun ldap ->
        List.iter
          (fun entry -> ldap#add entry)
          entries)

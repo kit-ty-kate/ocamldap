@@ -1,6 +1,6 @@
 open Ldap_types
 
-let err2string code = 
+let err2string code =
   match code with
       `SUCCESS -> "`SUCCESS"
     | `OPERATIONS_ERROR -> "`OPERATIONS_ERROR"
@@ -44,13 +44,13 @@ let err2string code =
     | `OTHER -> "`OTHER"
     | _ -> raise (LDAP_Decoder "invalid error code")
 
-let ldap_strerror msg ldaperror = 
+let ldap_strerror msg ldaperror =
   match ldaperror with
       LDAP_Failure (code, error, {ext_matched_dn=mdn;ext_referral=refs}) ->
         "LDAP_Failure (" ^
         (String.concat ", "
-           [(err2string code);             
-            "\"" ^ (String.concat ": " 
+           [(err2string code);
+            "\"" ^ (String.concat ": "
                       (List.filter
                          (function "" -> false | _ -> true)
                          [error; msg])) ^ "\"";
@@ -60,5 +60,5 @@ let ldap_strerror msg ldaperror =
                  | None -> "None") ^ "})"])
     | _ -> failwith "not an ldap error"
 
-let ldap_perror error ldaperror = 
+let ldap_perror error ldaperror =
   prerr_endline (ldap_strerror error ldaperror)

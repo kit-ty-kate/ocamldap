@@ -5,19 +5,19 @@
    Copyright (C) 2004 Eric Stokes, and The
    California State University at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
-   You should have received a copy of the GNU Lesser General Public            
-   License along with this library; if not, write to the Free Software         
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *)
 
 exception Decoding_error of string
@@ -43,7 +43,7 @@ type writebyte = (char -> unit)
    it is the number.  eg. 0b1100_0000, the _ has no meaning, it is
    just a seperator, however, seperating the nibbles in this way makes
    binary numbers very readable *)
-    
+
 (* X.690 sec. 8.1.1 structure of an encoding *)
 type ber_class = Universal
                  | Application
@@ -75,8 +75,8 @@ type ber_val_header = {ber_class: ber_class;
    essential for reading certian structures because length is only
    encoded in the toplevel in order to save space. This function is the
    secret of Ocamldap's performance. *)
-let readbyte_of_ber_element limit (rb:readbyte) = 
-  let peek_counter = ref 1 
+let readbyte_of_ber_element limit (rb:readbyte) =
+  let peek_counter = ref 1
   and byte_counter = ref 0 in
     match limit with
         Definite limit ->
@@ -95,12 +95,12 @@ let readbyte_of_ber_element limit (rb:readbyte) =
             else raise (Readbyte_error End_of_stream)
           in
             f
-      | Indefinite -> 
+      | Indefinite ->
 (*          let peek_saw_eoc_octets = ref false
           and saw_eoc_octets = ref false
           and eoc_buf = String.create 1
           and eoc_buf_len = ref 0 in
-          let f ?(peek=false) length = 
+          let f ?(peek=false) length =
             if !eoc_buf_len = 0 then
               if peek && !peek_saw_eoc_octets then
                 raise (Readbyte_error End_of_stream)
@@ -119,7 +119,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
                          eoc_buf_len := 1;
                          String.make 1 b)
                   else String.make 1 b
-            else 
+            else
               (eoc_buf_len := 0;
                eoc_buf)
           in
@@ -143,7 +143,7 @@ let readbyte_of_string octets =
         try String.make 1 (Stream.next strm)
         with Stream.Failure -> raise (Readbyte_error End_of_stream)
       )
-      else        
+      else
         let elts = (Stream.npeek !peek_counter strm) in
           if List.length elts = !peek_counter then
             (peek_counter := !peek_counter + 1;
@@ -162,11 +162,11 @@ let readbyte_of_readfun rfun =
   let buf_pos = ref 0 in
   let peek_pos = ref 0 in
   let peek_buf_len = ref 0 in
-  let read buf off len = 
+  let read buf off len =
     try rfun buf off len
     with exn -> raise (Readbyte_error Transport_error)
-  in    
-  let read_at_least_nbytes buf off len nbytes = 
+  in
+  let read_at_least_nbytes buf off len nbytes =
     let total = ref 0 in
       while !total < nbytes
       do
@@ -177,7 +177,7 @@ let readbyte_of_readfun rfun =
       done;
       !total
   in
-  let rec rb ?(peek=false) length = 
+  let rec rb ?(peek=false) length =
     if length <= 0 then raise (Invalid_argument "Readbyte.length");
     if length > bufsize then (
       if length > Sys.max_string_length then raise (Readbyte_error Request_too_large);
@@ -185,7 +185,7 @@ let readbyte_of_readfun rfun =
       let total = ref 0 in
         while !total < length
         do
-          let nbytes_to_read = 
+          let nbytes_to_read =
             if length - !total < bufsize then
               length - !total
             else bufsize
@@ -206,10 +206,10 @@ let readbyte_of_readfun rfun =
       else (
         let result = String.create length in
         let nbytes_really_in_buffer = (!buf_len - !buf_pos) + !peek_buf_len in
-        let nbytes_in_buffer = 
+        let nbytes_in_buffer =
           if nbytes_really_in_buffer > length then length
           else nbytes_really_in_buffer
-        in          
+        in
         let nbytes_to_read = length - nbytes_in_buffer in
           if nbytes_in_buffer > 0 then
             String.blit buf !buf_pos result 0 nbytes_in_buffer;
@@ -245,8 +245,8 @@ let readbyte_of_readfun rfun =
         let nbytes_to_read = length - nbytes_in_buffer in
         let read_start_pos = !peek_pos + nbytes_in_buffer in
           String.blit buf !peek_pos result 0 nbytes_in_buffer;
-          let nbytes_read = 
-            read_at_least_nbytes buf 
+          let nbytes_read =
+            read_at_least_nbytes buf
               read_start_pos
               (bufsize - (!buf_len + !peek_buf_len))
               nbytes_to_read
@@ -263,18 +263,18 @@ let readbyte_of_readfun rfun =
 (* a readbyte implementation which reads from an FD. It implements a
    peek buffer, so it can garentee that it will work with
    readbyte_of_ber_element, even with blocking fds. *)
-let readbyte_of_fd fd = 
-  readbyte_of_readfun 
+let readbyte_of_fd fd =
+  readbyte_of_readfun
     (fun buf off len ->
        try Unix.read fd buf off len
-       with exn -> 
+       with exn ->
          (try Unix.close fd with _ -> ());raise exn)
 
 (* a readbyte implementation which reads from an SSL socket. It is
    otherwise the same as rb_of_fd *)
-let readbyte_of_ssl fd = 
+let readbyte_of_ssl fd =
   readbyte_of_readfun
-    (fun buf off len -> 
+    (fun buf off len ->
        try Ssl.read fd buf off len
        with exn ->
          (try Ssl.shutdown fd with _ -> ());raise exn)
@@ -302,7 +302,7 @@ let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the d
             then
               raise (Decoding_error "length cannot be represented")
             else
-              decode_multioctet_length readbyte numoctets (remainingoctets - 1) 
+              decode_multioctet_length readbyte numoctets (remainingoctets - 1)
                 (value + (octet lsl ((numoctets - (numoctets - remainingoctets) - 1) * 8)))
       in
       let numoctets = octet land 0b0111_1111 in
@@ -342,7 +342,7 @@ let decode_ber_header ?(peek=false) (readbyte:readbyte) =
 let encode_ber_header {ber_class=cls;ber_primitive=pri;ber_tag=tag;ber_length=len} =
   let buf = Buffer.create 3 in
   let rec encode_multioctet_tag tag buf =
-    if tag > 127 then 
+    if tag > 127 then
       (Buffer.add_char buf (char_of_int 255);
        encode_multioctet_tag (tag - 127) buf)
     else
@@ -389,13 +389,13 @@ let read_contents ?(peek=false) (readbyte:readbyte) len =
   let rec readuntileoc (readbyte:readbyte) buf =
     let octet1 = (readbyte ~peek 1).[0] in
       if (int_of_char octet1) = 0b0000_0000 then
-        let octet2 = (readbyte ~peek 1).[0] in 
+        let octet2 = (readbyte ~peek 1).[0] in
           if (int_of_char octet2) = 0b0000_0000 then
             Buffer.contents buf
           else
             (Buffer.add_char buf octet1;Buffer.add_char buf octet2;
-             readuntileoc readbyte buf)            
-      else 
+             readuntileoc readbyte buf)
+      else
         (Buffer.add_char buf octet1;readuntileoc readbyte buf)
   in
     match len with
@@ -403,15 +403,15 @@ let read_contents ?(peek=false) (readbyte:readbyte) len =
       | Indefinite -> readuntileoc readbyte (Buffer.create 5)
 
 let decode_ber_end_of_contents ?(peek=false) (readbyte:readbyte) =
-  if not (((int_of_char (readbyte ~peek 1).[0]) = 0) && 
-          (int_of_char (readbyte ~peek 1).[0]) = 0) then 
+  if not (((int_of_char (readbyte ~peek 1).[0]) = 0) &&
+          (int_of_char (readbyte ~peek 1).[0]) = 0) then
     raise (Decoding_error "missing end of contents octets")
 
 (* sec. 8.2 *)
-let decode_ber_bool ?(peek=false) ?(cls=Universal) ?(tag=1) ?(contents=None) 
-  (readbyte:readbyte) = 
-  let decode_ber_bool' contents = 
-    if (int_of_char contents.[0]) = 0 then false else true 
+let decode_ber_bool ?(peek=false) ?(cls=Universal) ?(tag=1) ?(contents=None)
+  (readbyte:readbyte) =
+  let decode_ber_bool' contents =
+    if (int_of_char contents.[0]) = 0 then false else true
   in
     match contents with
         None ->
@@ -421,10 +421,10 @@ let decode_ber_bool ?(peek=false) ?(cls=Universal) ?(tag=1) ?(contents=None)
              | _ -> raise (Decoding_error "expected bool"))
       | Some contents -> decode_ber_bool' contents
 
-let encode_ber_bool ?(cls=Universal) ?(tag=1) value = 
+let encode_ber_bool ?(cls=Universal) ?(tag=1) value =
   let buf = Buffer.create 3 in
-    Buffer.add_string buf 
-      (encode_ber_header 
+    Buffer.add_string buf
+      (encode_ber_header
          {ber_class=cls;ber_primitive=true;ber_tag=tag;ber_length=Definite 1});
     Buffer.add_char buf
       (if value then char_of_int 1
@@ -441,19 +441,19 @@ let decode_ber_int32 ?(peek=false) ?(cls=Universal) ?(tag=2) ?(contents=None)
       else if length > 0 then
         let c i = Int32.of_int (int_of_char i) in
         let rec convert octets l i v =
-          if i <= l then            
-            convert octets l (i + 1)               
+          if i <= l then
+            convert octets l (i + 1)
               (Int32.logor v (Int32.shift_left (c octets.[i]) (8 * (l - i))))
           else v
         in
         let v = convert contents (length - 1) 0 0l in
-          if (Int32.logand (c contents.[0]) 0b10000000l) = 0b10000000l then 
+          if (Int32.logand (c contents.[0]) 0b10000000l) = 0b10000000l then
             (* the number should be negative, fix it. For a less than
                4 byte encoding, we need to set all the bits left of the data to
                1. This operation will have no effect on a 4 byte encoding *)
             (Int32.logor
                (Int32.shift_left (-1l) (length * 8))
-               v)              
+               v)
           else
             v
       else raise (Decoding_error "integer, no contents octets") (* sec 8.3.1 *)
@@ -466,15 +466,15 @@ let decode_ber_int32 ?(peek=false) ?(cls=Universal) ?(tag=2) ?(contents=None)
              | _ -> raise (Decoding_error "expected int"))
       | Some contents -> decode_ber_int32' contents (* we already have the contents *)
 
-let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =  
+let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
   let to_char i = char_of_int (Int32.to_int i) in
-  let encode_positive_int32 value = 
+  let encode_positive_int32 value =
     let buf = Buffer.create 4 in
       (if value < 0b01111111l then (* fits in 7 bits + sign bit? *)
          Buffer.add_char buf (to_char value) (* byte one, MSB *)
        else if value < 0b01111111_11111111l then (* fits in 15 bits + sign bit? *)
          (Buffer.add_char buf (* byte one, MSB *)
-            (to_char 
+            (to_char
                (Int32.shift_right
                   (Int32.logand value 0b01111111_00000000l)
                   8));
@@ -482,30 +482,30 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
             (to_char (Int32.logand value 0b00000000_11111111l)))
        else if value < 0b01111111_11111111_11111111l then (* fits in 23 bits + sign bit? *)
          (Buffer.add_char buf (* byte one, MSB *)
-            (to_char 
-               (Int32.shift_right 
+            (to_char
+               (Int32.shift_right
                   (Int32.logand value 0b01111111_00000000_00000000l)
                   16));
           Buffer.add_char buf (* byte two *)
-            (to_char 
-               (Int32.shift_right 
+            (to_char
+               (Int32.shift_right
                   (Int32.logand value 0b00000000_11111111_00000000l)
                   8));
           Buffer.add_char buf (* byte three *)
             (to_char (Int32.logand value 0b00000000_00000000_11111111l)))
        else (* use 31 bits + sign bit *)
          (Buffer.add_char buf (* byte one, MSB *)
-            (to_char 
+            (to_char
                (Int32.shift_right
-                  (Int32.logand value 0b01111111_00000000_00000000_00000000l) 
+                  (Int32.logand value 0b01111111_00000000_00000000_00000000l)
                   24));
           Buffer.add_char buf (* byte two *)
-            (to_char 
+            (to_char
                (Int32.shift_right
-                  (Int32.logand value 0b00000000_11111111_00000000_00000000l) 
+                  (Int32.logand value 0b00000000_11111111_00000000_00000000l)
                   16));
           Buffer.add_char buf (* byte three *)
-            (to_char 
+            (to_char
                (Int32.shift_right
                   (Int32.logand value 0b00000000_00000000_11111111_00000000l)
                   8));
@@ -514,7 +514,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
                (Int32.logand value 0b00000000_00000000_00000000_11111111l))));
       buf
   in
-  let encode_negative_int32 value = 
+  let encode_negative_int32 value =
     let buf = Buffer.create 4 in
       (* We must manually set the sign bit for the first octet of the
          encoding. So we must turn the real sign bit off, and set the
@@ -523,7 +523,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
       (if value > 0b11111111_11111111_11111111_10000000l then
          (* fits in 7 bits + sign bit *)
          Buffer.add_char buf (* byte one, MSB *)
-           (to_char 
+           (to_char
               (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
                  0b1000_0000l
                  (Int32.logand (* flip the sign bit for the WHOLE word OFF *)
@@ -534,23 +534,23 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
          (Buffer.add_char buf (* byte one, MSB *)
             (to_char
                (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
-                  0b1000_0000l                
+                  0b1000_0000l
                   (Int32.shift_right
                      (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
                         0b00000000_00000000_11111111_00000000l
                         value)
                      8)));
-          Buffer.add_char buf 
-            (to_char 
-               (Int32.logand 
-                  0b00000000_00000000_00000000_11111111l 
+          Buffer.add_char buf
+            (to_char
+               (Int32.logand
+                  0b00000000_00000000_00000000_11111111l
                   value))) (* byte two *)
        else if value > 0b11111111_10000000_00000000_00000000l then
          (* fits in 23 bits + sign bit *)
          (Buffer.add_char buf (* byte one, MSB *)
             (to_char
                (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
-                  0b1000_0000l                
+                  0b1000_0000l
                   (Int32.shift_right
                      (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
                         0b00000000_11111111_00000000_00000000l
@@ -564,7 +564,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
                      value)
                   8));
           Buffer.add_char buf (* byte three *)
-            (to_char 
+            (to_char
                (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
                   0b00000000_00000000_00000000_11111111l
                   value)))
@@ -573,7 +573,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
          (Buffer.add_char buf (* byte one, MSB *)
             (to_char
                (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
-                  0b1000_0000l                
+                  0b1000_0000l
                   (Int32.shift_right
                      (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
                         0b01111111_00000000_00000000_00000000l
@@ -594,7 +594,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
                      value)
                   8));
           Buffer.add_char buf (* byte four *)
-            (to_char 
+            (to_char
                (Int32.logand (* this mask also accomplishes flipping the sign bit OFF *)
                   0b00000000_00000000_00000000_11111111l
                   value))));
@@ -617,16 +617,16 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
     Buffer.contents buf1
 
 (* sec. 8.4 *)
-let decode_ber_enum ?(peek=false) ?(cls=Universal) ?(tag=10) ?(contents=None) 
-  (readbyte:readbyte) = 
+let decode_ber_enum ?(peek=false) ?(cls=Universal) ?(tag=10) ?(contents=None)
+  (readbyte:readbyte) =
   decode_ber_int32 ~peek:peek ~cls:cls ~tag:tag ~contents:contents readbyte
 
-let encode_ber_enum ?(cls=Universal) ?(tag=10) value = 
+let encode_ber_enum ?(cls=Universal) ?(tag=10) value =
   encode_ber_int32 ~cls:cls ~tag:tag value
 
 (* sec 8.7 *)
-let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=None) 
-  (readbyte:readbyte) = 
+let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=None)
+  (readbyte:readbyte) =
   match contents with
       None -> (* have not yet read the header, or unpacked the contents *)
         (match decode_ber_header readbyte with
@@ -635,7 +635,7 @@ let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=No
            | _ -> raise (Decoding_error "expected octetstring"))
     | Some contents -> contents
 
-let encode_ber_octetstring ?(cls=Universal) ?(tag=4) string = 
+let encode_ber_octetstring ?(cls=Universal) ?(tag=4) string =
   let len = String.length string in
   let buf = Buffer.create (len + 3) in
     Buffer.add_string buf
@@ -648,18 +648,18 @@ let encode_ber_octetstring ?(cls=Universal) ?(tag=4) string =
     Buffer.contents buf
 
 let encode_ber_null ?(cls=Universal) ?(tag=5) () =
-  encode_ber_header {ber_class=cls; 
-                     ber_tag=tag; 
+  encode_ber_header {ber_class=cls;
+                     ber_tag=tag;
                      ber_primitive=true;
                      ber_length=Definite 0}
 
 let decode_ber_null ?(peek=false) ?(cls=Universal) ?(tag=5) ?(contents=None)
-  (readbyte:readbyte) = 
+  (readbyte:readbyte) =
   let decode_ber_null' contents = () in
     match contents with
         None ->
           (match decode_ber_header ~peek:peek readbyte with
-               {ber_class=c; ber_tag=t; ber_length=l} 
+               {ber_class=c; ber_tag=t; ber_length=l}
                  when c=cls && t=tag && l=Definite 0 ->
                    decode_ber_null' None
              | _ -> raise (Decoding_error "expected null"))
@@ -667,7 +667,7 @@ let decode_ber_null ?(peek=false) ?(cls=Universal) ?(tag=5) ?(contents=None)
 
 let rec encode_berval_list ?(buf=Buffer.create 50) efun lst =
   match lst with
-      hd :: [] -> 
+      hd :: [] ->
         Buffer.add_string buf (efun hd);
         Buffer.contents buf
     | hd :: tl ->

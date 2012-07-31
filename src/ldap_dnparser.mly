@@ -3,25 +3,25 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
-   You should have received a copy of the GNU Lesser General Public            
-   License along with this library; if not, write to the Free Software         
-   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 %{
   open Ldap_types
 
-  let unhex hex = 
+  let unhex hex =
     match hex with
         '0' -> 0
       | '1' -> 1
@@ -41,24 +41,24 @@
       | 'f' -> 15
       | _ -> failwith "invalid hex digit"
 
-  let unescape_hexpair hex1 hex2 = 
-    (char_of_int 
-       ((lor) 
+  let unescape_hexpair hex1 hex2 =
+    (char_of_int
+       ((lor)
           ((lsl) (unhex hex1) 4)
           (unhex hex2)))
-    
-  let unescape_stringwithpair s = 
+
+  let unescape_stringwithpair s =
     let strm = Stream.of_string s in
     let buf = Buffer.create (String.length s) in
-    let rec unescape strm buf = 
+    let rec unescape strm buf =
       try
         match Stream.next strm with
-            '\\' -> 
+            '\\' ->
               (match Stream.next strm with
                    (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"' | ' ') as c ->
                      Buffer.add_char buf c;
                      unescape strm buf
-                 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 -> 
+                 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 ->
                      let hex2 = Stream.next strm in
                        Buffer.add_char buf (unescape_hexpair hex1 hex2);
                        unescape strm buf
@@ -68,13 +68,13 @@
     in
       unescape strm buf
 
-  let unescape_quotestring s = 
+  let unescape_quotestring s =
     unescape_stringwithpair (String.sub s 1 ((String.length s) - 2))
 
-  let unescape_hexstring s = 
+  let unescape_hexstring s =
     let strm = Stream.of_string s in
     let buf = Buffer.create (String.length s) in
-    let rec unescape strm buf = 
+    let rec unescape strm buf =
       try
         let hex1 = Stream.next strm in
         let hex2 = Stream.next strm in
@@ -113,8 +113,8 @@ attrname:
 ;
 
 dn:
-  attrname Equals attrval Plus dn 
-  {match $5 with 
+  attrname Equals attrval Plus dn
+  {match $5 with
        {attr_type=attr_name;attr_vals=vals} :: tl ->
          if $1 = attr_name then
            {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
