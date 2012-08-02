@@ -17,7 +17,10 @@ Library "ldap"
     Ldap_url,
     Ldap_filter,
     Ldap_dn,
-    Ldap_schemaparser
+    Ldap_schemaparser,
+    Ldap_funclient,
+    Ldap_ooclient,
+    Ldap_txooclient
   InternalModules:
     Ldap_urllexer,
     Ldap_filterlexer,
@@ -25,34 +28,24 @@ Library "ldap"
     Ldap_dnlexer,
     Ldap_dnparser,
     Ldap_schemalexer,
-    Ldif_parser
-  BuildDepends: ssl, pcre, netstring
-
-Library "client"
-  Path: src
-  Modules:
-    Ldap_funclient,
-    Ldap_ooclient,
-    Ldap_txooclient
-  InternalModules:
+    Ldif_parser,
     Ldap_mutex,
     Ldif_oo,
     Ldif_changerec_oo,
     Ldif_changerec_lexer,
     Ldif_changerec_parser,
     Ulist
-  FindlibParent: ldap
-  BuildDepends: ldap
+  BuildDepends: ssl, pcre, netstring
 
 Library "server"
   Path: src
   Modules: Ldap_funserver
   FindlibParent: ldap
-  BuildDepends: ldap.client
+  BuildDepends: ldap
 
 Library "toplevel"
   Path: src
   Modules: Ldap_toplevel
   FindlibParent: ldap
-  BuildDepends: ldap.client
+  BuildDepends: ldap.server
   CompiledObject: byte
