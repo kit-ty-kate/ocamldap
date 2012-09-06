@@ -49,3 +49,4 @@ Library "toplevel"
   FindlibParent: ldap
   BuildDepends: ldap.server
   CompiledObject: byte
+  ByteOpt: -I +compiler-libs # For ocaml-4.00.0 compatibility
