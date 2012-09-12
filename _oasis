@@ -10,43 +10,74 @@ BuildTools:  ocamlbuild
 Library "ldap"
   Path: src
   Modules:
-    Lber,
     Ldap_types,
-    Ldap_error,
-    Ldap_protocol,
-    Ldap_url,
     Ldap_filter,
-    Ldap_dn,
-    Ldap_schemaparser,
-    Ldap_funclient,
-    Ldap_ooclient,
-    Ldap_txooclient
-  InternalModules:
-    Ldap_urllexer,
-    Ldap_filterlexer,
     Ldap_filterparser,
-    Ldap_dnlexer,
-    Ldap_dnparser,
-    Ldap_schemalexer,
-    Ldif_parser,
+    Ldap_filterlexer,
+    Lber,
+    Ldap_protocol,
     Ldap_mutex,
-    Ldif_oo,
-    Ldif_changerec_oo,
-    Ldif_changerec_lexer,
-    Ldif_changerec_parser,
-    Ulist
-  BuildDepends: ssl, pcre, netstring
+    Ldap_dn,
+    Ldap_dnparser,
+    Ldap_dnlexer,
+    Ldap_error
+  BuildDepends: pcre
 
-Library "server"
+Library "funclient"
   Path: src
-  Modules: Ldap_funserver
+  Modules: 
+    Ldap_funclient,
+    Ldap_url,
+    Ldap_urllexer
+  FindlibParent: ldap
+  BuildDepends: ldap, ssl
+
+Library "funserver"
+  Path: src
+  Modules:
+    Ldap_funserver
   FindlibParent: ldap
   BuildDepends: ldap
 
+Library "ooclient"
+  Path: src
+  Modules:
+    Ldap_ooclient,
+    Ldap_schemaparser,
+    Ldap_schemalexer,
+    Ulist
+  FindlibParent: ldap
+  BuildDepends: ldap.funclient
+
+Library "txooclient"
+  Path: src
+  Modules:
+    Ldap_txooclient
+  FindlibParent: ldap
+  BuildDepends: ldap.ooclient
+
+Library "ldif"
+  Path: src
+  Modules:
+    Ldif_oo,
+    Ldif_parser
+  FindlibParent: ldap
+  BuildDepends: ldap.ooclient, netstring
+
+Library "changerec"
+  Path: src
+  Modules:
+    Ldif_changerec_oo,
+    Ldif_changerec_lexer,
+    Ldif_changerec_parser
+  FindlibParent: ldif
+  BuildDepends: ldap.ldif
+
 Library "toplevel"
   Path: src
-  Modules: Ldap_toplevel
+  Modules:
+    Ldap_toplevel
   FindlibParent: ldap
-  BuildDepends: ldap.server
+  BuildDepends: ldap.ldif
   CompiledObject: byte
   ByteOpt: -I +compiler-libs # For ocaml-4.00.0 compatibility
