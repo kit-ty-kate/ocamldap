@@ -16,7 +16,6 @@ Library "ldap"
     Ldap_filterlexer,
     Lber,
     Ldap_protocol,
-    Ldap_mutex,
     Ldap_dn,
     Ldap_dnparser,
     Ldap_dnlexer,
@@ -45,6 +44,7 @@ Library "ooclient"
     Ldap_ooclient,
     Ldap_schemaparser,
     Ldap_schemalexer,
+    Ldap_mutex,
     Ulist
   FindlibParent: ldap
   BuildDepends: ldap.funclient
