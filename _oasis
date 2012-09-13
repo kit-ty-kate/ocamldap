@@ -19,59 +19,29 @@ Library "ldap"
     Ldap_dn,
     Ldap_dnparser,
     Ldap_dnlexer,
-    Ldap_error
-  BuildDepends: pcre
-
-Library "funclient"
-  Path: src
-  Modules: 
+    Ldap_error,
     Ldap_funclient,
     Ldap_url,
-    Ldap_urllexer
-  FindlibParent: ldap
-  BuildDepends: ldap, ssl
-
-Library "funserver"
-  Path: src
-  Modules:
-    Ldap_funserver
-  FindlibParent: ldap
-  BuildDepends: ldap
-
-Library "ooclient"
-  Path: src
-  Modules:
+    Ldap_urllexer,
+    Ldap_funserver,
     Ldap_ooclient,
     Ldap_schemaparser,
     Ldap_schemalexer,
     Ldap_mutex,
-    Ulist
-  FindlibParent: ldap
-  BuildDepends: ldap.funclient
-
-Library "txooclient"
-  Path: src
-  Modules:
+    Ulist,
     Ldap_txooclient
-  FindlibParent: ldap
-  BuildDepends: ldap.ooclient
+  BuildDepends: pcre, ssl
 
 Library "ldif"
   Path: src
   Modules:
     Ldif_oo,
-    Ldif_parser
-  FindlibParent: ldap
-  BuildDepends: ldap.ooclient, netstring
-
-Library "changerec"
-  Path: src
-  Modules:
+    Ldif_parser,
     Ldif_changerec_oo,
     Ldif_changerec_lexer,
     Ldif_changerec_parser
-  FindlibParent: ldif
-  BuildDepends: ldap.ldif
+  FindlibParent: ldap
+  BuildDepends: ldap, netstring
 
 Library "toplevel"
   Path: src
