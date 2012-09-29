@@ -1,8 +1,8 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 7b8816f7c3d5c68d6ebe77a2393cfa3d) *)
-This is the README file for the ocaml-ldap distribution.
+(* DO NOT EDIT (digest: b692906925410259277e40125b45495a) *)
+This is the README file for the ocamldap distribution.
 
-ocaml-ldap is a fork of ocamldap
+Ocamldap is an implementation of the Light Weight Directory Access Protocol
 
 See the files INSTALL.txt for building and installation instructions. 
 

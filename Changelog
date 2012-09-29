@@ -1,3 +1,10 @@
+2.2
+	* OCaml 4 compatibility
+	* Modularize the library in sub-libraries: ldap ldap.ldif ldap.toplevel
+	* Use oasis
+	* Repository cleaning
+	* Maintainer changed
+	* Switch from svn to git
 2.1.7
 	* Fixed a bug in search_a, if a search results in zero results an
 	exception (LDAP_Failure (`SUCCESS, ..)) was being raised by the

@@ -1,0 +1,34 @@
+# OASIS_START
+# DO NOT EDIT (digest: 79641b2c9e44662106ef2af4e4667de5)
+version = "2.1.6"
+description =
+"Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+requires = "pcre ssl"
+archive(byte) = "ldap.cma"
+archive(byte, plugin) = "ldap.cma"
+archive(native) = "ldap.cmxa"
+archive(native, plugin) = "ldap.cmxs"
+exists_if = "ldap.cma"
+package "toplevel" (
+ version = "2.1.6"
+ description =
+ "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+ requires = "ldap.ldif"
+ archive(byte) = "toplevel.cma"
+ archive(byte, plugin) = "toplevel.cma"
+ exists_if = "toplevel.cma"
+)
+
+package "ldif" (
+ version = "2.1.6"
+ description =
+ "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
+ requires = "ldap netstring"
+ archive(byte) = "ldif.cma"
+ archive(byte, plugin) = "ldif.cma"
+ archive(native) = "ldif.cmxa"
+ archive(native, plugin) = "ldif.cmxs"
+ exists_if = "ldif.cma"
+)
+# OASIS_STOP
+

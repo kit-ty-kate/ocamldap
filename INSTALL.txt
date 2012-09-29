@@ -1,6 +1,6 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 962742e5071118e9d1b9d71e5b7bb5f2) *)
-This is the INSTALL file for the ocaml-ldap distribution.
+(* DO NOT EDIT (digest: 4d21938e2c35bd77dbf68cede79b64cb) *)
+This is the INSTALL file for the ocamldap distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
 full information. 
