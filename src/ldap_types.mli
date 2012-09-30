@@ -124,7 +124,7 @@ type saslCredentials = {
 }
 
 type authentication = Simple of string
-		      | Sasl of saslCredentials
+                      | Sasl of saslCredentials
 
 type bind_request = {
   bind_version: int;
@@ -153,13 +153,13 @@ type search_result_entry = {
 
 (** a type defining the scope of a search filter *)
 type search_scope = [ `BASE (** search only at the base *)
-		    | `ONELEVEL (** search one level below the base *)
-		    | `SUBTREE (** search the entire tree under the base *)]
+                    | `ONELEVEL (** search one level below the base *)
+                    | `SUBTREE (** search the entire tree under the base *)]
 
 type alias_deref = [ `NEVERDEREFALIASES
-		   | `DEREFINSEARCHING
-		   | `DEREFFINDINGBASE
-		   | `DEREFALWAYS ]
+                   | `DEREFINSEARCHING
+                   | `DEREFFINDINGBASE
+                   | `DEREFALWAYS ]
 
 type attribute_value_assertion = {
   attributeDesc: string;
@@ -185,15 +185,15 @@ type substring_filter = {
 }
 
 type filter = [ `And of filter list
-	      | `Or of filter list
-	      | `Not of filter
-	      | `EqualityMatch of attribute_value_assertion
-	      | `Substrings of substring_filter
-	      | `GreaterOrEqual of attribute_value_assertion
-	      | `LessOrEqual of attribute_value_assertion
-	      | `Present of string
-	      | `ApproxMatch of attribute_value_assertion
-	      | `ExtensibleMatch of matching_rule_assertion ]
+              | `Or of filter list
+              | `Not of filter
+              | `EqualityMatch of attribute_value_assertion
+              | `Substrings of substring_filter
+              | `GreaterOrEqual of attribute_value_assertion
+              | `LessOrEqual of attribute_value_assertion
+              | `Present of string
+              | `ApproxMatch of attribute_value_assertion
+              | `ExtensibleMatch of matching_rule_assertion ]
 
 type search_request = {
   baseObject: string;
@@ -207,8 +207,8 @@ type search_request = {
 }
 
 type modify_optype = [ `ADD
-		     | `DELETE
-		     | `REPLACE ]
+                     | `DELETE
+                     | `REPLACE ]
 
 type modify_op = {
   mod_op: modify_optype;
@@ -244,25 +244,25 @@ type extended_response = {
 }
 
 type protocol_op = Bind_request of bind_request
-		   | Bind_response of bind_response
+                   | Bind_response of bind_response
                    | Unbind_request
-		   | Search_request of search_request
-		   | Search_result_entry of search_result_entry
-		   | Search_result_reference of string list
-		   | Search_result_done of ldap_result
-		   | Modify_request of modify_request
-		   | Modify_response of ldap_result
-		   | Add_request of search_result_entry
-		   | Add_response of ldap_result
-		   | Delete_request of string
-		   | Delete_response of ldap_result
-		   | Modify_dn_request of modify_dn_request
-		   | Modify_dn_response of ldap_result
-		   | Compare_request of compare_request
-		   | Compare_response of ldap_result
-		   | Abandon_request of Int32.t
-		   | Extended_request of extended_request
-		   | Extended_response of extended_response
+                   | Search_request of search_request
+                   | Search_result_entry of search_result_entry
+                   | Search_result_reference of string list
+                   | Search_result_done of ldap_result
+                   | Modify_request of modify_request
+                   | Modify_response of ldap_result
+                   | Add_request of search_result_entry
+                   | Add_response of ldap_result
+                   | Delete_request of string
+                   | Delete_response of ldap_result
+                   | Modify_dn_request of modify_dn_request
+                   | Modify_dn_response of ldap_result
+                   | Compare_request of compare_request
+                   | Compare_response of ldap_result
+                   | Abandon_request of Int32.t
+                   | Extended_request of extended_request
+                   | Extended_response of extended_response
 
 type ldap_control = {
   controlType: string;
@@ -279,7 +279,7 @@ type ldap_message = {
 }
 
 type con_mech = [ `SSL
-		| `PLAIN ]
+                | `PLAIN ]
 
 type ldap_url = {
   url_mech: con_mech;

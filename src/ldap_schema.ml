@@ -34,20 +34,20 @@ let caseIgnoreCompare v1 v2 =
     else if lv1 = lv2 then begin
       if String.compare v1 v2 = 0 then 0
       else
-	let result = ref 0 in
-	  try
-	    for i=0 to lv1 - 1
-	    do
-	      if v1.[i] <> v2.[i] then
-		let v1lc = Char.lowercase v1.[i]
-		and v2lc = Char.lowercase v2.[i] in
-		  if v1lc <> v2lc then begin
-		    result := Char.compare v1lc v2lc;
-		    raise Different
-		  end
-	    done;
-	    0
-	  with Different -> !result
+        let result = ref 0 in
+          try
+            for i=0 to lv1 - 1
+            do
+              if v1.[i] <> v2.[i] then
+                let v1lc = Char.lowercase v1.[i]
+                and v2lc = Char.lowercase v2.[i] in
+                  if v1lc <> v2lc then begin
+                    result := Char.compare v1lc v2lc;
+                    raise Different
+                  end
+            done;
+            0
+          with Different -> !result
     end else 1
 *)
 
@@ -166,38 +166,38 @@ let attrNameToAttr schema attr =
     try (Lcmap.find attr schema.attributes) (* try canonical name first *)
     with Not_found ->
       (match
-	 Lcmap.fold
-	   (fun k v matches ->
-	      if (List.exists
-		    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
-		    v.at_name)
-	      then
-		v :: matches
-	      else matches)
-	   schema.attributes []
+         Lcmap.fold
+           (fun k v matches ->
+              if (List.exists
+                    (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
+                    v.at_name)
+              then
+                v :: matches
+              else matches)
+           schema.attributes []
        with
            [] -> raise (Invalid_attribute (Lcstring.to_string attr))
-	 | [attr] -> attr
-	 | _ -> raise (Non_unique_attribute_alias (Lcstring.to_string attr)))
+         | [attr] -> attr
+         | _ -> raise (Non_unique_attribute_alias (Lcstring.to_string attr)))
 
 let ocNameToOc schema oc =
   let oc = Lcstring.of_string oc in
     try Lcmap.find oc schema.objectclasses
     with Not_found ->
       (match
-	 Lcmap.fold
-	   (fun k v matches ->
-	      if (List.exists
-		    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
-		    v.oc_name)
-	      then
-		v :: matches
-	      else matches)
-	   schema.objectclasses []
+         Lcmap.fold
+           (fun k v matches ->
+              if (List.exists
+                    (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
+                    v.oc_name)
+              then
+                v :: matches
+              else matches)
+           schema.objectclasses []
        with
            [] -> raise (Invalid_objectclass (Lcstring.to_string oc))
-	 | [oc] -> oc
-	 | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc)))
+         | [oc] -> oc
+         | _ -> raise (Non_unique_objectclass_alias (Lcstring.to_string oc)))
 
 let attrNameToOid schema attr = (attrNameToAttr schema attr).at_oid
 
@@ -221,20 +221,20 @@ let compareOcs schema oc1 oc2 =
 let rec lookupMatchingRule schema rtype attr =
   let mrule =
     match rtype with
-	`Ordering -> attr.at_ordering
+        `Ordering -> attr.at_ordering
       | `Substring -> attr.at_substr
       | `Equality -> attr.at_equality
   in
     match mrule with
-	Some oid -> Some oid
+        Some oid -> Some oid
       | None ->
-	  List.fold_left
-	    (fun mrule superior ->
-	       match mrule with
-		   None -> lookupMatchingRule schema rtype (attrNameToAttr schema superior)
-		 | _ -> mrule)
-	    None
-	    attr.at_sup
+          List.fold_left
+            (fun mrule superior ->
+               match mrule with
+                   None -> lookupMatchingRule schema rtype (attrNameToAttr schema superior)
+                 | _ -> mrule)
+            None
+            attr.at_sup
 
 let schema_print_depth = ref 10
 let format_schema s =
@@ -242,15 +242,15 @@ let format_schema s =
   let printtbl tbl =
     let i = ref 0 in
       try
-	Lcmap.iter
-	  (fun aname aval ->
-	     if !i < !schema_print_depth then begin
-	       Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
-	       Format.print_break 1 indent;
-	       i := !i + 1
-	     end
-	     else failwith "depth")
-	  tbl
+        Lcmap.iter
+          (fun aname aval ->
+             if !i < !schema_print_depth then begin
+               Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
+               Format.print_break 1 indent;
+               i := !i + 1
+             end
+             else failwith "depth")
+          tbl
       with Failure "depth" -> Format.print_string "..."
   in
     Format.open_box 0;
@@ -291,106 +291,106 @@ let rec readSchema oclst attrlst =
   let readOc lxbuf oc =
     let rec readOptionalFields lxbuf oc =
       try match (lexoc lxbuf) with
-	  Name s                -> readOptionalFields lxbuf {oc with oc_name=s}
-	| Desc s                -> readOptionalFields lxbuf {oc with oc_desc=s}
-	| Obsolete              -> readOptionalFields lxbuf {oc with oc_obsolete=true}
-	| Sup s                 -> readOptionalFields lxbuf {oc with oc_sup=s}
-	| Ldap_schemalexer.Abstract   -> readOptionalFields lxbuf {oc with oc_type=Abstract}
-	| Ldap_schemalexer.Structural -> readOptionalFields lxbuf {oc with oc_type=Structural}
-	| Ldap_schemalexer.Auxiliary  -> readOptionalFields lxbuf {oc with oc_type=Auxiliary}
-	| Must s                -> readOptionalFields lxbuf {oc with oc_must=s}
-	| May s                 -> readOptionalFields lxbuf {oc with oc_may=s}
-	| Xstring t             -> readOptionalFields lxbuf {oc with oc_xattr=(t :: oc.oc_xattr)}
-	| Rparen                -> oc
-	| _                     -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
+          Name s                -> readOptionalFields lxbuf {oc with oc_name=s}
+        | Desc s                -> readOptionalFields lxbuf {oc with oc_desc=s}
+        | Obsolete              -> readOptionalFields lxbuf {oc with oc_obsolete=true}
+        | Sup s                 -> readOptionalFields lxbuf {oc with oc_sup=s}
+        | Ldap_schemalexer.Abstract   -> readOptionalFields lxbuf {oc with oc_type=Abstract}
+        | Ldap_schemalexer.Structural -> readOptionalFields lxbuf {oc with oc_type=Structural}
+        | Ldap_schemalexer.Auxiliary  -> readOptionalFields lxbuf {oc with oc_type=Auxiliary}
+        | Must s                -> readOptionalFields lxbuf {oc with oc_must=s}
+        | May s                 -> readOptionalFields lxbuf {oc with oc_may=s}
+        | Xstring t             -> readOptionalFields lxbuf {oc with oc_xattr=(t :: oc.oc_xattr)}
+        | Rparen                -> oc
+        | _                     -> raise (Parse_error_oc (lxbuf, oc, "unexpected token"))
       with Failure(_) -> raise (Parse_error_oc (lxbuf, oc, "Expected right parenthesis"))
     in
     let readOid lxbuf oc =
       try match (lexoc lxbuf) with
-	  Numericoid(s) -> readOptionalFields lxbuf {oc with oc_oid=Oid.of_string s}
-	| _ -> raise (Parse_error_oc (lxbuf, oc, "missing required field, numericoid"))
+          Numericoid(s) -> readOptionalFields lxbuf {oc with oc_oid=Oid.of_string s}
+        | _ -> raise (Parse_error_oc (lxbuf, oc, "missing required field, numericoid"))
       with Failure(_) -> raise (Syntax_error_oc (lxbuf, oc, "Syntax error"))
     in
     let readLparen lxbuf oc =
       try match (lexoc lxbuf) with
-	  Lparen -> readOid lxbuf oc
-	| _ -> raise (Parse_error_oc (lxbuf, oc, "Expected left paren"))
+          Lparen -> readOid lxbuf oc
+        | _ -> raise (Parse_error_oc (lxbuf, oc, "Expected left paren"))
       with Failure(_) -> raise (Syntax_error_oc (lxbuf, oc, "Syntax error"))
     in
       readLparen lxbuf oc
   in
   let rec readAttr lxbuf attr =
     let rec readOptionalFields lxbuf attr =
-      try match (lexattr lxbuf) with	
-	  Name s              -> readOptionalFields lxbuf {attr with at_name=s}
-	| Desc s              -> readOptionalFields lxbuf {attr with at_desc=s}
-	| Obsolete            -> readOptionalFields lxbuf {attr with at_obsolete=true}
-	| Sup s               -> readOptionalFields lxbuf {attr with at_sup=s}
-	| Equality s          ->
-	    readOptionalFields lxbuf
-	      {attr with at_equality=(Some (Oid.of_string s))}
-	| Substr s            ->
-	    readOptionalFields lxbuf
-	      {attr with at_substr=(Some (Oid.of_string s))}
-	| Ordering s          ->
-	    readOptionalFields lxbuf
-	      {attr with at_ordering=(Some (Oid.of_string s))}
-	| Syntax (s, l)       ->
-	    readOptionalFields lxbuf {attr with at_syntax=Oid.of_string s;at_length=l}
-	| Single_value         -> readOptionalFields lxbuf {attr with at_single_value=true}
-	| Collective           -> readOptionalFields lxbuf {attr with at_collective=true}
-	| No_user_modification -> readOptionalFields lxbuf {attr with at_no_user_modification=true}
-	| Usage s              -> readOptionalFields lxbuf {attr with at_usage=s}
-	| Rparen               -> attr
-	| Xstring t            ->
-	    (readOptionalFields
-	       lxbuf
-	       {attr with at_xattr=(t :: attr.at_xattr)})
-	| _                    -> raise (Parse_error_at (lxbuf, attr, "unexpected token"))
+      try match (lexattr lxbuf) with
+          Name s              -> readOptionalFields lxbuf {attr with at_name=s}
+        | Desc s              -> readOptionalFields lxbuf {attr with at_desc=s}
+        | Obsolete            -> readOptionalFields lxbuf {attr with at_obsolete=true}
+        | Sup s               -> readOptionalFields lxbuf {attr with at_sup=s}
+        | Equality s          ->
+            readOptionalFields lxbuf
+              {attr with at_equality=(Some (Oid.of_string s))}
+        | Substr s            ->
+            readOptionalFields lxbuf
+              {attr with at_substr=(Some (Oid.of_string s))}
+        | Ordering s          ->
+            readOptionalFields lxbuf
+              {attr with at_ordering=(Some (Oid.of_string s))}
+        | Syntax (s, l)       ->
+            readOptionalFields lxbuf {attr with at_syntax=Oid.of_string s;at_length=l}
+        | Single_value         -> readOptionalFields lxbuf {attr with at_single_value=true}
+        | Collective           -> readOptionalFields lxbuf {attr with at_collective=true}
+        | No_user_modification -> readOptionalFields lxbuf {attr with at_no_user_modification=true}
+        | Usage s              -> readOptionalFields lxbuf {attr with at_usage=s}
+        | Rparen               -> attr
+        | Xstring t            ->
+            (readOptionalFields
+               lxbuf
+               {attr with at_xattr=(t :: attr.at_xattr)})
+        | _                    -> raise (Parse_error_at (lxbuf, attr, "unexpected token"))
       with Failure(f) -> raise (Parse_error_at (lxbuf, attr, f))
     in
     let readOid lxbuf attr =
       try match (lexoc lxbuf) with
-	  Numericoid(s) -> readOptionalFields lxbuf {attr with at_oid=Oid.of_string s}
-	| _ -> raise (Parse_error_at (lxbuf, attr, "missing required field, numericoid"))
+          Numericoid(s) -> readOptionalFields lxbuf {attr with at_oid=Oid.of_string s}
+        | _ -> raise (Parse_error_at (lxbuf, attr, "missing required field, numericoid"))
       with Failure(_) -> raise (Syntax_error_at (lxbuf, attr, "Syntax error"))
     in
     let readLparen lxbuf attr =
       try match (lexoc lxbuf) with
-	  Lparen -> readOid lxbuf attr
-	| _ -> raise (Parse_error_at (lxbuf, attr, "Expected left paren"))
+          Lparen -> readOid lxbuf attr
+        | _ -> raise (Parse_error_at (lxbuf, attr, "Expected left paren"))
       with Failure(_) -> raise (Syntax_error_at (lxbuf, attr, "Syntax error"))
     in
       readLparen lxbuf attr
   in
   let schema =
     {objectclasses=Lcmap.empty;
-     objectclasses_byoid=Oidmap.empty;		
+     objectclasses_byoid=Oidmap.empty;
      attributes=Lcmap.empty;
      attributes_byoid=Oidmap.empty}
   in
     List.fold_left (* add attributes to the map *)
       (fun schema a ->
-	 let attr = readAttr (Lexing.from_string a) empty_attr in
-	   {schema with
-	      attributes=
-	       (List.fold_left
-		  (fun map n -> Lcmap.add (Lcstring.of_string n) attr map)
-		  schema.attributes
-		  attr.at_name);
-	      attributes_byoid=
-	       (Oidmap.add attr.at_oid attr schema.attributes_byoid)})
+         let attr = readAttr (Lexing.from_string a) empty_attr in
+           {schema with
+              attributes=
+               (List.fold_left
+                  (fun map n -> Lcmap.add (Lcstring.of_string n) attr map)
+                  schema.attributes
+                  attr.at_name);
+              attributes_byoid=
+               (Oidmap.add attr.at_oid attr schema.attributes_byoid)})
       (List.fold_left (* add objectclasses to the map *)
-	 (fun schema a ->
-	    let oc = readOc (Lexing.from_string a) empty_oc in
-	      {schema with
-		 objectclasses=
-		  (List.fold_left
-		     (fun map n -> Lcmap.add (Lcstring.of_string n) oc map)
-		     schema.objectclasses
-		     oc.oc_name);
-		 objectclasses_byoid=
-		  (Oidmap.add oc.oc_oid oc schema.objectclasses_byoid)})
-	 schema
-	 oclst)
+         (fun schema a ->
+            let oc = readOc (Lexing.from_string a) empty_oc in
+              {schema with
+                 objectclasses=
+                  (List.fold_left
+                     (fun map n -> Lcmap.add (Lcstring.of_string n) oc map)
+                     schema.objectclasses
+                     oc.oc_name);
+                 objectclasses_byoid=
+                  (Oidmap.add oc.oc_oid oc schema.objectclasses_byoid)})
+         schema
+         oclst)
       attrlst

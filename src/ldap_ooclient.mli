@@ -75,9 +75,9 @@ object
     method attributes : string list
 
     (** return a list of changes made to the object in a the format of
-	a modify operation. For example, you can apply the changes to another
-	ldapentry object using the {!Ldap_ooclient.ldapentry.modify}
-	method *)
+        a modify operation. For example, you can apply the changes to another
+        ldapentry object using the {!Ldap_ooclient.ldapentry.modify}
+        method *)
     method changes : (Ldap_types.modify_optype * string * string list) list
 
     (** return the changetype of the object *)
@@ -91,9 +91,9 @@ object
     method dn : string
 
     (** given an ldapentry, return the differences between the current
-	entry and the specified entry in the form of a modify
-	operation which would make the specified entry the same as the
-	current entry. *)
+        entry and the specified entry in the form of a modify
+        operation which would make the specified entry the same as the
+        current entry. *)
     method diff : ldapentry_t -> (modify_optype * string * string list) list
 
     (** query whether the attribute type (name) exists in the object *)
@@ -103,18 +103,18 @@ object
     method flush_changes : unit
 
     (** get the value of an attribute @raise Not_found If the
-	attribute does not exist. *)
+        attribute does not exist. *)
     method get_value : string -> string list
 
     (** Apply modifications to object in memory, does not change the
-	database until you update using
-	{!Ldap_ooclient.ldapcon.update_entry} *)
+        database until you update using
+        {!Ldap_ooclient.ldapcon.update_entry} *)
     method modify :
       (Ldap_types.modify_optype * string * string list) list -> unit
 
     (** @deprecated print an ldif like representation of the object to stdout, see
-	Ldif_oo for standards compliant ldif. Usefull for toplevel
-	sessions. *)
+        Ldif_oo for standards compliant ldif. Usefull for toplevel
+        sessions. *)
     method print : unit
 
     (** replace values in the object, does not change the database
@@ -412,10 +412,10 @@ end
 type scflavor =
     Optimistic
       (** Add missing attributes to make the object consistant, or add
-	  objectclasses in order to make illegal attribues legal *)
+          objectclasses in order to make illegal attribues legal *)
   | Pessimistic
       (** Delete objectclasses which must attributes which are
-	  missing, and delete illegal attributes. *)
+          missing, and delete illegal attributes. *)
 
 (** given a name of an attribute name (canonical or otherwise), return
     its oid @raise Invalid_attribute If the attribute is not found in the schema. *)

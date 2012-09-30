@@ -30,9 +30,9 @@
   let unescape s =
     (Pcre.qreplace ~rex:star_escape_rex ~templ:"*"
        (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
-	  (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
-	     (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
-		(Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
+          (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
+             (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
+                (Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
 %}
 
 %token WHSP LPAREN RPAREN AND OR NOT EOF
@@ -65,19 +65,19 @@ filter:
 | ATTRPRESENT {`Present $1}
 | ATTRAPPROX {`ApproxMatch {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
 | ATTREXTENDEDMATCH {let (a, oid, v) = $1 in
-		       `ExtensibleMatch
-			 {matchingRule=(Some (unescape oid));
-			  ruletype=(Some (unescape a));
-			  matchValue=(unescape v);
-			  dnAttributes=false}}
+                       `ExtensibleMatch
+                         {matchingRule=(Some (unescape oid));
+                          ruletype=(Some (unescape a));
+                          matchValue=(unescape v);
+                          dnAttributes=false}}
 | ATTREXTENDEDDN {let (a, oid, v) = $1 in
-		    `ExtensibleMatch
-		      {matchingRule=(match oid with
-					 Some s -> Some (unescape s)
-				       | None -> None);
-		       ruletype=(Some (unescape a));
-		       matchValue=(unescape v);
-		       dnAttributes=true}}
+                    `ExtensibleMatch
+                      {matchingRule=(match oid with
+                                         Some s -> Some (unescape s)
+                                       | None -> None);
+                       ruletype=(Some (unescape a));
+                       matchValue=(unescape v);
+                       dnAttributes=true}}
 ;
 
 /* used to enforce EOF at the end of the filter */

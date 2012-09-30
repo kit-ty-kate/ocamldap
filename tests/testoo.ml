@@ -43,9 +43,9 @@ let _ =
   let set_base x = base := x in
   let set_filter x = filter := x in
   let spec = [("-H", String(set_host), "host");
-	      ("-D", String(set_binddn), "dn to bind with");
-	      ("-w", String(set_cred), "password to use when binding");
-	      ("-b", String(set_base), "search base")] in
+              ("-D", String(set_binddn), "dn to bind with");
+              ("-w", String(set_cred), "password to use when binding");
+              ("-b", String(set_base), "search base")] in
 
 
     (* do the ldap part *)
@@ -53,9 +53,9 @@ let _ =
       (parse spec set_filter usg;
        let ldap = new ldapcon [!host] in
        let ldif = new ldif () in
-	 ldap#bind  !binddn ~cred: !cred;
-	 Ldap_ooclient.iter
-	   (fun e -> ldif#write_entry e)
-	   (ldap#search_a ~base: !base !filter))
+         ldap#bind  !binddn ~cred: !cred;
+         Ldap_ooclient.iter
+           (fun e -> ldif#write_entry e)
+           (ldap#search_a ~base: !base !filter))
     else
       usage spec usg

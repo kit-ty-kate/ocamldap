@@ -30,13 +30,13 @@ let of_string dn_string =
   let lexbuf = Lexing.from_string dn_string in
     try Ldap_dnparser.dn lexdn lexbuf
     with
-	Parsing.Parse_error -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, "parse error"))
+        Parsing.Parse_error -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, "parse error"))
       | Failure msg -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, msg))
 
 let hexpair_of_char c =
   let hexify i =
     match i with
-	0 -> '0'
+        0 -> '0'
       | 1 -> '1'
       | 2 -> '2'
       | 3 -> '3'
@@ -66,36 +66,36 @@ let escape_value valu =
   let rec escape strm buf =
     try
       match Stream.next strm with
-	  (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
-	    Buffer.add_char buf '\\';
-	    Buffer.add_char buf c;
-	  escape strm buf
-	| ' ' ->
-	    if Stream.peek strm = None then begin
-	      Buffer.add_string buf "\\ ";
-	      escape strm buf
-	    end
-	    else begin
-	      Buffer.add_char buf ' ';
-	      escape strm buf
-	    end
-	| c ->
-	    if (int_of_char c) < (int_of_char ' ') ||
-	       (int_of_char c) > (int_of_char '~')
-	    then begin
-	      Buffer.add_string buf ("\\" ^ (hexpair_of_char c));
-	      escape strm buf
-	    end
-	    else begin
-	      Buffer.add_char buf c;escape strm buf
-	    end
+          (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"') as c ->
+            Buffer.add_char buf '\\';
+            Buffer.add_char buf c;
+          escape strm buf
+        | ' ' ->
+            if Stream.peek strm = None then begin
+              Buffer.add_string buf "\\ ";
+              escape strm buf
+            end
+            else begin
+              Buffer.add_char buf ' ';
+              escape strm buf
+            end
+        | c ->
+            if (int_of_char c) < (int_of_char ' ') ||
+               (int_of_char c) > (int_of_char '~')
+            then begin
+              Buffer.add_string buf ("\\" ^ (hexpair_of_char c));
+              escape strm buf
+            end
+            else begin
+              Buffer.add_char buf c;escape strm buf
+            end
     with Stream.Failure -> Buffer.contents buf
   in
     match Stream.peek strm with
-	Some ' ' ->
-	  Buffer.add_string buf "\\ ";
-	  Stream.junk strm;
-	  escape strm buf
+        Some ' ' ->
+          Buffer.add_string buf "\\ ";
+          Stream.junk strm;
+          escape strm buf
       | Some c -> escape strm buf
       | None -> ""
 
@@ -103,28 +103,28 @@ let to_string dn =
   let dn_to_strcomponents dn =
     List.map
       (fun {attr_type=attr;attr_vals=vals} ->
-	 let rec string_values s attr vals =
-	   match vals with
-	       valu :: [] -> sprintf "%s%s=%s" s attr (escape_value valu)
-	     | valu :: tl ->
-		 string_values
-		   (sprintf "%s%s=%s+"
-		      s attr (escape_value valu))
-		   attr tl
-	     | [] -> s
-	 in
-	   if List.length vals = 0 then
-	     raise
-	       (Invalid_dn
-		  (0, "invalid dn structure. no attribute " ^
-		     "value specified for attribute: " ^ attr))
-	   else
-	     string_values "" attr vals)
+         let rec string_values s attr vals =
+           match vals with
+               valu :: [] -> sprintf "%s%s=%s" s attr (escape_value valu)
+             | valu :: tl ->
+                 string_values
+                   (sprintf "%s%s=%s+"
+                      s attr (escape_value valu))
+                   attr tl
+             | [] -> s
+         in
+           if List.length vals = 0 then
+             raise
+               (Invalid_dn
+                  (0, "invalid dn structure. no attribute " ^
+                     "value specified for attribute: " ^ attr))
+           else
+             string_values "" attr vals)
       dn
   in
   let rec components_to_dn s comps =
     match comps with
-	comp :: [] -> sprintf "%s%s" s comp
+        comp :: [] -> sprintf "%s%s" s comp
       | comp :: tl -> components_to_dn (sprintf "%s%s," s comp) tl
       | [] -> s
   in

@@ -28,27 +28,27 @@
   let to_substr v =
     let substrs = Pcre.split ~rex:star v in
       (if v.[0] = '*' then
-	 (* pcre puts the empty string on the front of the list if the
-	    delimeter is the first char in the string *)
-	 let substrs = List.tl substrs in
-	   if v.[(String.length v) - 1] = '*' then
-	     {substr_proto with substr_any=substrs}
-	   else
-	     {substr_initial=[];
-	      substr_final=[(List.hd (List.rev substrs))];
-	      substr_any=(try List.rev (List.tl (List.rev substrs)) with _ -> [])}
+         (* pcre puts the empty string on the front of the list if the
+            delimeter is the first char in the string *)
+         let substrs = List.tl substrs in
+           if v.[(String.length v) - 1] = '*' then
+             {substr_proto with substr_any=substrs}
+           else
+             {substr_initial=[];
+              substr_final=[(List.hd (List.rev substrs))];
+              substr_any=(try List.rev (List.tl (List.rev substrs)) with _ -> [])}
        else
-	 if v.[(String.length v) - 1] = '*' then
-	   {substr_initial=(try [List.hd substrs] with _ -> []);
-	    substr_any=(try List.tl substrs with _ -> []);
-	    substr_final=[]}
-	 else
-	   {substr_initial=(try [List.hd substrs] with _ -> []);
-	    substr_final=(try [List.hd (List.rev substrs)] with _ -> []);
-	    substr_any=(try (List.rev
-			       (List.tl
-				  (List.rev (List.tl substrs))))
-			with _ -> [])})
+         if v.[(String.length v) - 1] = '*' then
+           {substr_initial=(try [List.hd substrs] with _ -> []);
+            substr_any=(try List.tl substrs with _ -> []);
+            substr_final=[]}
+         else
+           {substr_initial=(try [List.hd substrs] with _ -> []);
+            substr_final=(try [List.hd (List.rev substrs)] with _ -> []);
+            substr_any=(try (List.rev
+                               (List.tl
+                                  (List.rev (List.tl substrs))))
+                        with _ -> [])})
 }
 
 let lparen = '('

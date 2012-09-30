@@ -47,17 +47,17 @@ let err2string code =
 let ldap_strerror msg ldaperror =
   match ldaperror with
       LDAP_Failure (code, error, {ext_matched_dn=mdn;ext_referral=refs}) ->
-	"LDAP_Failure (" ^
-	(String.concat ", "
-	   [(err2string code); 	
-	    "\"" ^ (String.concat ": "
-		      (List.filter
-			 (function "" -> false | _ -> true)
-			 [error; msg])) ^ "\"";
-	    "{ext_matched_dn = " ^ "\"" ^ mdn ^ "\"; ext_referral = " ^
-	      (match refs with
-		   Some lst -> "[" ^ (String.concat "; " lst) ^ "]"
-		 | None -> "None") ^ "})"])
+        "LDAP_Failure (" ^
+        (String.concat ", "
+           [(err2string code);
+            "\"" ^ (String.concat ": "
+                      (List.filter
+                         (function "" -> false | _ -> true)
+                         [error; msg])) ^ "\"";
+            "{ext_matched_dn = " ^ "\"" ^ mdn ^ "\"; ext_referral = " ^
+              (match refs with
+                   Some lst -> "[" ^ (String.concat "; " lst) ^ "]"
+                 | None -> "None") ^ "})"])
     | _ -> failwith "not an ldap error"
 
 let ldap_perror error ldaperror =

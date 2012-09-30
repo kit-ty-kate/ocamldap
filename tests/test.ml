@@ -30,22 +30,22 @@ let ldif_buffer = Buffer.create 3124
 let print_entry e =
   match e with
       `Entry {sr_dn=dn;sr_attributes=attrs} ->
-	Buffer.add_string ldif_buffer "dn: ";
-	Buffer.add_string ldif_buffer dn;
-	Buffer.add_string ldif_buffer "\n";
-	List.iter
-	  (fun {attr_type=name;attr_vals=vals} ->
-	     List.iter
-	       (fun aval ->
-		  Buffer.add_string ldif_buffer name;
-		  Buffer.add_string ldif_buffer ": ";
-		  Buffer.add_string ldif_buffer aval;
-		  Buffer.add_string ldif_buffer "\n")
-	       vals)
-	  attrs;
-	Buffer.add_string ldif_buffer "\n";
-	Buffer.output_buffer stdout ldif_buffer;
-	Buffer.clear ldif_buffer
+        Buffer.add_string ldif_buffer "dn: ";
+        Buffer.add_string ldif_buffer dn;
+        Buffer.add_string ldif_buffer "\n";
+        List.iter
+          (fun {attr_type=name;attr_vals=vals} ->
+             List.iter
+               (fun aval ->
+                  Buffer.add_string ldif_buffer name;
+                  Buffer.add_string ldif_buffer ": ";
+                  Buffer.add_string ldif_buffer aval;
+                  Buffer.add_string ldif_buffer "\n")
+               vals)
+          attrs;
+        Buffer.add_string ldif_buffer "\n";
+        Buffer.output_buffer stdout ldif_buffer;
+        Buffer.clear ldif_buffer
     | `Referral f -> ()
 
 let main () =
@@ -63,20 +63,20 @@ let main () =
   let set_base x = base := x in
   let set_filter x = filter := x in
   let spec = [("-H", String(set_host), "host");
-	      ("-D", String(set_binddn), "dn to bind with");
-	      ("-w", String(set_cred), "password to use when binding");
-	      ("-b", String(set_base), "search base")] in
+              ("-D", String(set_binddn), "dn to bind with");
+              ("-w", String(set_cred), "password to use when binding");
+              ("-b", String(set_base), "search base")] in
     if (Array.length Sys.argv) > 9 then
       (parse spec set_filter usg;
        let con = init [!host] in
-	 bind_s con ~who:!binddn ~cred:!cred;
-	 let msgid = search con ~base:!base !filter in
-	   try
-	     while true
-	     do
-	       print_entry (get_search_entry con msgid);
-	     done
-	   with LDAP_Failure (`SUCCESS, _, _) -> print_endline "")
+         bind_s con ~who:!binddn ~cred:!cred;
+         let msgid = search con ~base:!base !filter in
+           try
+             while true
+             do
+               print_entry (get_search_entry con msgid);
+             done
+           with LDAP_Failure (`SUCCESS, _, _) -> print_endline "")
     else
       usage spec usg
 ;;

@@ -24,21 +24,21 @@
   let check_attrs attr attrs =
     List.rev_map
       (fun (declared_attr, valu) ->
-	 if declared_attr = attr then
-	   valu
-	 else
-	   failwith
-	     ("declared attribute " ^
-		"modifies the wrong" ^
-		"attribute, " ^
-		"attribute: " ^ attr ^
-		"declared: " ^
-		declared_attr))
+         if declared_attr = attr then
+           valu
+         else
+           failwith
+             ("declared attribute " ^
+                "modifies the wrong" ^
+                "attribute, " ^
+                "attribute: " ^ attr ^
+                "declared: " ^
+                declared_attr))
       attrs
 
   let check_empty op attr =
     match op with
-	`DELETE -> (op, attr, [])
+        `DELETE -> (op, attr, [])
       | `ADD -> failwith "non sensical empty add"
       | `REPLACE -> failwith "non sensical empty replace"
 %}
@@ -72,16 +72,16 @@ modificationterminator:
 
 modifications:
   operation attrlst Dash modifications {let (op, attr) = $1 in
-					  (op,
-					   attr,
-					   check_attrs attr $2) :: $4}
+                                          (op,
+                                           attr,
+                                           check_attrs attr $2) :: $4}
 | operation Dash modifications {let (op, attr) = $1 in
-				  (check_empty op attr) :: $3}
+                                  (check_empty op attr) :: $3}
 | operation attrlst modificationterminator {let (op, attr) = $1 in
-					      [(op, attr,
-						check_attrs attr $2)]}
+                                              [(op, attr,
+                                                check_attrs attr $2)]}
 | operation modificationterminator {let (op, attr) = $1 in
-				      [(check_empty op attr)]}
+                                      [(check_empty op attr)]}
 ;
 
 entry:
@@ -91,11 +91,11 @@ entry:
 changerec:
   Dn Change_type_modify modifications {`Modification ($1, List.rev $3)}
 | Dn Change_type_add entry {let e = new ldapentry in
-			      e#set_dn $1;e#add $3;`Addition e}
+                              e#set_dn $1;e#add $3;`Addition e}
 | Dn Change_type_delete newline {`Delete $1}
 | Dn Change_type_modrdn Attr Attr newline {`Modrdn
-					     ($1,
-					      int_of_string (snd $3),
-					      snd $4)}
+                                             ($1,
+                                              int_of_string (snd $3),
+                                              snd $4)}
 | End_of_input {failwith "end"}
 ;

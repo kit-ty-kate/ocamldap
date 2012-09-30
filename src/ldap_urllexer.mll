@@ -24,19 +24,19 @@
   open Str
 
   type lexeme = SCHEME
-		| COLONSLASHSLASH
-		| PORT of string
-		| HOST of string
-		| DN of string
-		| IDENT of string
-		| SCOPE of string
-		| FILTER of string
-		| QUESTION
-		| EQUAL
-		| CRITICAL
-		| SLASH
-		| WHSP
-		| COMMA
+                | COLONSLASHSLASH
+                | PORT of string
+                | HOST of string
+                | DN of string
+                | IDENT of string
+                | SCOPE of string
+                | FILTER of string
+                | QUESTION
+                | EQUAL
+                | CRITICAL
+                | SLASH
+                | WHSP
+                | COMMA
 }
 
 let port = ['0' - '9']+
@@ -49,14 +49,14 @@ let scope = "base" | "one" | "sub"
 rule lexurl = parse
     (("ldap" 's'?) as mech) "://" (host as host)? (':' (port as port))? '/'? eof
       {{url_mech=(match mech with "ldap" -> `PLAIN | "ldaps" -> `SSL
-		    | _ -> failwith "invalid mechanism") ;
-	url_host=host;
-	url_port=port;
-	url_dn=None;
-	url_attributes=None;
-	url_scope=None;
-	url_filter=None;
-	url_ext=None}}
+                    | _ -> failwith "invalid mechanism") ;
+        url_host=host;
+        url_port=port;
+        url_dn=None;
+        url_attributes=None;
+        url_scope=None;
+        url_filter=None;
+        url_ext=None}}
 
 (*
 rule lexurl = parse

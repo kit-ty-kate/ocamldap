@@ -26,7 +26,7 @@ open Netencoding
 open Ldap_ooclient
 open Ldif_parser
 open Ldap_types
-		
+
 let safe_string_regex =
   Str.regexp "^[\x01-\x09\x0b-\x0c\x0e-\x7f]+$"
 
@@ -69,8 +69,8 @@ let entry2ldif ?(ext=false) outbuf e =
      (fun attr ->
         (List.iter
            (fun value ->
-	      safe_attr_val outbuf attr value;
-	      Buffer.add_char outbuf '\n')
+              safe_attr_val outbuf attr value;
+              Buffer.add_char outbuf '\n')
            (e#get_value attr)))
      e#attributes);
   Buffer.add_char outbuf '\n';
@@ -89,7 +89,7 @@ let fold f v ldif =
     try
       while true
       do
-	res := f !res ldif#read_entry
+        res := f !res ldif#read_entry
       done;
       !res
     with End -> !res
@@ -109,8 +109,8 @@ object (self)
   method to_string (e:ldapentry_t) =
     try
       let contents = Buffer.contents (entry2ldif outbuf e) in
-	Buffer.clear outbuf;
-	contents
+        Buffer.clear outbuf;
+        contents
     with exn ->
       Buffer.clear outbuf;
       raise exn
@@ -129,14 +129,14 @@ let read_ldif_file file =
     try
       let ldif = new ldif ~in_ch:fd () in
       let entries = fold (fun l e -> e :: l) [] ldif in
-	close_in fd;
-	entries
+        close_in fd;
+        entries
     with exn -> close_in fd;raise exn
 
 let write_ldif_file file entries =
   let fd = open_out file in
     try
       let ldif = new ldif ~out_ch:fd () in
-	List.iter ldif#write_entry entries;
-	close_out fd
+        List.iter ldif#write_entry entries;
+        close_out fd
     with exn -> close_out fd;raise exn

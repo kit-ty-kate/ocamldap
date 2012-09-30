@@ -23,7 +23,7 @@
 
   let unhex hex =
     match hex with
-	'0' -> 0
+        '0' -> 0
       | '1' -> 1
       | '2' -> 2
       | '3' -> 3
@@ -44,26 +44,26 @@
   let unescape_hexpair hex1 hex2 =
     (char_of_int
        ((lor)
-	  ((lsl) (unhex hex1) 4)
-	  (unhex hex2)))
+          ((lsl) (unhex hex1) 4)
+          (unhex hex2)))
 
   let unescape_stringwithpair s =
     let strm = Stream.of_string s in
     let buf = Buffer.create (String.length s) in
     let rec unescape strm buf =
       try
-	match Stream.next strm with
-	    '\\' ->
-	      (match Stream.next strm with
-		   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"' | ' ') as c ->
-		     Buffer.add_char buf c;
-		     unescape strm buf
-		 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 ->
-		     let hex2 = Stream.next strm in
-		       Buffer.add_char buf (unescape_hexpair hex1 hex2);
-		       unescape strm buf
-		 | _ -> failwith "invalid escape sequence")
-	  | c -> Buffer.add_char buf c;unescape strm buf
+        match Stream.next strm with
+            '\\' ->
+              (match Stream.next strm with
+                   (',' | '=' | '+' | '<' | '>' | '#' | ';' | '\\' | '"' | ' ') as c ->
+                     Buffer.add_char buf c;
+                     unescape strm buf
+                 | ('0' .. '9' | 'A' .. 'F' | 'a' .. 'f') as hex1 ->
+                     let hex2 = Stream.next strm in
+                       Buffer.add_char buf (unescape_hexpair hex1 hex2);
+                       unescape strm buf
+                 | _ -> failwith "invalid escape sequence")
+          | c -> Buffer.add_char buf c;unescape strm buf
       with Stream.Failure -> Buffer.contents buf
     in
       unescape strm buf
@@ -76,15 +76,15 @@
     let buf = Buffer.create (String.length s) in
     let rec unescape strm buf =
       try
-	let hex1 = Stream.next strm in
-	let hex2 = Stream.next strm in
-	  Buffer.add_char buf (unescape_hexpair hex1 hex2);
-	  unescape strm buf
+        let hex1 = Stream.next strm in
+        let hex2 = Stream.next strm in
+          Buffer.add_char buf (unescape_hexpair hex1 hex2);
+          unescape strm buf
       with Stream.Failure -> Buffer.contents buf
     in
       match Stream.next strm with
-	  '#' -> unescape strm buf
-	| _ -> failwith "invalid hexstring"
+          '#' -> unescape strm buf
+        | _ -> failwith "invalid hexstring"
 %}
 
 %token Equals Plus Comma End_of_input
@@ -116,9 +116,9 @@ dn:
   attrname Equals attrval Plus dn
   {match $5 with
        {attr_type=attr_name;attr_vals=vals} :: tl ->
-	 if $1 = attr_name then
-	   {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
-	 else failwith ("invalid multivalued rdn, expected: " ^ $1)
+         if $1 = attr_name then
+           {attr_type=attr_name;attr_vals=($3 :: vals)} :: tl
+         else failwith ("invalid multivalued rdn, expected: " ^ $1)
      | [] -> [{attr_type=$1;attr_vals=[$3]}]}
  | attrname Equals attrval Comma dn {{attr_type=$1;attr_vals=[$3]} :: $5}
  | attrname Equals attrval End_of_input {[{attr_type=$1;attr_vals=[$3]}]}

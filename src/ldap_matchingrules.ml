@@ -67,24 +67,24 @@ object (self)
     else {< data = remove v data >}
   method replace vals =
     {< data =
-	(List.fold_left
-	   (fun s v -> syntax v;add v s)
-	   empty
-	   vals) >}
+        (List.fold_left
+           (fun s v -> syntax v;add v s)
+           empty
+           vals) >}
   method exists v = mem v data
   method values = elements data
   method cardinal = cardinal data
   method equality_match v = mem v data
   method substrings_match subs =
     match substrings with
-	Some substrings_rule -> exists (substrings_rule subs) data
+        Some substrings_rule -> exists (substrings_rule subs) data
       | None -> raise Substring_matching_rule_not_defined
   method private ordering_match i v =
     match ordering with
-	Some ordering_rule ->
-	  exists
-	    (fun elt -> ordering_rule elt v <> i)
-	    data
+        Some ordering_rule ->
+          exists
+            (fun elt -> ordering_rule elt v <> i)
+            data
       | None -> raise Ordering_matching_rule_not_defined
   method greater_than_or_equal_match v = self#ordering_match (-1) v
   method less_than_or_equal_match v = self#ordering_match 1 v
@@ -596,13 +596,13 @@ let begins_with case v initial =
     else if l < il then false
     else
       try
-	for i=0 to il - 1 do
-	  if v.[i] <> initial.[i] then
-	    match case with
-		`Ignore -> if lc v.[i] <> lc initial.[i] then failwith ""
-	      | `Exact -> failwith ""
-	done;
-	true
+        for i=0 to il - 1 do
+          if v.[i] <> initial.[i] then
+            match case with
+                `Ignore -> if lc v.[i] <> lc initial.[i] then failwith ""
+              | `Exact -> failwith ""
+        done;
+        true
       with Failure "" -> false
 
 let ends_with case v ends =
@@ -613,17 +613,17 @@ let ends_with case v ends =
     else if l < el then false
     else
       try
-	let j = ref (l - 1) in
-	  for i = el - 1 downto 0 do
-	    if v.[!j] <> ends.[i] then
-	      match case with
-		  `Ignore ->
-		    if lc v.[!j] <> lc ends.[i] then failwith ""
-		    else j := !j - 1
-		| `Exact -> failwith ""
-	    else j := !j - 1
-	  done;
-	  true
+        let j = ref (l - 1) in
+          for i = el - 1 downto 0 do
+            if v.[!j] <> ends.[i] then
+              match case with
+                  `Ignore ->
+                    if lc v.[!j] <> lc ends.[i] then failwith ""
+                    else j := !j - 1
+                | `Exact -> failwith ""
+            else j := !j - 1
+          done;
+          true
       with Failure "" -> false
 
 let contains case v sub =
@@ -634,74 +634,74 @@ let contains case v sub =
     let i = ref i in
       if !i + sl > l then false
       else
-	try
-	  for j=0 to sl - 1 do
-	    if sub.[j] <> v.[!i] then
-	      match case with
-		  `Ignore ->
-		    if lc sub.[j] <> lc v.[!i] then failwith ""
-		    else i := !i + 1
-		| `Exact -> failwith ""
-	    else i := !i + 1
-	  done;
-	  true
-	with Failure "" -> false
+        try
+          for j=0 to sl - 1 do
+            if sub.[j] <> v.[!i] then
+              match case with
+                  `Ignore ->
+                    if lc sub.[j] <> lc v.[!i] then failwith ""
+                    else i := !i + 1
+                | `Exact -> failwith ""
+            else i := !i + 1
+          done;
+          true
+        with Failure "" -> false
   in
   let index_from case v i c =
     let lc_c = lc c in
     let p = ref i in
       if i < l then
-	try
-	  for i = i to l - 1 do
-	    if v.[i] = c then ( p := i;failwith "" )
-	    else
-	      match case with
-		  `Ignore -> if lc v.[i] = lc_c then ( p := i;failwith "" )
-		| `Exact -> ()
-	  done;
-	  raise Not_found
-	with Failure "" -> !p
+        try
+          for i = i to l - 1 do
+            if v.[i] = c then ( p := i;failwith "" )
+            else
+              match case with
+                  `Ignore -> if lc v.[i] = lc_c then ( p := i;failwith "" )
+                | `Exact -> ()
+          done;
+          raise Not_found
+        with Failure "" -> !p
       else raise Not_found
   in
     if sl = 0 then true
     else
       let last_p = ref 0 in
       let initial_c = sub.[0] in
-	try
-	  while true do
-	    let index = index_from case v !last_p initial_c in
-	      last_p := index + 1;
-	      if test_position index then failwith ""
-	  done;
-	  false
-	with
-	    Not_found -> false
-	  | Failure "" -> true
+        try
+          while true do
+            let index = index_from case v !last_p initial_c in
+              last_p := index + 1;
+              if test_position index then failwith ""
+          done;
+          false
+        with
+            Not_found -> false
+          | Failure "" -> true
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
   let v = collapse_whitespace v in
     (match i with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (begins_with `Ignore v) lst) &&
     (match a with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (contains `Ignore v) lst) &&
     (match f with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (ends_with `Ignore v) lst)
 
 (* 2.5.13.7 NAME 'caseExactSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_exact_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =
   let v = collapse_whitespace v in
     (match i with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (begins_with `Exact v) lst) &&
     (match a with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (contains `Exact v) lst) &&
     (match f with
-	 [] -> true
+         [] -> true
        | lst -> List.exists (ends_with `Exact v) lst)
 
 (* 2.5.13.21 NAME 'telephoneNumberSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
@@ -729,8 +729,8 @@ let (equality, equality_bysyntax) =
   List.fold_left
     (fun (m1, m2) (oid, alias, syntax, checksyntax, constructor) ->
        (Oidmap.add alias (syntax, checksyntax, constructor)
-	  (Oidmap.add oid (syntax, checksyntax, constructor) m1),
-	Oidmap.add syntax constructor m2))
+          (Oidmap.add oid (syntax, checksyntax, constructor) m1),
+        Oidmap.add syntax constructor m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.13", oid "booleanMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.7", false, new_boolean_match);
@@ -783,8 +783,8 @@ let (ordering, ordering_bysyntax) =
   List.fold_left
     (fun (m1, m2) (oid, alias, syntax, checksyntax, matchingrule) ->
        (Oidmap.add alias (syntax, checksyntax, matchingrule)
-	  (Oidmap.add oid (syntax, checksyntax, matchingrule) m1),
-	Oidmap.add syntax matchingrule m2))
+          (Oidmap.add oid (syntax, checksyntax, matchingrule) m1),
+        Oidmap.add syntax matchingrule m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.28", oid "generalizedtimeorderingmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.24", false, generalized_time_ordering_match);
@@ -804,10 +804,10 @@ let (substring, substring_bysyntax) =
     (fun
        (m1, m2)
        (oid, alias, syntax, checksyntax,
-	(value: (Ldap_types.substring_component -> string -> bool))) ->
-	 (Oidmap.add alias (syntax, checksyntax, value)
-	    (Oidmap.add oid (syntax, checksyntax, value) m1),
-	  Oidmap.add syntax value m2))
+        (value: (Ldap_types.substring_component -> string -> bool))) ->
+         (Oidmap.add alias (syntax, checksyntax, value)
+            (Oidmap.add oid (syntax, checksyntax, value) m1),
+          Oidmap.add syntax value m2))
     (Oidmap.empty, Oidmap.empty)
     [(oid "2.5.13.4", oid "caseignoresubstringsmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, case_ignore_substrings_match);

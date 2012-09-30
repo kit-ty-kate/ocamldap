@@ -43,8 +43,8 @@ let ldap_cmd_harness ~h ~d ~w f =
     try
       ldap#bind d ~cred:w;
       let res = f ldap in
-	ldap#unbind;
-	res
+        ldap#unbind;
+        res
     with exn -> ldap#unbind;raise exn
 ;;
 
@@ -52,22 +52,22 @@ let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap ->
        ldap#search
-	 ~base:b ~scope:s
-	 ~attrs:a filter)
+         ~base:b ~scope:s
+         ~attrs:a filter)
 ;;
 
 let ldapmodify ~h ~d ~w mods =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap ->
        List.iter
-	 (fun (dn, ldmod) -> ldap#modify dn ldmod)
-	 mods)
+         (fun (dn, ldmod) -> ldap#modify dn ldmod)
+         mods)
 ;;
 
 let ldapadd ~h ~d ~w entries =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap ->
        List.iter
-	 (fun entry -> ldap#add entry)
-	 entries)
+         (fun entry -> ldap#add entry)
+         entries)
 ;;
