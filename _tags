@@ -1,0 +1,32 @@
+# OASIS_START
+# DO NOT EDIT (digest: 8f86e7578c58231711df2027bc5ae545)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library ldap
+"src/ldap.cmxs": use_ldap
+<src/ldap.{cma,cmxa}>: use_libldap_stubs
+"src/caseIgnoreCompare.c": pkg_pcre
+"src/caseIgnoreCompare.c": pkg_ssl
+# Library ldif
+"src/ldif.cmxs": use_ldif
+# Library toplevel
+"src/toplevel.cmxs": use_toplevel
+"src/toplevel.cma": oasis_library_toplevel_byte
+<src/*.ml{,i}>: oasis_library_toplevel_byte
+<src/*.ml{,i}>: use_ldif
+<src/*.ml{,i}>: use_ldap
+<src/*.ml{,i}>: pkg_netstring
+<src/*.ml{,i}>: pkg_pcre
+<src/*.ml{,i}>: pkg_ssl
+# OASIS_STOP

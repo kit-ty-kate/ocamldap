@@ -1,0 +1,60 @@
+OASISFormat: 0.3
+Name:        ocamldap
+Version:     2.2
+Synopsis:    Ocamldap is an implementation of the Light Weight Directory Access Protocol
+Authors:     Eric Stokes,
+             Jacques-Pascal Deplaix
+License:     LGPL-2.1 with OCaml linking exception
+Plugins:     DevFiles (0.3), META (0.3), StdFiles (0.3)
+BuildTools:  ocamlbuild
+
+Library "ldap"
+  Path: src
+  Modules:
+    Ldap_types,
+    Ldap_filter,
+    Ldap_filterparser,
+    Ldap_filterlexer,
+    Lber,
+    Ldap_protocol,
+    Ldap_dn,
+    Ldap_dnparser,
+    Ldap_dnlexer,
+    Ldap_error,
+    Ldap_funclient,
+    Ldap_url,
+    Ldap_urllexer,
+    Ldap_funserver,
+    Ldap_ooclient,
+    Ldap_schema,
+    Ldap_schemalexer,
+    Ldap_mutex,
+    Ulist,
+    Ldap_txooclient,
+    Ldap_syntaxes,
+    Ldap_matchingrules,
+    Ldap_schemavalidator,
+    Ldap_schemacheck
+  CSources:
+    caseIgnoreCompare.c
+  BuildDepends: pcre, ssl
+
+Library "ldif"
+  Path: src
+  Modules:
+    Ldif_oo,
+    Ldif_parser,
+    Ldif_changerec_oo,
+    Ldif_changerec_lexer,
+    Ldif_changerec_parser
+  FindlibParent: ldap
+  BuildDepends: ldap, netstring
+
+Library "toplevel"
+  Path: src
+  Modules:
+    Ldap_toplevel
+  FindlibParent: ldap
+  BuildDepends: ldap.ldif
+  CompiledObject: byte
+  ByteOpt: -I +compiler-libs # For ocaml-4.00.0 compatibility

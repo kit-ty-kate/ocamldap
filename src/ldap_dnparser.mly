@@ -19,7 +19,6 @@
 */
 
 %{
-  open Ldap_dnlexer
   open Ldap_types
 
   let unhex hex = 
