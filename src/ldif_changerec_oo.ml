@@ -4,16 +4,16 @@
    Copyright (C) 2004 Eric Stokes, Matthew Backes, and The California
    State University at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -25,9 +25,9 @@ open Ldif_changerec_parser
 open Ldif_changerec_lexer
 
 exception Invalid_changerec of string
-exception End_of_changerecs  
+exception End_of_changerecs
 
-let iter f cr = 
+let iter f cr =
   try
     while true
     do
@@ -39,7 +39,7 @@ let rec fold f cr a =
   try fold f cr (f a cr#read_changerec)
   with End_of_changerecs -> a
 
-let insert_change buf cr = 
+let insert_change buf cr =
   match cr with
       `Modification (dn, mod_op) ->
 	Buffer.add_string buf ("dn: " ^ dn ^ "\n");
@@ -73,7 +73,7 @@ class change ?(in_ch=stdin) ?(out_ch=stdout) () =
 object (self)
   val lxbuf = Lexing.from_channel in_ch
   val buf = Buffer.create 1
-  method read_changerec =       
+  method read_changerec =
     try changerec lexcr lxbuf
     with
 	Failure "end" -> raise End_of_changerecs

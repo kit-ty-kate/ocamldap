@@ -3,16 +3,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -78,7 +78,7 @@ object
   method update_entry : ldapentry_t -> unit
 end	
 
-let format_entry e = 
+let format_entry e =
   Format.open_box 0;
   Format.open_box 2;
   Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn));
@@ -114,7 +114,7 @@ let format_entry e =
     Format.print_string ">";
     Format.close_box ()
 
-let format_entries lst = 
+let format_entries lst =
   let length = List.length lst in
   let i = ref 0 in
     Format.open_box 0;
@@ -128,13 +128,13 @@ let format_entries lst =
 	       Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
 	       Format.print_cut ();
 	       i := !i + 1
-	     end else 
+	     end else
 	       Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
 	  lst
       with Failure "limit" -> Format.print_string "..."
     else
       List.iter
-	(fun e -> 
+	(fun e ->
 	   if !i < length - 1 then begin
 	     format_entry e;
 	     Format.print_break 1 0;
@@ -160,7 +160,7 @@ module CaseInsensitiveString =
      val compare: t -> t -> int
    end);;
 
-module OrdStr = 
+module OrdStr =
 struct
   type t = CaseInsensitiveString.t
   let compare = CaseInsensitiveString.compare
@@ -173,18 +173,18 @@ module Strset = Set.Make (OrdStr)
 (********************************************************************************)
 (********************************************************************************)
 (* ldap entry object *)
-class ldapentry = 
+class ldapentry =
 object (self)
   val mutable dn = ""
   val mutable data = Hashtbl.create 50
   val mutable changes = []
   val mutable changetype = `ADD
 
-  method private push_change (t:modify_optype) lst = 
+  method private push_change (t:modify_optype) lst =
     match changetype with
 	`MODIFY -> (match lst with
 			[] -> ()
-		      | (attr, values) :: tail -> 
+		      | (attr, values) :: tail ->
 			  changes <- (t, attr, values) :: changes; self#push_change t tail)
       | _ -> ()
 
@@ -194,11 +194,11 @@ object (self)
   method changes = changes
 
   method exists x = Hashtbl.mem data (lowercase x)
-  method add (x:op_lst) = 
+  method add (x:op_lst) =
     let rec do_add (x:op_lst) =
       match x with
 	  [] -> ()
-	| (name, value) :: lst -> 
+	| (name, value) :: lst ->
 	    let lcname = lowercase name in
 	      try
 		Ulist.addlst (Hashtbl.find data lcname) value; do_add lst
@@ -208,9 +208,9 @@ object (self)
     in
       do_add x; self#push_change `ADD x
 
-  method diff (entry: ldapentry_t) = 
-    let diff_entries e1 e2 : (modify_optype * string * string list) list = 
-      let rec setOfList ?(set=Strset.empty) list = 
+  method diff (entry: ldapentry_t) =
+    let diff_entries e1 e2 : (modify_optype * string * string list) list =
+      let rec setOfList ?(set=Strset.empty) list =
 	match list with
 	    a :: tail -> setOfList ~set:(Strset.add a set) tail
 	  | []  -> set
@@ -222,7 +222,7 @@ object (self)
       in
       let e1attrs = setOfList (ciStringlst e1#attributes) in
       let e2attrs = setOfList (ciStringlst e2#attributes) in
-      let add_attrs = 
+      let add_attrs =
 	Strset.fold
 	  (fun attr mods ->
 	     let attr = CaseInsensitiveString.to_string attr in
@@ -230,7 +230,7 @@ object (self)
 	  (Strset.diff e1attrs (Strset.inter e1attrs e2attrs))
 	  []
       in
-      let remove_attrs = 
+      let remove_attrs =
 	Strset.fold
 	  (fun attr mods ->
 	     let attr = CaseInsensitiveString.to_string attr in
@@ -238,7 +238,7 @@ object (self)
 	  (Strset.diff e2attrs (Strset.inter e2attrs e1attrs))
 	  []
       in
-      let sync_attrs = 
+      let sync_attrs =
 	Strset.fold
 	  (fun attr mods ->
 	     let attr = CaseInsensitiveString.to_string attr in
@@ -248,7 +248,7 @@ object (self)
 		 (not (Strset.is_empty (Strset.diff e2vals (Strset.inter e1vals e2vals))))
 	       then		
 		 (`REPLACE, attr, e1#get_value attr) :: mods
-	       else 
+	       else
 		 mods)
 	  (Strset.inter e1attrs (Strset.inter e1attrs e2attrs))
 	  []
@@ -257,15 +257,15 @@ object (self)
     in
       (diff_entries self entry)
 
-  method delete (x:op_lst) = 
-    let rec do_delete x = 
+  method delete (x:op_lst) =
+    let rec do_delete x =
       match x with
 	  [] -> ()
 	| (attr, values) :: lst ->
 	    let lcname = lowercase attr in
 	      match values with
 		  [] -> Hashtbl.remove data lcname;do_delete lst
-		| _  -> 
+		| _  ->
 		    (try List.iter (Ulist.remove (Hashtbl.find data lcname)) values
 		     with Not_found -> ());
 		    (match Ulist.tolst (Hashtbl.find data lcname) with
@@ -275,12 +275,12 @@ object (self)
     in
       do_delete x; self#push_change `DELETE x
 
-  method replace (x:op_lst) = 
-    let rec do_replace x = 
+  method replace (x:op_lst) =
+    let rec do_replace x =
       match x with
 	  [] -> ()
 	| (attr, values) :: lst -> let n = Ulist.create 5 in
-	    Ulist.addlst n values; Hashtbl.replace data (lowercase attr) n; 
+	    Ulist.addlst n values; Hashtbl.replace data (lowercase attr) n;
 	    do_replace lst;
     in
       do_replace x; self#push_change `REPLACE x
@@ -295,13 +295,13 @@ object (self)
     in
       do_modify x
 
-  method attributes = 
-    let keys hash = 
+  method attributes =
+    let keys hash =
       let cur = ref [] in
       let key k _ = cur := k :: !cur in
 	Hashtbl.iter key hash; !cur
     in
-      keys data      
+      keys data
 
   method get_value attr = Ulist.tolst (Hashtbl.find data (lowercase attr))
   method set_dn x = dn <- x
@@ -309,16 +309,16 @@ object (self)
   method print =
     print_endline "THIS METHOD IS DEPRECATED, use Ldif_oo, or rely on the toplevel printers";
     print_endline ("dn: " ^ self#dn);
-    (List.iter 
-       (fun a -> 
-	  (List.iter 
-	     (fun b -> print_endline (a ^ ": " ^ b)) 
+    (List.iter
+       (fun a ->
+	  (List.iter
+	     (fun b -> print_endline (a ^ ": " ^ b))
 	     (self#get_value a)))
        self#attributes)
 
 end
 
-type changerec = 
+type changerec =
     [`Modification of string * ((Ldap_types.modify_optype * string * string list) list)
     | `Addition of ldapentry
     | `Delete of string
@@ -335,22 +335,22 @@ let to_entry ent =
       | [] -> entry#set_changetype `MODIFY; entry
   in
     match ent with
-	`Entry {sr_dn = dn; sr_attributes = attrs} -> 
+	`Entry {sr_dn = dn; sr_attributes = attrs} ->
 	  let entry = new ldapentry in
 	    entry#set_dn dn; add_attrs attrs entry
-      | `Referral refs -> 
+      | `Referral refs ->
 	  let entry = new ldapentry in
 	    entry#set_dn "referral";
 	    entry#add [("ref", refs)];
 	    entry#add [("objectclass", ["referral"])];
 	    entry
 
-let of_entry ldapentry = 
+let of_entry ldapentry =
   let rec extract_attrs ?(converted=[]) entry attrs =
     match attrs with
 	[] -> converted
       | attr :: tail ->
-	  extract_attrs 
+	  extract_attrs
 	    ~converted:({attr_type=attr;
 			 attr_vals=(entry#get_value attr)} :: converted)
 	    entry
@@ -358,8 +358,8 @@ let of_entry ldapentry =
   in
     {sr_dn=(ldapentry#dn);
      sr_attributes=(extract_attrs ldapentry ldapentry#attributes)}
-	      
-let iter (f: ldapentry -> unit) (res: ?abandon:bool -> unit -> ldapentry) =   
+	
+let iter (f: ldapentry -> unit) (res: ?abandon:bool -> unit -> ldapentry) =
   try
     while true
     do
@@ -368,19 +368,19 @@ let iter (f: ldapentry -> unit) (res: ?abandon:bool -> unit -> ldapentry) =
   with
       LDAP_Failure (`SUCCESS, _, _) -> ()
     | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
-      
+
 let rev_map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
   let lst = ref [] in
     (try while true
      do
        lst := (f (res ())) :: !lst
      done
-     with 
+     with
 	 LDAP_Failure (`SUCCESS, _, _) -> ()
        | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn);
     !lst
 
-let map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) = 
+let map (f: ldapentry -> 'a) (res: ?abandon:bool -> unit -> ldapentry) =
   List.rev (rev_map f res)
 
 let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapentry) =
@@ -391,12 +391,12 @@ let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapent
 	value := (f (res ()) !value)
       done;
       !value
-    with 
+    with
 	LDAP_Failure (`SUCCESS, _, _) -> !value
       | exn -> (try ignore (res ~abandon:true ()) with _ -> ());raise exn
 
 (* a connection to an ldap server *)
-class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts = 
+class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts =
 object (self)
   val mutable bdn = ""
   val mutable pwd = ""
@@ -415,7 +415,7 @@ object (self)
 
   method unbind = if bound then (unbind con;bound <- false)
 
-  method update_entry (e:ldapentry) = 
+  method update_entry (e:ldapentry) =
     if not (reconnect_successful && bound) then self#reconnect;
     try self#modify e#dn (List.rev e#changes); e#flush_changes
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#update_entry e
@@ -429,7 +429,7 @@ object (self)
     reconnect_successful <- true;
     bdn <- dn; pwd <- cred; mth <- meth
 
-  method add (entry: ldapentry) = 
+  method add (entry: ldapentry) =
     if not (reconnect_successful && bound) then self#reconnect;
     try add_s con (of_entry entry)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
@@ -441,7 +441,7 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#delete dn
 
-  method modify dn mods = 
+  method modify dn mods =
     if not (reconnect_successful && bound) then self#reconnect;
     try modify_s con dn mods
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
@@ -453,7 +453,7 @@ object (self)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#modrdn dn ~deleteoldrdn:deleteoldrdn newrdn
 
-  method search 
+  method search
     ?(scope = `SUBTREE)
     ?(attrs = [])
     ?(attrsonly = false)
@@ -462,16 +462,16 @@ object (self)
     ?(timelimit = 0l)
     filter =
     if not (reconnect_successful && bound) then self#reconnect;
-    try 
-      List.rev_map to_entry 
-	(search_s 
+    try
+      List.rev_map to_entry
+	(search_s
 	   ~scope ~base ~attrs
 	   ~attrsonly ~sizelimit
 	   ~timelimit con filter)
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;
-      self#search 
-	~scope ~attrs ~attrsonly 
+      self#search
+	~scope ~attrs ~attrsonly
 	~base ~sizelimit ~timelimit filter
 	
   method search_a
@@ -490,7 +490,7 @@ object (self)
        fetch the first entry, and pass it in to this function. We do
        this because, we will not know if the server actually recieved
        our search until we read the first entry. *)
-    let fetch_result con (msgid:msgid) first_entry ?(abandon=false) () = 
+    let fetch_result con (msgid:msgid) first_entry ?(abandon=false) () =
       if abandon then
 	(Ldap_funclient.abandon con msgid;
 	 self#reconnect;
@@ -502,15 +502,15 @@ object (self)
 	      first_entry := `No;
 	      to_entry e
 	  | `NoResults -> (* this search has no results *)
-	      raise 
-		(LDAP_Failure 
-		   (`SUCCESS, "success", 
+	      raise
+		(LDAP_Failure
+		   (`SUCCESS, "success",
 		    {ext_matched_dn = ""; ext_referral = None}))
     in
       if not (reconnect_successful && bound) then self#reconnect;
-      try 
+      try
 	let first_entry = ref `No in
-	let msgid = 
+	let msgid =
 	  search
 	    ~scope ~base ~attrs ~attrsonly
 	    ~sizelimit ~timelimit
@@ -518,24 +518,24 @@ object (self)
 	in
 	  (* make sure the server is really still there *)
 	  (try first_entry := `Yes (get_search_entry con msgid)
-	   with LDAP_Failure (`SUCCESS, _, _) -> 
+	   with LDAP_Failure (`SUCCESS, _, _) ->
 	     (* the search is already complete and has no results *)
 	     first_entry := `NoResults);
 	  fetch_result con msgid first_entry
       with LDAP_Failure(`SERVER_DOWN, _, _) ->
 	self#reconnect;
-	self#search_a 
+	self#search_a
 	  ~scope ~attrs ~attrsonly ~base
 	  ~sizelimit ~timelimit filter
-	  
-  method schema = 
+	
+  method schema =
     if not (reconnect_successful && bound) then self#reconnect;
-    try 
+    try
       if version = 3 then
-	let schema_base = (match (self#search 
-				    ~base: "" 
-				    ~scope: `BASE 
-				    ~attrs: ["subschemasubentry"] 
+	let schema_base = (match (self#search
+				    ~base: ""
+				    ~scope: `BASE
+				    ~attrs: ["subschemasubentry"]
 				    "(objectclass=*)")
 			   with
 			       [e] -> List.hd (e#get_value "subschemasubentry")
@@ -546,23 +546,23 @@ object (self)
 		    ~attrs: ["objectClasses";"attributeTypes";
 			     "matchingRules";"ldapSyntaxes"]
 		    "(objectclass=subschema)") with
-	       [e] -> 
-		 readSchema 
+	       [e] ->
+		 readSchema
 		   (e#get_value "objectclasses")
 		   (e#get_value "attributetypes")
 	     |  _  -> raise Not_found)
       else
 	raise Not_found
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#schema
- 
-  method rawschema = 
+
+  method rawschema =
     if not (reconnect_successful && bound) then self#reconnect;
-    try       
+    try
       if version = 3 then
-	let schema_base = (match (self#search 
-				    ~base: "" 
-				    ~scope: `BASE 
-				    ~attrs: ["subschemasubentry"] 
+	let schema_base = (match (self#search
+				    ~base: ""
+				    ~scope: `BASE
+				    ~attrs: ["subschemasubentry"]
 				    "(objectclass=*)") with
 			       [e] -> List.hd (e#get_value "subschemasubentry")
 			     |  _  -> raise Not_found) in

@@ -10,8 +10,8 @@
 #define EQUAL 0
 
 char to_lowercase(long c) {
-    if (((c >= 'A' && c <= 'Z') || 
-	 (c >= 192 && c <= 214)) || 
+    if (((c >= 'A' && c <= 'Z') ||
+	 (c >= 192 && c <= 214)) ||
 	(c >= 216 && c <= 222))
 	return (char) c + 32;
     else return (char) c;
@@ -34,7 +34,7 @@ CAMLprim value caseIgnoreCompare(value v1, value v2)
 		     p2 = (unsigned char *) String_val(v2);
 		 len > 0;
 		 len--, p1++, p2++)
-		if (*p1 != *p2) 
+		if (*p1 != *p2)
 		    if (to_lowercase (*p1) != to_lowercase(*p2)) {
 			res = (long)*p1 - (long)*p2;
 			break;

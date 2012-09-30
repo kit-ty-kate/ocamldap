@@ -1,18 +1,18 @@
-(* A lexer and parser for ldif format files 
+(* A lexer and parser for ldif format files
 
    Copyright (C) 2004 Eric Stokes, and The California State University at
    Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -33,31 +33,31 @@ let optval o =
       Some(c) -> c
     | None -> raise End
 
-let rec read_comment s =  
-  let check_next s = 
+let rec read_comment s =
+  let check_next s =
     match (optval (Stream.peek s.stream)) with
 	' ' | '#' -> (Stream.junk s.stream);read_comment s (* line folded, or another comment *)
       |  _ -> ()
-  in 
+  in
     match (optval (Stream.peek s.stream)) with
 	'\n' -> (Stream.junk s.stream);s.line <- s.line + 1;check_next s
-      | '\r' -> 
+      | '\r' ->
 	  (Stream.junk s.stream);(Stream.junk s.stream);
 	  s.line <- s.line + 1;check_next s
       |  _   -> (Stream.junk s.stream);read_comment s
-	   
+	
 let comment s =
   match (optval (Stream.peek s.stream)) with
       '#' -> (Stream.junk s.stream);read_comment s
     |  _  -> ()
 
-let sep s = 
+let sep s =
   match (optval (Stream.peek s.stream)) with
       '\n' -> (Stream.junk s.stream);s.line <- s.line + 1;"\n"
     | '\r' -> (Stream.junk s.stream);(Stream.junk s.stream);s.line <- s.line + 1;"\n"
     |  c   -> raise (Illegal_char (c,s.line));;
 
-let seps s = 
+let seps s =
   try
     (while true
      do
@@ -87,22 +87,22 @@ let alpha s =
 
 let safe_chars s =
   let rec do_safe_chars s =
-    try 
+    try
       while true
       do
 	Buffer.add_char s.buf (safe_char s)
       done
-    with 
-	Illegal_char('\n',_) -> 
+    with
+	Illegal_char('\n',_) ->
 	  (match (Stream.npeek 2 s.stream) with
-	       ['\n';' '] -> 
+	       ['\n';' '] ->
 		 (Stream.junk s.stream);(Stream.junk s.stream);
 		 s.line <- s.line + 1;
 		 (do_safe_chars s)
 	     | _ -> ())
-      | Illegal_char('\r',_) -> 
+      | Illegal_char('\r',_) ->
 	  (match (Stream.npeek 3 s.stream) with
-	       ['\r';'\n';' '] -> 
+	       ['\r';'\n';' '] ->
 		 (Stream.junk s.stream);(Stream.junk s.stream);(Stream.junk s.stream);
 		 s.line <- s.line + 1;
 		 (do_safe_chars s)
@@ -128,7 +128,7 @@ let attr_type_chars s =
     while true
     do
       Buffer.add_char s.buf (attr_type_char s)
-    done; 
+    done;
   with Illegal_char(_,_) -> ()
 
 let option s =
@@ -177,7 +177,7 @@ let rec attrval_spec ?(attrs=[]) s =
   let lc = String.lowercase in
     try
       ignore (sep s);attrs
-    with 
+    with
 	Illegal_char(_,_) ->
 	  let attr = (attributeDescription s) in
 	  let valu = (value_spec s) in
@@ -185,13 +185,13 @@ let rec attrval_spec ?(attrs=[]) s =
 	    (try
 	       let {attr_type=name;attr_vals=vals} = List.hd attrs in
 		 if (lc attr) = (lc name) then
-		   attrval_spec 
+		   attrval_spec
 		     ~attrs:({attr_type=name;
 			      attr_vals=(valu :: vals)} :: (List.tl attrs)) s
-		 else 
-		   attrval_spec 
+		 else
+		   attrval_spec
 		     ~attrs:({attr_type=attr;attr_vals=[valu]} :: attrs) s
-	     with Failure "hd" -> 
+	     with Failure "hd" ->
 	       attrval_spec ~attrs:[{attr_type=attr;attr_vals=[valu]}] s)
       | End -> attrs
 
@@ -200,14 +200,14 @@ let distinguishedName s =
       ':' -> (Stream.junk s.stream);
         (match (optval (Stream.peek s.stream)) with
 	     ' ' -> (Stream.junk s.stream);
-               (Base64.decode (safe_string s)) 
+               (Base64.decode (safe_string s))
 	   |  c  -> raise (Illegal_char (c, s.line)))
     | ' ' -> (Stream.junk s.stream);safe_string s
     |  c  -> raise (Illegal_char (c, s.line))
 
 let dn_spec s =
   match (Stream.npeek 3 s.stream) with
-      ['d';'n';':'] -> 
+      ['d';'n';':'] ->
 	(Stream.junk s.stream);
 	(Stream.junk s.stream);
 	(Stream.junk s.stream);

@@ -53,7 +53,7 @@ class ldapadvisorytxcon :
     method search :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
-      ?attrsonly:bool -> ?base:string -> 
+      ?attrsonly:bool -> ?base:string ->
       ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
       string -> ldapentry list
     method search_a :

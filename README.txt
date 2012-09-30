@@ -4,7 +4,7 @@ This is the README file for the ocamldap distribution.
 
 Ocamldap is an implementation of the Light Weight Directory Access Protocol
 
-See the files INSTALL.txt for building and installation instructions. 
+See the files INSTALL.txt for building and installation instructions.
 
 
 (* OASIS_STOP *)
@@ -35,7 +35,7 @@ Prerequisites
 Features
 ---------------------------------------------------------------------------
 * Ocamldap supports the core ldap-client functions, including search, add,
-  modify, and delete.  
+  modify, and delete.
 * object oriented interface with additional features.
   Such as, nice data structures for local ldap entries which
   record local modifications and can sync them with the server, fewer
@@ -45,7 +45,7 @@ Features
   entry objects. It also supports ldif change records.
 * Ocamldap has a method call to grab the schema of an ldapv3 server
 * Basic ldap server functionality (ldap_funserver) allows you to easily
-  construct your own ldap servers. Perfect for meta directories, 
+  construct your own ldap servers. Perfect for meta directories,
   and other cool projects. Someday maybe your main database :-)
 
 ---------------------------------------------------------------------------

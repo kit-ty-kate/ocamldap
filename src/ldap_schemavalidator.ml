@@ -4,9 +4,9 @@ open Ldap_syntaxes
 
 type schema_object =
     [ `Attribute of string
-    | `Objectclass of string ] 
+    | `Objectclass of string ]
 
-type schema_error = 
+type schema_error =
     Non_unique_name_for_must_or_may of string
   | Undefined_must_or_may of string
   | Non_unique_name_for_superior_oc of string
@@ -16,18 +16,18 @@ type schema_error =
   | Unknown_matching_rule of Oid.t
   | No_equality_matching_rule_defined
 
-let validate schema = 
+let validate schema =
   (* check that all musts, and all mays are attributes which exist. *)
-  let errors = 
+  let errors =
     Lcmap.fold
-      (fun oc {oc_must=musts;oc_may=mays} errors -> 
+      (fun oc {oc_must=musts;oc_may=mays} errors ->
 	 let oc = Lcstring.to_string oc in
-	 let check_error errors attr = 
+	 let check_error errors attr =
 	   try ignore (attrNameToAttr schema attr);errors
-	   with 
-	       Invalid_attribute _ -> 
+	   with
+	       Invalid_attribute _ ->
 		 (`Objectclass oc, Undefined_must_or_may attr) :: errors
-	     | Non_unique_attribute_alias attr -> 
+	     | Non_unique_attribute_alias attr ->
 		 (`Objectclass oc, Non_unique_name_for_must_or_may attr) :: errors
 	 in
 	   (List.rev_append errors
@@ -55,7 +55,7 @@ let validate schema =
 	       Hashtbl.add seen oid ();
 	       (name, Cross_linked_oid (Hashtbl.find_all oids oid)) :: errors
 	     end
-	   else 
+	   else
 	     errors)
 	oids
 	errors
@@ -66,10 +66,10 @@ let validate schema =
       (fun oc {oc_sup=sups} errors ->
 	 let oc = Lcstring.to_string oc in
 	   List.fold_left
-	     (fun errors sup -> 
+	     (fun errors sup ->
 		try ignore (ocNameToOc schema sup);errors
-		with 
-		    Invalid_objectclass _ -> 
+		with
+		    Invalid_objectclass _ ->
 		      (`Objectclass oc, Undefined_superior_oc sup) :: errors
 		  | Non_unique_objectclass_alias _ ->
 		      (`Objectclass oc, Non_unique_name_for_superior_oc sup) :: errors)
@@ -79,7 +79,7 @@ let validate schema =
       errors
   in
     (* check that we know all of the syntaxes defined in the schema *)
-  let errors = 
+  let errors =
     Lcmap.fold
       (fun attr {at_syntax=syntax} errors ->
 	 let attr = Lcstring.to_string attr in
@@ -91,14 +91,14 @@ let validate schema =
     (* check that an equality matching rule is defined either directly,
        indirectly by a parent attribute, or by virtue of the syntax of
        the attribute *)
-  let errors = 
+  let errors =
     Lcmap.fold
       (fun attrname attr errors ->
 	 let attrname = Lcstring.to_string attrname in
 	   try
 	     begin match lookupMatchingRule schema `Equality attr with
 		 Some mrule -> errors
-	       | None -> (* try it by syntax *) 
+	       | None -> (* try it by syntax *)
 		   if Oidmap.mem attr.at_syntax Ldap_matchingrules.equality_bysyntax then errors
 		   else (`Attribute attrname, No_equality_matching_rule_defined) :: errors
 	     end

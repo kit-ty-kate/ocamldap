@@ -3,16 +3,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -91,7 +91,7 @@ type ldap_resultcode = [
   | `NO_RESULTS_RETURNED
   | `MORE_RESULTS_TO_RETURN
   | `CLIENT_LOOP
-  | `REFERRAL_LIMIT_EXCEEDED 
+  | `REFERRAL_LIMIT_EXCEEDED
   | `UNKNOWN_ERROR of int ]
 
 type ldap_result = {
@@ -154,7 +154,7 @@ type search_result_entry = {
 (** a type defining the scope of a search filter *)
 type search_scope = [ `BASE (** search only at the base *)
 		    | `ONELEVEL (** search one level below the base *)
-		    | `SUBTREE (** search the entire tree under the base *)] 
+		    | `SUBTREE (** search the entire tree under the base *)]
 
 type alias_deref = [ `NEVERDEREFALIASES
 		   | `DEREFINSEARCHING
@@ -271,7 +271,7 @@ type ldap_control = {
 }
 
 type ldap_controls = ldap_control list
-    
+
 type ldap_message = {
   messageID: Int32.t;
   protocolOp: protocol_op;
@@ -294,7 +294,7 @@ type ldap_url = {
 
 (** see draft-zeilenga-ldap-grouping-xx Ldap grouping is a way of
     telling the server that a set of ldap operations is related, its most
-    interesting application is transactions across multiple objects. 
+    interesting application is transactions across multiple objects.
     This draft is not yet implemented by any present day ldap server *)
 type ldap_grouping_type = [ `LDAP_GROUP_TXN ]
 

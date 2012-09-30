@@ -4,13 +4,13 @@ exception Invalid_syntax of string
 
 (* 1.3.6.1.4.1.1466.115.121.1.3 DESC 'Attribute Type Description' *)
 let attribute_type_description_syntax v = ()
-  
+
 (* 1.3.6.1.4.1.1466.115.121.1.5 DESC 'Binary' *)
 let binary_syntax v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.6 DESC 'Bit String' *)
 let bitstring_rex = Pcre.regexp ~study:true "^\'[01]*\'B$"
-let bitstring_syntax v = 
+let bitstring_syntax v =
   if not (Pcre.pmatch ~rex:bitstring_rex v) then
     raise (Invalid_syntax v)
 
@@ -194,7 +194,7 @@ let ldap_schema_description v = ()
 (* 1.3.6.1.4.1.1466.115.121.1.58 DESC 'Substring Assertion' *)
 let substring_assertion v = ()
 
-let syntaxes = 
+let syntaxes =
   List.fold_left
     (fun m (key, (value: string -> unit)) -> Oidmap.add key value m)
     Oidmap.empty

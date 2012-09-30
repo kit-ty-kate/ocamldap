@@ -4,16 +4,16 @@
    Copyright (C) 2004 Eric Stokes, Matthew Backes, and The California
    State University at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -87,51 +87,51 @@ let encode_resultcode (code:ldap_resultcode) =
 
 let decode_resultcode code =
   match code with
-      0 -> `SUCCESS 
-    | 1 -> `OPERATIONS_ERROR 
-    | 2 -> `PROTOCOL_ERROR 
-    | 3 -> `TIMELIMIT_EXCEEDED 
-    | 4 -> `SIZELIMIT_EXCEEDED 
-    | 5 -> `COMPARE_FALSE 
-    | 6 -> `COMPARE_TRUE 
-    | 7 -> `AUTH_METHOD_NOT_SUPPORTED 
-    | 8 -> `STRONG_AUTH_REQUIRED 
-    | 10 -> `REFERRAL 
-    | 11 -> `ADMINLIMIT_EXCEEDED 
-    | 12 -> `UNAVAILABLE_CRITICAL_EXTENSION 
-    | 13 -> `CONFIDENTIALITY_REQUIRED 
-    | 14 -> `SASL_BIND_IN_PROGRESS 
-    | 16 -> `NO_SUCH_ATTRIBUTE 
-    | 17 -> `UNDEFINED_TYPE 
-    | 18 -> `INAPPROPRIATE_MATCHING 
-    | 19 -> `CONSTRAINT_VIOLATION 
-    | 20 -> `TYPE_OR_VALUE_EXISTS 
-    | 21 -> `INVALID_SYNTAX 
-    | 32 -> `NO_SUCH_OBJECT 
-    | 33 -> `ALIAS_PROBLEM 
-    | 34 -> `INVALID_DN_SYNTAX 
+      0 -> `SUCCESS
+    | 1 -> `OPERATIONS_ERROR
+    | 2 -> `PROTOCOL_ERROR
+    | 3 -> `TIMELIMIT_EXCEEDED
+    | 4 -> `SIZELIMIT_EXCEEDED
+    | 5 -> `COMPARE_FALSE
+    | 6 -> `COMPARE_TRUE
+    | 7 -> `AUTH_METHOD_NOT_SUPPORTED
+    | 8 -> `STRONG_AUTH_REQUIRED
+    | 10 -> `REFERRAL
+    | 11 -> `ADMINLIMIT_EXCEEDED
+    | 12 -> `UNAVAILABLE_CRITICAL_EXTENSION
+    | 13 -> `CONFIDENTIALITY_REQUIRED
+    | 14 -> `SASL_BIND_IN_PROGRESS
+    | 16 -> `NO_SUCH_ATTRIBUTE
+    | 17 -> `UNDEFINED_TYPE
+    | 18 -> `INAPPROPRIATE_MATCHING
+    | 19 -> `CONSTRAINT_VIOLATION
+    | 20 -> `TYPE_OR_VALUE_EXISTS
+    | 21 -> `INVALID_SYNTAX
+    | 32 -> `NO_SUCH_OBJECT
+    | 33 -> `ALIAS_PROBLEM
+    | 34 -> `INVALID_DN_SYNTAX
     | 35 -> `IS_LEAF
-    | 36 -> `ALIAS_DEREF_PROBLEM 
-    | 48 -> `INAPPROPRIATE_AUTH 
-    | 49 -> `INVALID_CREDENTIALS 
-    | 50 -> `INSUFFICIENT_ACCESS 
-    | 51 -> `BUSY 
-    | 52 -> `UNAVAILABLE 
-    | 53 -> `UNWILLING_TO_PERFORM 
-    | 54 -> `LOOP_DETECT 
-    | 64 -> `NAMING_VIOLATION 
-    | 65 -> `OBJECT_CLASS_VIOLATION 
-    | 66 -> `NOT_ALLOWED_ON_NONLEAF 
-    | 67 -> `NOT_ALLOWED_ON_RDN 
-    | 68 -> `ALREADY_EXISTS 
-    | 69 -> `NO_OBJECT_CLASS_MODS 
+    | 36 -> `ALIAS_DEREF_PROBLEM
+    | 48 -> `INAPPROPRIATE_AUTH
+    | 49 -> `INVALID_CREDENTIALS
+    | 50 -> `INSUFFICIENT_ACCESS
+    | 51 -> `BUSY
+    | 52 -> `UNAVAILABLE
+    | 53 -> `UNWILLING_TO_PERFORM
+    | 54 -> `LOOP_DETECT
+    | 64 -> `NAMING_VIOLATION
+    | 65 -> `OBJECT_CLASS_VIOLATION
+    | 66 -> `NOT_ALLOWED_ON_NONLEAF
+    | 67 -> `NOT_ALLOWED_ON_RDN
+    | 68 -> `ALREADY_EXISTS
+    | 69 -> `NO_OBJECT_CLASS_MODS
     | 71 -> `AFFECTS_MULTIPLE_DSAS
-    | 80 -> `OTHER 
+    | 80 -> `OTHER
     | i ->  `UNKNOWN_ERROR i
 
 (* encode a standard sequence header *)
 let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =
-  encode_ber_header 
+  encode_ber_header
     {ber_class=cls;
      ber_tag=tag;
      ber_primitive=false;
@@ -142,13 +142,13 @@ let decode_ldapcontrol rb =
       {ber_class=Universal;ber_tag=16;ber_length=len} ->
 	let rb = readbyte_of_ber_element len rb in
 	let controlType = decode_ber_octetstring rb in
-	let criticality = 
+	let criticality =
 	  try decode_ber_bool rb
 	  with Readbyte_error End_of_stream -> false
 	in
-	let controlValue = 
-	  try Some (decode_ber_octetstring rb) 
-	  with Readbyte_error End_of_stream -> None 
+	let controlValue =
+	  try Some (decode_ber_octetstring rb)
+	  with Readbyte_error End_of_stream -> None
 	in
 	  {controlType=controlType;criticality=criticality;controlValue=controlValue}
     | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected sequence")
@@ -163,7 +163,7 @@ let decode_ldapcontrols rb =
     in
     let rec decode_ldapcontrols' ?(controls=[]) rb =
       try decode_ldapcontrols' ~controls:((decode_ldapcontrol rb) :: controls) rb
-      with Readbyte_error End_of_stream -> 
+      with Readbyte_error End_of_stream ->
 	match controls with
 	    [] -> None
 	  | controls -> Some (List.rev controls) (* return them in order *)
@@ -180,13 +180,13 @@ let encode_components_of_ldapresult {result_code=resultcode;
   let ldap_referral = (match refs with
 			   Some refs ->
 			     let buf = Buffer.create 100 in
-			       List.iter 
-				 (fun ref -> 
+			       List.iter
+				 (fun ref ->
 				    Buffer.add_string buf (encode_ber_octetstring ref))
 				 refs;
 			       let hdr = Buffer.create 101 in
-				 Buffer.add_string hdr 
-				   (encode_ber_header 
+				 Buffer.add_string hdr
+				   (encode_ber_header
 				      {ber_class=Context_specific;
 				       ber_tag=3;
 				       ber_primitive=false;
@@ -219,8 +219,8 @@ let decode_components_of_ldapresult rb =
   let resultCodeval = decode_ber_enum rb in
   let matched_dn = decode_ber_octetstring rb in
   let error_message = decode_ber_octetstring rb in
-  let referrals = 
-    try 
+  let referrals =
+    try
       (match decode_ber_header ~peek:true rb with
 	   {ber_class=Context_specific;ber_tag=3;ber_length=referral_length} ->
 	     ignore (decode_ber_header rb);
@@ -229,9 +229,9 @@ let decode_components_of_ldapresult rb =
 		    [] -> None
 		  | lst -> Some lst)
 	 | _ -> None)
-    with 
+    with
 	Readbyte_error End_of_stream -> None
-  in    
+  in
     {result_code=(decode_resultcode (Int32.to_int resultCodeval));
      matched_dn=matched_dn;
      error_message=error_message;
@@ -245,12 +245,12 @@ let decode_ldapresult rb =
        | _ -> raise (LDAP_Decoder "decode_ldapresult: expected ldapresult (sequence)"))
   in
     decode_components_of_ldapresult rb
-	  
-let encode_bindrequest {bind_version=ver;bind_name=dn;bind_authentication=auth} = 
+	
+let encode_bindrequest {bind_version=ver;bind_name=dn;bind_authentication=auth} =
   let buf = Buffer.create 100 in
   let version = encode_ber_int32 (Int32.of_int ver) in
   let dn = encode_ber_octetstring dn in
-  let auth = (match auth with 
+  let auth = (match auth with
 		  Simple pwd -> encode_ber_octetstring ~cls:Context_specific ~tag:0 pwd
 		| Sasl {sasl_mechanism=mech;sasl_credentials=cred} ->
 		    let buf = Buffer.create 10 in
@@ -260,7 +260,7 @@ let encode_bindrequest {bind_version=ver;bind_name=dn;bind_authentication=auth} 
 				  | None -> None)
 		    in
 		    let hdr = encode_seq_hdr ~cls:Context_specific ~tag:3
-				((String.length mech) + 
+				((String.length mech) +
 				 (match cred with
 				      Some cred -> String.length cred
 				    | None -> 0))
@@ -272,13 +272,13 @@ let encode_bindrequest {bind_version=ver;bind_name=dn;bind_authentication=auth} 
 			 | None -> ());
 		      Buffer.contents buf)
   in
-  let hdr = 
-    (encode_ber_header 
+  let hdr =
+    (encode_ber_header
        {ber_class=Application;
 	ber_tag=0;
 	ber_primitive=false;
-	ber_length=Definite ((String.length version) + 
-			     (String.length dn) + 
+	ber_length=Definite ((String.length version) +
+			     (String.length dn) +
 			     (String.length auth))})
   in
     Buffer.add_string buf hdr;
@@ -287,7 +287,7 @@ let encode_bindrequest {bind_version=ver;bind_name=dn;bind_authentication=auth} 
     Buffer.add_string buf auth;
     Buffer.contents buf
 
-let decode_bindrequest rb = 
+let decode_bindrequest rb =
   let version = decode_ber_int32 rb in
   let dn = decode_ber_octetstring rb in
   let cred =
@@ -298,7 +298,7 @@ let decode_bindrequest rb =
 	   let rb = readbyte_of_ber_element cred_length rb in
 	   let sasl_mech = decode_ber_octetstring rb in
 	   let sasl_cred = (try Some (decode_ber_octetstring rb)
-			    with Readbyte_error End_of_stream -> None) 
+			    with Readbyte_error End_of_stream -> None)
 	   in
 	     Sasl {sasl_mechanism=sasl_mech;sasl_credentials=sasl_cred}
        | _ -> raise (LDAP_Decoder "decode_bindrequest: unknown authentication method"))
@@ -314,7 +314,7 @@ let encode_bindresponse {bind_result=result;bind_serverSaslCredentials=saslcred}
 			      Some s -> Some (encode_ber_octetstring s)
 			    | None -> None)
   in
-  let len = (String.length encoded_result) + 
+  let len = (String.length encoded_result) +
 	    (match encoded_saslcred with
 		 Some s -> (String.length s)
 	       | None -> 0)
@@ -329,19 +329,19 @@ let encode_bindresponse {bind_result=result;bind_serverSaslCredentials=saslcred}
 	 Some s -> Buffer.add_string buf s
        | None -> ());
     Buffer.contents buf
-    
+
 let decode_bindresponse rb =
   let result = decode_components_of_ldapresult rb in
   let saslcred = try Some (decode_ber_octetstring rb) with Readbyte_error End_of_stream -> None in
     Bind_response
       {bind_result=result;
        bind_serverSaslCredentials=saslcred}
-      
-let decode_unbindrequest rb = 
+
+let decode_unbindrequest rb =
   (* some clients do not properly encode the length octets, which will cause decoding
-     of null values to fail. In short, it is never OK to omit completely the length 
+     of null values to fail. In short, it is never OK to omit completely the length
      octets, however some clients (namely openldap) do it anyway *)
-  (try ignore (decode_ber_null rb) 
+  (try ignore (decode_ber_null rb)
    with Readbyte_error End_of_stream -> ());
   Unbind_request
 
@@ -357,25 +357,25 @@ let decode_attributevalueassertion rb =
 let encode_substringfilter {attrtype=attr;
 			    substrings={substr_initial=initial;
 					substr_any=any;substr_final=final}} =
-  let encode_component ctype vals =     
+  let encode_component ctype vals =
     match vals with
 	[] -> ""
       | vals ->
 	  let tag =
-	    match ctype with 
+	    match ctype with
 		`INITIAL -> 0
 	      | `ANY -> 1
 	      | `FINAL -> 2
 	  in
-	  let buf = 
-	    Buffer.create 
-	      (List.fold_left 
-		 (fun s v -> s + (String.length v) + 3) 
-		 0 vals) 
+	  let buf =
+	    Buffer.create
+	      (List.fold_left
+		 (fun s v -> s + (String.length v) + 3)
+		 0 vals)
 	  in
 	    List.iter
-	      (fun v -> 
-		 Buffer.add_string buf 
+	      (fun v ->
+		 Buffer.add_string buf
 		   (encode_ber_octetstring ~cls:Context_specific ~tag v))
 	      vals;
 	    Buffer.contents buf
@@ -386,8 +386,8 @@ let encode_substringfilter {attrtype=attr;
   let e_final = encode_component `FINAL final in
   let component_len = (String.length e_initial) + (String.length e_any) + (String.length e_final) in
   let component_buf = Buffer.create (component_len + 3) in
-    Buffer.add_string component_buf 
-      (encode_ber_header 
+    Buffer.add_string component_buf
+      (encode_ber_header
 	 {ber_class=Universal;ber_tag=16;ber_primitive=false;
 	  ber_length=(Definite component_len)});
     Buffer.add_string component_buf e_initial;
@@ -395,7 +395,7 @@ let encode_substringfilter {attrtype=attr;
     Buffer.add_string component_buf e_final;
     let len = ((Buffer.length component_buf) + (String.length e_attr)) in
     let buf = Buffer.create (len + 3) in
-      Buffer.add_string buf 
+      Buffer.add_string buf
 	(encode_ber_header
 	   {ber_class=Context_specific;ber_tag=4;ber_primitive=false;
 	    ber_length=(Definite len)});
@@ -409,25 +409,25 @@ let decode_substringfilter rb =
       match decode_ber_header ~peek:true rb with
 	  {ber_class=Context_specific;ber_tag=0} ->
 	    decode_substring_components
-	      {skel with 
-		 substr_initial=((decode_ber_octetstring 
-				    ~cls:Context_specific 
-				    ~tag:0 rb) :: 
+	      {skel with
+		 substr_initial=((decode_ber_octetstring
+				    ~cls:Context_specific
+				    ~tag:0 rb) ::
 				   skel.substr_initial)}
 	      rb
 	| {ber_class=Context_specific;ber_tag=1} ->
 	    decode_substring_components
 	      {skel with
-		 substr_any=((decode_ber_octetstring 
-				~cls:Context_specific 
-				~tag:1 rb) :: 
+		 substr_any=((decode_ber_octetstring
+				~cls:Context_specific
+				~tag:1 rb) ::
 			       skel.substr_any)}
 	      rb
 	| {ber_class=Context_specific;ber_tag=2} ->
 	    decode_substring_components
 	      {skel with
-		 substr_final=((decode_ber_octetstring 
-				  ~cls:Context_specific 
+		 substr_final=((decode_ber_octetstring
+				  ~cls:Context_specific
 				  ~tag:2 rb) ::
 				 skel.substr_final)}
 	      rb
@@ -435,7 +435,7 @@ let decode_substringfilter rb =
     with Readbyte_error End_of_stream -> skel
   in
   let attrtype =  decode_ber_octetstring rb in
-  let components =    
+  let components =
     (match decode_ber_header rb with
 	 {ber_class=Universal;ber_tag=16;ber_length=len} ->
 	   let rb = readbyte_of_ber_element len rb in
@@ -459,15 +459,15 @@ let encode_matchingruleassertion {matchingRule=mrule;ruletype=mruletype;
        | None -> ())
   in
   let oencode tag valu =
-        match valu with 
-	Some s -> Some (encode_ber_octetstring ~cls:Context_specific ~tag:tag s) 
-      | None -> None 
+        match valu with
+	Some s -> Some (encode_ber_octetstring ~cls:Context_specific ~tag:tag s)
+      | None -> None
   in
   let e_mrule = oencode 1 mrule in
   let e_mruletype = oencode 2 mruletype in
   let e_valu = encode_ber_octetstring ~cls:Context_specific ~tag:3 valu in
   let e_dnattrs = encode_ber_bool ~cls:Context_specific ~tag:4 dnattrs in
-  let len = (olen e_mrule) + (olen e_mruletype) + (String.length e_valu) + 
+  let len = (olen e_mrule) + (olen e_mruletype) + (String.length e_valu) +
 	    (String.length e_dnattrs)
   in
   let buf = Buffer.create (len + 10) in
@@ -488,7 +488,7 @@ let decode_matchingruleassertion rb =
 	   Some (decode_ber_octetstring ~cls:Context_specific ~tag:1 rb)
        | _ -> None)
   in
-  let ruletype = 
+  let ruletype =
     (match decode_ber_header ~peek:true rb with
 	 {ber_class=Context_specific;ber_tag=1;ber_length=len} ->
 	   Some (decode_ber_octetstring ~cls:Context_specific ~tag:2 rb)
@@ -506,7 +506,7 @@ let rec encode_ldapfilter filter =
     let encoded_lst = encode_berval_list encode_ldapfilter lst in
     let len = String.length encoded_lst in
     let buf = Buffer.create (len + 10) in
-      Buffer.add_string buf 
+      Buffer.add_string buf
 	(encode_ber_header {hdr with ber_length=(Definite len)});
       Buffer.add_string buf encoded_lst;
       Buffer.contents buf
@@ -523,13 +523,13 @@ let rec encode_ldapfilter filter =
       Buffer.contents buf
   in
   let hdr = {ber_class=Context_specific;ber_tag=0;
-		 ber_primitive=false;ber_length=Definite 0} 
+		 ber_primitive=false;ber_length=Definite 0}
   in
     match filter with
 	`And lst -> encode_complex lst hdr
       | `Or lst -> encode_complex lst {hdr with ber_tag=1}
       | `Not f -> encode_complex [f] {hdr with ber_tag=2}
-      | `EqualityMatch {attributeDesc=attr;assertionValue=valu} -> 
+      | `EqualityMatch {attributeDesc=attr;assertionValue=valu} ->
 	  encode_simple attr valu {hdr with ber_tag=3}
       | `Substrings substrs -> encode_substringfilter substrs
       | `GreaterOrEqual {attributeDesc=attr;assertionValue=valu} ->
@@ -540,7 +540,7 @@ let rec encode_ldapfilter filter =
       | `ApproxMatch {attributeDesc=attr;assertionValue=valu} ->
 	  encode_simple attr valu {hdr with ber_tag=8}
       | `ExtensibleMatch extn -> encode_matchingruleassertion extn
-	    
+	
 let rec decode_ldapfilter rb =
   match decode_ber_header rb with
       {ber_class=Context_specific;ber_tag=0;ber_length=len} -> (* and *)
@@ -572,7 +572,7 @@ let encode_attributedescriptionlist attrs =
   let len = String.length e_attrs in
   let buf = Buffer.create (len + 10) in
     Buffer.add_string buf
-      (encode_ber_header 
+      (encode_ber_header
 	 {ber_class=Universal;ber_tag=16;
 	  ber_primitive=false;ber_length=(Definite len)});
     Buffer.add_string buf e_attrs;
@@ -649,7 +649,7 @@ let decode_searchrequest rb =
   let typesonly = decode_ber_bool rb in
   let filter = decode_ldapfilter rb in
   let attributes = decode_attributedescriptionlist rb in
-    Search_request 
+    Search_request
       {baseObject=base;
        scope=scope;
        derefAliases=deref;
@@ -661,7 +661,7 @@ let decode_searchrequest rb =
 
 let encode_attribute {attr_type=attrtype;attr_vals=attrvals} =
   let e_attrtype = encode_ber_octetstring attrtype in
-  let e_attrvals = 
+  let e_attrvals =
     let vals = encode_berval_list encode_ber_octetstring attrvals in
     let len = String.length vals in
     let buf = Buffer.create (len + 10) in
@@ -687,10 +687,10 @@ let decode_attribute rb =
       {ber_class=Universal;ber_tag=16;ber_length=len} ->
 	let rb = readbyte_of_ber_element len rb in
 	let attrtype = decode_ber_octetstring rb in
-	let attrvals = 
+	let attrvals =
 	  match decode_ber_header rb with
 	      {ber_class=Universal;ber_tag=17} ->
-		decode_berval_list decode_ber_octetstring rb 
+		decode_berval_list decode_ber_octetstring rb
 	    | _ -> raise (LDAP_Decoder "decode_attribute: expected set")
 	in
 	  {attr_type=attrtype;attr_vals=attrvals}
@@ -698,11 +698,11 @@ let decode_attribute rb =
 
 (* also used to encode addrequest. Forgive the naming conventions, trying to
    follow the ASN.1 closely, but not copy some of its problems at the same time.
-   They have a few seperate implementations of entry, 
+   They have a few seperate implementations of entry,
    all the same encoding, but with different names, and different ASN.1 code! *)
 let encode_searchresultentry ?(tag=4) {sr_dn=dn;sr_attributes=attributes} =
   let e_dn = encode_ber_octetstring dn in
-  let e_attributes = 
+  let e_attributes =
     let valu = encode_berval_list encode_attribute attributes in
     let len = String.length valu in
     let buf = Buffer.create (len + 10) in
@@ -725,7 +725,7 @@ let encode_searchresultentry ?(tag=4) {sr_dn=dn;sr_attributes=attributes} =
 
 let decode_searchresultentry rb =
   let dn = decode_ber_octetstring rb in
-  let attributes = 
+  let attributes =
     match decode_ber_header rb with
 	{ber_class=Universal;ber_tag=16;ber_length=len} ->
 	  let rb = readbyte_of_ber_element len rb in
@@ -737,9 +737,9 @@ let decode_searchresultentry rb =
 
 let encode_searchresultdone = encode_ldapresult ~cls:Application ~tag:5
 
-let decode_searchresultdone rb = 
+let decode_searchresultdone rb =
   Search_result_done
-    (decode_components_of_ldapresult rb)    
+    (decode_components_of_ldapresult rb)
 
 let encode_searchresultreference srf =
   let refs = encode_berval_list encode_ber_octetstring srf in
@@ -767,7 +767,7 @@ let encode_modification {mod_op=op;mod_value=attr} =
   let len = (String.length e_op) + (String.length e_attr) in
   let buf = Buffer.create (len + 10) in
     Buffer.add_string buf
-      (encode_ber_header 
+      (encode_ber_header
 	 {ber_class=Universal;ber_tag=16;ber_primitive=false;
 	  ber_length=(Definite len)});
     Buffer.add_string buf e_op;
@@ -786,19 +786,19 @@ let decode_modification rb =
 	in
 	let attr = decode_attribute rb in
 	  {mod_op=op;mod_value=attr}
-    | {ber_class=cls;ber_tag=tag;ber_length=len} -> 
+    | {ber_class=cls;ber_tag=tag;ber_length=len} ->
 	raise (LDAP_Decoder
 		 ("decode_modification: expected sequence, or enum, " ^
 		    ("tag: " ^ (string_of_int tag))))
 
 let encode_modifyrequest {mod_dn=dn;modification=mods} =
   let e_dn = encode_ber_octetstring dn in
-  let e_mods = 
+  let e_mods =
     let vals = encode_berval_list encode_modification mods in
     let len = String.length vals in
     let buf = Buffer.create (len + 10) in
       Buffer.add_string buf
-	(encode_ber_header 
+	(encode_ber_header
 	   {ber_class=Universal;ber_tag=16;ber_primitive=false;
 	    ber_length=(Definite len)});
       Buffer.add_string buf vals;
@@ -807,7 +807,7 @@ let encode_modifyrequest {mod_dn=dn;modification=mods} =
   let len = (String.length e_dn) + (String.length e_mods) in
   let buf = Buffer.create (len + 10) in
     Buffer.add_string buf
-      (encode_ber_header 
+      (encode_ber_header
 	 {ber_class=Application;ber_tag=6;
 	  ber_primitive=false;ber_length=(Definite len)});
     Buffer.add_string buf e_dn;
@@ -816,7 +816,7 @@ let encode_modifyrequest {mod_dn=dn;modification=mods} =
 
 let decode_modifyrequest rb =
   let dn = decode_ber_octetstring rb in
-  let mods = 
+  let mods =
     match decode_ber_header rb with
 	{ber_class=Universal;ber_tag=16;ber_length=len} ->
 	  let rb = readbyte_of_ber_element len rb in
@@ -833,7 +833,7 @@ let decode_modifyresponse rb =
 (* the types from search are reused. I refuse to duplicate them
    each type countless times like the ASN.1 specification does *)
 let encode_addrequest = encode_searchresultentry ~tag:8
-let decode_addrequest rb = 
+let decode_addrequest rb =
   let res = decode_searchresultentry rb in
     match res with
 	Search_result_entry res -> Add_request res
@@ -847,7 +847,7 @@ let encode_deleterequest req =
   encode_ber_octetstring ~cls:Application ~tag:10 req
 
 let decode_deleterequest len rb =
-  Delete_request 
+  Delete_request
     (decode_ber_octetstring ~contents:(Some (read_contents rb len)) rb)
 
 let encode_deleteresponse = encode_ldapresult ~cls:Application ~tag:11
@@ -896,7 +896,7 @@ let decode_modifydnrequest rb =
 
 let encode_modifydnresponse = encode_ldapresult ~cls:Application ~tag:13
 
-let decode_modifydnresponse rb = 
+let decode_modifydnresponse rb =
   Modify_dn_response (decode_components_of_ldapresult rb)
 
 let encode_comparerequest {cmp_dn=dn;
@@ -966,9 +966,9 @@ let encode_extendedrequest {ext_requestName=reqname;ext_requestValue=reqval} =
 
 let decode_extendedrequest rb =
   let reqname = decode_ber_octetstring ~cls:Context_specific ~tag:0 rb in
-  let reqval = 
-    try Some (decode_ber_octetstring ~cls:Context_specific ~tag:1 rb) 
-    with Readbyte_error End_of_stream -> None 
+  let reqval =
+    try Some (decode_ber_octetstring ~cls:Context_specific ~tag:1 rb)
+    with Readbyte_error End_of_stream -> None
   in
     Extended_request
       {ext_requestName=reqname;ext_requestValue=reqval}
@@ -983,7 +983,7 @@ let encode_extendedresponse {ext_result=result;ext_responseName=resname;ext_resp
 		   Some s -> Some (encode_ber_octetstring s)
 		 | None -> None)
   in
-  let len = (String.length e_result) + 
+  let len = (String.length e_result) +
 	    (match e_resname with
 		 Some s -> String.length s
 	       | None -> 0) +
@@ -1009,7 +1009,7 @@ let decode_extendedresponse rb =
   let result = decode_components_of_ldapresult rb in
   let responsename = ref None in
   let response = ref None in
-    (try 
+    (try
        responsename := Some (decode_ber_octetstring ~cls:Context_specific ~tag:10 rb);
        response := Some (decode_ber_octetstring ~cls:Context_specific ~tag:11 rb)
      with Readbyte_error End_of_stream -> ());
@@ -1044,7 +1044,7 @@ let encode_ldapmessage {messageID=msgid;protocolOp=protocol_op;controls=controls
   in
   let buf = Buffer.create ((String.length encoded_op) + 20) in
   let msgid = encode_ber_int32 msgid in
-    Buffer.add_string buf 
+    Buffer.add_string buf
       (encode_seq_hdr ((String.length encoded_op) + (String.length msgid)));
     Buffer.add_string buf msgid;
     Buffer.add_string buf encoded_op;

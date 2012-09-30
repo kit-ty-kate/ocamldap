@@ -3,16 +3,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -39,15 +39,15 @@ type search_result = [ `Entry of entry | `Referral of string list ]
   init is round robin dns aware, if dns returns multiple mappings it
   will try each one before finially failing. It also takes a list of
   hostnames, so you can specify backup servers to try. SSL and TLS are
-  supported if selected at compile time. 
+  supported if selected at compile time.
 
   @param version the protocol version to use to
   connect, default is version 3. And actually, version 2 will probably
-  not work correctly without some tweaking. 
+  not work correctly without some tweaking.
 
   @raise LDAP_Failure any
   failure to connect to the server will result in LDAP_Failure with
-  the result_code set to `LOCAL_ERROR. 
+  the result_code set to `LOCAL_ERROR.
 
   @raise Failure May raise
   Failure "int_of_string" if you pass it a malformed url. May also
@@ -61,7 +61,7 @@ val unbind : conn -> unit
 (** authenticatite to the server. In this version only simple binds
   are supported, however the ldap_protocol.ml module DOES implement
   sasl binds. It would be fairly easy to support them here. We
-  eventually will. 
+  eventually will.
 
   @param who the dn to bind as
   @param cred the credentials to authenticate with. For `SIMPLE binds
@@ -86,10 +86,10 @@ val bind_s :
   (it does not block) you will need to call the get_search_entry
   function below to actually get any data back. This function will
   return a msgid which you must use when you call get_search_entry.
-  
+
   @param base The dn of the object in the tree to use as the base
   object, the search will only cover children of this object, and will
-  be further governed by scope. 
+  be further governed by scope.
   @param scope The depth in the tree to look for the requested
   object. There are three possible values, `BASE, `ONELEVEL, and
   `SUBTREE. `BASE means to only search the base object, the search
@@ -108,7 +108,7 @@ val bind_s :
 
   @raise LDAP_Failure for immediate errors (bad filter, etc)
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
-  @raise Encoding_error for encoder errors (unlikely, probably a bug)  
+  @raise Encoding_error for encoder errors (unlikely, probably a bug)
 *)
 val search :
   ?base:string ->
@@ -119,7 +119,7 @@ val search :
   ?attrs:string list -> ?attrsonly:bool -> conn -> string -> msgid
 
 (** fetch a search entry from the wire using the given msgid. The
-  entry could be a search entry, OR it could be a referral structure. 
+  entry could be a search entry, OR it could be a referral structure.
 
   @raise LDAP_Failure for all results other than `SUCCESS (except referrals)
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
@@ -151,7 +151,7 @@ val search_s :
   [> `Entry of Ldap_types.search_result_entry | `Referral of string list ]
   list
 
-(** add entry to the directory 
+(** add entry to the directory
 
   @raise LDAP_Failure for all results other than `SUCCESS
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
@@ -159,7 +159,7 @@ val search_s :
 *)
 val add_s : conn -> entry -> unit
 
-(** delete the entry named by dn from the directory 
+(** delete the entry named by dn from the directory
 
   @raise LDAP_Failure for all results other than `SUCCESS
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
@@ -168,7 +168,7 @@ val add_s : conn -> entry -> unit
 val delete_s : conn -> dn:string -> unit
 
 (** apply the list of modifications to the named entry
-  
+
   @param dn The dn of the object to modify
   @param mods The list of modifications to apply
 
@@ -181,8 +181,8 @@ val modify_s :
     dn:string ->
     mods:(Ldap_types.modify_optype * string * string list) list -> unit
 
-(** change the rdn, and optionally the superior entry of dn 
-  
+(** change the rdn, and optionally the superior entry of dn
+
   @param deleteoldrdn Delete the old rdn value, (default true)
   @param newsup The new superior dn of the object (default None)
   @param dn The dn of the object to modify

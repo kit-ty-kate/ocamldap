@@ -3,18 +3,18 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
-   You should have received a copy of the GNU Lesser General Public            
-   License along with this library; if not, write to the Free Software         
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
+   You should have received a copy of the GNU Lesser General Public
+   License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA  *)
 
 open Ldap_types
@@ -43,8 +43,8 @@ object
   method extensible_match: string -> (string -> string -> int) -> bool
 end
 
-class ['a] attribute 
-  (add: string -> 'a -> 'a) 
+class ['a] attribute
+  (add: string -> 'a -> 'a)
   (mem: string -> 'a -> bool)
   (remove: string -> 'a -> 'a)
   (empty: 'a)
@@ -75,14 +75,14 @@ object (self)
   method values = elements data
   method cardinal = cardinal data
   method equality_match v = mem v data
-  method substrings_match subs = 
+  method substrings_match subs =
     match substrings with
 	Some substrings_rule -> exists (substrings_rule subs) data
       | None -> raise Substring_matching_rule_not_defined
   method private ordering_match i v =
     match ordering with
 	Some ordering_rule ->
-	  exists 
+	  exists
 	    (fun elt -> ordering_rule elt v <> i)
 	    data
       | None -> raise Ordering_matching_rule_not_defined
@@ -95,7 +95,7 @@ end
 (* equality matching rules *)
 
 (* used to normalize whitespace for caseIgnoreMatch and friends *)
-let isspace c = 
+let isspace c =
   if (c = '\t' || c = '\n' || c = '\011' || c = '\012' || c = '\r' || c = ' ') then true
   else false
 
@@ -107,7 +107,7 @@ let strip_edge_whitespace s =
     try for i=0 to l - 1 do if not (isspace s.[i]) then raise (Break i) done;l
     with Break i -> i
   in
-  let last_non_space_char = 
+  let last_non_space_char =
     try for i=(l - 1) downto 0 do if not (isspace s.[i]) then raise (Break i) done;0
     with Break i -> i
   in
@@ -118,7 +118,7 @@ let strip_edge_whitespace s =
 
 let whsp = Pcre.regexp ~study:true "\\s+"
 let longwhsp = Pcre.regexp ~study:true "\\s\\s+"
-let collapse_whitespace_if_necessary s = 
+let collapse_whitespace_if_necessary s =
   (* here testing and then replacing is twice as fast as blindly replacing *)
   if Pcre.pmatch ~rex:longwhsp s then
     Pcre.replace ~rex:longwhsp ~templ:" " s
@@ -126,7 +126,7 @@ let collapse_whitespace_if_necessary s =
 
 let collapse_whitespace v =
   collapse_whitespace_if_necessary (strip_edge_whitespace v)
-    
+
 let remove_whitespace v = Pcre.replace ~rex:whsp ~templ:"" v
 
 (* 2.5.13.0 NAME 'objectIdentifierMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 *)
@@ -167,8 +167,8 @@ let new_distinguished_name_equality_set ?(ordering=None) ?(substrings=None) synt
      ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.8 NAME 'numericStringMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.36 *)
-let numeric_string_equality_match v1 v2 = 
-  String.compare 
+let numeric_string_equality_match v1 v2 =
+  String.compare
     (remove_whitespace v1)
     (remove_whitespace v2)
 
@@ -287,10 +287,10 @@ let new_generalized_time_equality_set ?(ordering=None) ?(substrings=None) syntax
      GeneralizedTimeMatch.elements GeneralizedTimeMatch.cardinal
      GeneralizedTimeMatch.exists
      ordering substrings syntax :> attribute_t)
-     
+
 (* 2.5.13.2 NAME 'caseIgnoreMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_ignore_equality_match v1 v2 = 
-  Lcstring.compare 
+let case_ignore_equality_match v1 v2 =
+  Lcstring.compare
     (Lcstring.of_string (collapse_whitespace v1))
     (Lcstring.of_string (collapse_whitespace v2))
 
@@ -309,8 +309,8 @@ let new_case_ignore_equality_set ?(ordering=None) ?(substrings=None) syntax =
      ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.5 NAME 'caseExactMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_exact_equality_match v1 v2 = 
-  String.compare 
+let case_exact_equality_match v1 v2 =
+  String.compare
     (collapse_whitespace v1)
     (collapse_whitespace v2)
 
@@ -346,8 +346,8 @@ let new_case_ignore_list_equality_set ?(ordering=None) ?(substrings=None) syntax
      ordering substrings syntax :> attribute_t)
 
 (* 2.5.13.20 NAME 'telephoneNumberMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.50 *)
-let telephone_number_equality_match v1 v2 = 
-  String.compare 
+let telephone_number_equality_match v1 v2 =
+  String.compare
     (collapse_whitespace v1)
     (collapse_whitespace v2)
 
@@ -366,7 +366,7 @@ let new_telephone_number_equality_set ?(ordering=None) ?(substrings=None) syntax
      ordering substrings syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.1 NAME 'caseExactIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
-let case_exact_ia5_equality_match v1 v2 = 
+let case_exact_ia5_equality_match v1 v2 =
   String.compare
     (collapse_whitespace v1)
     (collapse_whitespace v2)
@@ -386,8 +386,8 @@ let new_case_exact_ia5_equality_set ?(ordering=None) ?(substrings=None) syntax =
      ordering substrings syntax :> attribute_t)
 
 (* 1.3.6.1.4.1.1466.109.114.2 NAME 'caseIgnoreIA5Match' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
-let case_ignore_ia5_equality_match v1 v2 = 
-  Lcstring.compare 
+let case_ignore_ia5_equality_match v1 v2 =
+  Lcstring.compare
     (Lcstring.of_string (collapse_whitespace v1))
     (Lcstring.of_string (collapse_whitespace v2))
 
@@ -434,7 +434,7 @@ module BooleanMatch = Set.Make
 let new_boolean_match ?(ordering=None) ?(substrings=None) syntax =
   (new attribute
      BooleanMatch.add BooleanMatch.mem
-     BooleanMatch.remove BooleanMatch.empty 
+     BooleanMatch.remove BooleanMatch.empty
      BooleanMatch.elements BooleanMatch.cardinal
      BooleanMatch.exists
      ordering substrings syntax :> attribute_t)
@@ -444,10 +444,10 @@ let new_boolean_match ?(ordering=None) ?(substrings=None) syntax =
    Implementors should note that the assertion syntax of these
    matching rules, an INTEGER or OID, is different from the value
    syntax of attributes for which this is the equality matching
-   rule. 
-   
+   rule.
+
    What is up with this! *)
-(* 2.5.13.29 NAME 'integerFirstComponentMatch' 
+(* 2.5.13.29 NAME 'integerFirstComponentMatch'
    SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 (wrong!) *)
 let integer_first_component_match = integer_equality_match
 
@@ -465,7 +465,7 @@ let new_integer_first_component_set ?(ordering=None) ?(substrings=None) syntax =
      IntegerFirstComponentMatch.exists
      ordering substrings syntax :> attribute_t)
 
-(* 2.5.13.30 NAME 'objectIdentifierFirstComponentMatch' 
+(* 2.5.13.30 NAME 'objectIdentifierFirstComponentMatch'
    SYNTAX 1.3.6.1.4.1.1466.115.121.1.38 (wrong!) *)
 let object_identifier_first_component_match = object_identifier_equality_match
 
@@ -560,13 +560,13 @@ let new_word_match_set ?(ordering=None) ?(substrings=None) syntax =
 let generalized_time_ordering_match v1 v2 = String.compare v1 v2
 
 (* 2.5.13.3 NAME 'caseIgnoreOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_ignore_ordering_match v1 v2 = 
+let case_ignore_ordering_match v1 v2 =
   Lcstring.compare
     (Lcstring.of_string (collapse_whitespace v1))
     (Lcstring.of_string (collapse_whitespace v2))
 
 (* 2.5.13.6 NAME 'caseExactOrderingMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
-let case_exact_ordering_match v1 v2 = 
+let case_exact_ordering_match v1 v2 =
   String.compare
     (collapse_whitespace v1)
     (collapse_whitespace v2)
@@ -588,7 +588,7 @@ let octet_string_ordering_match = case_ignore_ordering_match
 
 
 (* substring matching rules *)
-let begins_with case v initial = 
+let begins_with case v initial =
   let lc = Char.lowercase in
   let l = String.length v in
   let il = String.length initial in
@@ -596,7 +596,7 @@ let begins_with case v initial =
     else if l < il then false
     else
       try
-	for i=0 to il - 1 do 
+	for i=0 to il - 1 do
 	  if v.[i] <> initial.[i] then
 	    match case with
 		`Ignore -> if lc v.[i] <> lc initial.[i] then failwith ""
@@ -605,7 +605,7 @@ let begins_with case v initial =
 	true
       with Failure "" -> false
 
-let ends_with case v ends = 
+let ends_with case v ends =
   let lc = Char.lowercase in
   let l = String.length v in
   let el = String.length ends in
@@ -614,10 +614,10 @@ let ends_with case v ends =
     else
       try
 	let j = ref (l - 1) in
-	  for i = el - 1 downto 0 do 
+	  for i = el - 1 downto 0 do
 	    if v.[!j] <> ends.[i] then
 	      match case with
-		  `Ignore -> 
+		  `Ignore ->
 		    if lc v.[!j] <> lc ends.[i] then failwith ""
 		    else j := !j - 1
 		| `Exact -> failwith ""
@@ -664,7 +664,7 @@ let contains case v sub =
       else raise Not_found
   in
     if sl = 0 then true
-    else 
+    else
       let last_p = ref 0 in
       let initial_c = sub.[0] in
 	try
@@ -674,7 +674,7 @@ let contains case v sub =
 	      if test_position index then failwith ""
 	  done;
 	  false
-	with 
+	with
 	    Not_found -> false
 	  | Failure "" -> true
 
@@ -713,7 +713,7 @@ let numeric_string_substrings_match = case_ignore_substrings_match
 (* 1.3.6.1.4.1.4203.1.2.1 NAME 'caseExactIA5SubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_exact_ia5_substrings_match = case_exact_substrings_match
 
-(* 1.3.6.1.4.1.1466.109.114.3 NAME 'caseIgnoreIA5SubstringsMatch' 
+(* 1.3.6.1.4.1.1466.109.114.3 NAME 'caseIgnoreIA5SubstringsMatch'
    SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 *)
 let case_ignore_ia5_substrings_match = case_ignore_substrings_match
 
@@ -725,16 +725,16 @@ let case_ignore_list_substrings_match = case_ignore_substrings_match
 
 
 let oid = Oid.of_string
-let (equality, equality_bysyntax) = 
+let (equality, equality_bysyntax) =
   List.fold_left
-    (fun (m1, m2) (oid, alias, syntax, checksyntax, constructor) -> 
+    (fun (m1, m2) (oid, alias, syntax, checksyntax, constructor) ->
        (Oidmap.add alias (syntax, checksyntax, constructor)
 	  (Oidmap.add oid (syntax, checksyntax, constructor) m1),
 	Oidmap.add syntax constructor m2))
     (Oidmap.empty, Oidmap.empty)
-    [(oid "2.5.13.13", oid "booleanMatch", 
+    [(oid "2.5.13.13", oid "booleanMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.7", false, new_boolean_match);
-     (oid "2.5.13.32", oid "wordMatch", 
+     (oid "2.5.13.32", oid "wordMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, new_word_match_set);
      (oid "2.5.13.41", oid "storedPrefixMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, new_stored_prefix_set);
@@ -746,47 +746,47 @@ let (equality, equality_bysyntax) =
       oid "1.3.6.1.4.1.1466.115.121.1.38", false, new_object_identifier_first_component_set);
      (oid "2.5.13.29", oid "integerFirstComponentMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.27", false, new_integer_first_component_set);
-     (oid "2.5.13.17", oid "octetStringMatch", 
+     (oid "2.5.13.17", oid "octetStringMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.40", false, new_octet_string_match);
-     (oid "2.5.13.0", oid "objectidentifiermatch", 
+     (oid "2.5.13.0", oid "objectidentifiermatch",
       oid "1.3.6.1.4.1.1466.115.121.1.38", false, new_object_identifier_equality_set);
-     (oid "2.5.13.1", oid "distinguishednamematch", 
+     (oid "2.5.13.1", oid "distinguishednamematch",
       oid "1.3.6.1.4.1.1466.115.121.1.12", false, new_distinguished_name_equality_set);
      (oid "2.5.13.8", oid "numericstringmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.36", false, new_numeric_string_equality_set);
-     (oid "2.5.13.14", oid "integermatch", 
+     (oid "2.5.13.14", oid "integermatch",
       oid "1.3.6.1.4.1.1466.115.121.1.27", false, new_integer_equality_set);
-     (oid "2.5.13.16", oid "bitstringmatch", 
+     (oid "2.5.13.16", oid "bitstringmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.6", false, new_bit_string_equality_set);
-     (oid "2.5.13.22", oid "presentationaddressmatch", 
+     (oid "2.5.13.22", oid "presentationaddressmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.43", false, new_presentation_address_equality_set);
-     (oid "2.5.13.23", oid "uniquemembermatch", 
+     (oid "2.5.13.23", oid "uniquemembermatch",
       oid "1.3.6.1.4.1.1466.115.121.1.34", false, new_unique_member_equality_set);
-     (oid "2.5.13.24", oid "protocolinformationmatch", 
+     (oid "2.5.13.24", oid "protocolinformationmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.42", false, new_protocol_information_equality_set);
-     (oid "2.5.13.27", oid "generalizedtimematch", 
+     (oid "2.5.13.27", oid "generalizedtimematch",
       oid "1.3.6.1.4.1.1466.115.121.1.24", false, new_generalized_time_equality_set);
-     (oid "2.5.13.2", oid "caseignorematch", 
+     (oid "2.5.13.2", oid "caseignorematch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, new_case_ignore_equality_set);
-     (oid "2.5.13.5", oid "caseExactMatch", 
+     (oid "2.5.13.5", oid "caseExactMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, new_case_exact_equality_set);
-     (oid "2.5.13.11", oid "caseignorelistmatch", 
+     (oid "2.5.13.11", oid "caseignorelistmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.41", false, new_case_ignore_list_equality_set);
-     (oid "2.5.13.20", oid "telephonenumbermatch", 
+     (oid "2.5.13.20", oid "telephonenumbermatch",
       oid "1.3.6.1.4.1.1466.115.121.1.50", false, new_telephone_number_equality_set);
-     (oid "1.3.6.1.4.1.1466.109.114.1", oid "caseexactia5match", 
+     (oid "1.3.6.1.4.1.1466.109.114.1", oid "caseexactia5match",
       oid "1.3.6.1.4.1.1466.115.121.1.26", false, new_case_exact_ia5_equality_set);
-     (oid "1.3.6.1.4.1.1466.109.114.2", oid "caseignoreia5match", 
+     (oid "1.3.6.1.4.1.1466.109.114.2", oid "caseignoreia5match",
       oid "1.3.6.1.4.1.1466.115.121.1.26", false, new_case_ignore_ia5_equality_set)]
 
 let (ordering, ordering_bysyntax) =
   List.fold_left
-    (fun (m1, m2) (oid, alias, syntax, checksyntax, matchingrule) -> 
-       (Oidmap.add alias (syntax, checksyntax, matchingrule) 
+    (fun (m1, m2) (oid, alias, syntax, checksyntax, matchingrule) ->
+       (Oidmap.add alias (syntax, checksyntax, matchingrule)
 	  (Oidmap.add oid (syntax, checksyntax, matchingrule) m1),
 	Oidmap.add syntax matchingrule m2))
     (Oidmap.empty, Oidmap.empty)
-    [(oid "2.5.13.28", oid "generalizedtimeorderingmatch", 
+    [(oid "2.5.13.28", oid "generalizedtimeorderingmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.24", false, generalized_time_ordering_match);
      (oid "2.5.13.3", oid "caseignoreorderingmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, case_ignore_ordering_match);
@@ -794,32 +794,32 @@ let (ordering, ordering_bysyntax) =
       oid "1.3.6.1.4.1.1466.115.121.1.40", false, octet_string_ordering_match);
      (oid "2.5.13.6", oid "caseExactOrderingMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, case_exact_ordering_match);
-     (oid "2.5.13.9", oid "numericStringOrderingMatch", 
+     (oid "2.5.13.9", oid "numericStringOrderingMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.36", false, numeric_string_ordering_match);
-     (oid "2.5.13.15", oid "integerOrderingMatch", 
+     (oid "2.5.13.15", oid "integerOrderingMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.27", false, integer_ordering_match)]
 
-let (substring, substring_bysyntax) = 
+let (substring, substring_bysyntax) =
   List.fold_left
-    (fun 
-       (m1, m2) 
-       (oid, alias, syntax, checksyntax, 
-	(value: (Ldap_types.substring_component -> string -> bool))) -> 
-	 (Oidmap.add alias (syntax, checksyntax, value) 
+    (fun
+       (m1, m2)
+       (oid, alias, syntax, checksyntax,
+	(value: (Ldap_types.substring_component -> string -> bool))) ->
+	 (Oidmap.add alias (syntax, checksyntax, value)
 	    (Oidmap.add oid (syntax, checksyntax, value) m1),
 	  Oidmap.add syntax value m2))
     (Oidmap.empty, Oidmap.empty)
-    [(oid "2.5.13.4", oid "caseignoresubstringsmatch", 
+    [(oid "2.5.13.4", oid "caseignoresubstringsmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, case_ignore_substrings_match);
      (oid "2.5.13.12", oid "caseIgnoreListSubstringsMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.58", false, case_ignore_list_substrings_match);
-     (oid "2.5.13.21", oid "telephonenumbersubstringsmatch", 
+     (oid "2.5.13.21", oid "telephonenumbersubstringsmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.50", false, telephone_number_substrings_match);
-     (oid "2.5.13.10", oid "numericstringsubstringsmatch", 
+     (oid "2.5.13.10", oid "numericstringsubstringsmatch",
       oid "1.3.6.1.4.1.1466.115.121.1.36", false, numeric_string_substrings_match);
-     (oid "2.5.13.7", oid "caseExactSubstringsMatch", 
+     (oid "2.5.13.7", oid "caseExactSubstringsMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.15", false, case_exact_substrings_match);
-     (oid "1.3.6.1.4.1.4203.1.2.1", oid "caseExactIA5SubstringsMatch", 
+     (oid "1.3.6.1.4.1.4203.1.2.1", oid "caseExactIA5SubstringsMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.26", false, case_exact_ia5_substrings_match);
-     (oid "1.3.6.1.4.1.1466.109.114.3", oid "caseIgnoreIA5SubstringsMatch", 
+     (oid "1.3.6.1.4.1.1466.109.114.3", oid "caseIgnoreIA5SubstringsMatch",
       oid "1.3.6.1.4.1.1466.115.121.1.26", false, case_ignore_ia5_substrings_match)]

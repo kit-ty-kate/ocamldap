@@ -4,16 +4,16 @@
    Copyright (C) 2004 Eric Stokes, Matthew Backes, and The California
    State University at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -26,19 +26,19 @@ open Netencoding
 open Ldap_ooclient
 open Ldif_parser
 open Ldap_types
-		     
-let safe_string_regex = 
+		
+let safe_string_regex =
   Str.regexp "^[\x01-\x09\x0b-\x0c\x0e-\x7f]+$"
 
 let password_regex =
   Str.regexp_case_fold ".*p\\(ass\\)?w\\(or\\)?d$"
 
-let empty_regex = 
+let empty_regex =
   Str.regexp "^ *$\\|^  *.*$"
 
-let safe_val buf s = 
-  if 
-    (Str.string_match safe_string_regex s 0) && 
+let safe_val buf s =
+  if
+    (Str.string_match safe_string_regex s 0) &&
     (not (Str.string_match empty_regex s 0))
   then begin
     Buffer.add_string buf ": ";
@@ -60,7 +60,7 @@ let safe_attr_val buf a v =
     safe_val buf v
   end
 
-let entry2ldif ?(ext=false) outbuf e = 
+let entry2ldif ?(ext=false) outbuf e =
   Buffer.add_string outbuf "dn";
   safe_val outbuf e#dn;
   if ext then Buffer.add_string outbuf "\nchangetype: add";
@@ -68,15 +68,15 @@ let entry2ldif ?(ext=false) outbuf e =
   (List.iter
      (fun attr ->
         (List.iter
-           (fun value -> 
+           (fun value ->
 	      safe_attr_val outbuf attr value;
 	      Buffer.add_char outbuf '\n')
            (e#get_value attr)))
      e#attributes);
   Buffer.add_char outbuf '\n';
   outbuf
-    
-let iter (f: ('a -> unit)) ldif = 
+
+let iter (f: ('a -> unit)) ldif =
   try
     while true
     do
@@ -84,7 +84,7 @@ let iter (f: ('a -> unit)) ldif =
     done
   with End -> ()
 
-let fold f v ldif = 
+let fold f v ldif =
   let res = ref v in
     try
       while true
