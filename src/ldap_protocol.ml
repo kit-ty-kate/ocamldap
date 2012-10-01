@@ -310,9 +310,9 @@ let decode_bindrequest rb =
 
 let encode_bindresponse {bind_result=result;bind_serverSaslCredentials=saslcred} =
   let encoded_result = encode_components_of_ldapresult result in
-  let encoded_saslcred = (match saslcred with
-                              Some s -> Some (encode_ber_octetstring s)
-                            | None -> None)
+  let encoded_saslcred = match saslcred with
+    | Some s -> Some (encode_ber_octetstring ~cls:Context_specific ~tag:7 s)
+    | None -> None
   in
   let len = (String.length encoded_result) +
             (match encoded_saslcred with
