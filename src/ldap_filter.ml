@@ -19,7 +19,6 @@
 *)
 
 open Ldap_types
-open Ldap_filterparser
 
 exception Invalid_filter of int * string
 
@@ -39,7 +38,7 @@ let escape_filterstring s =
 
 let of_string f =
   let lxbuf = Lexing.from_string f in
-    try filter_and_eof Ldap_filterlexer.lexfilter lxbuf
+    try Ldap_filterparser.filter_and_eof Ldap_filterlexer.lexfilter lxbuf
     with
         Parsing.Parse_error ->
           raise (Invalid_filter (lxbuf.Lexing.lex_curr_pos, "parse error"))
@@ -158,4 +157,3 @@ let to_string (f:filter) =
   let buf = Buffer.create 100 in
     to_string' buf f;
     Buffer.contents buf
-
