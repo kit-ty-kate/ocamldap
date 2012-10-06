@@ -20,7 +20,6 @@
 *)
 
 open Ldap_types
-open Ldap_dnparser
 
 exception Invalid_dn of int * string
 
