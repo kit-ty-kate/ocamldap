@@ -21,13 +21,12 @@
 open Ldap_types
 open Ldap_protocol
 open Lber
-open Unix
 open Sys
 
 type msgid = Int32.t
 
 type ld_socket = Ssl of Ssl.socket
-                 | Plain of file_descr
+                 | Plain of Unix.file_descr
 
 type conn = {
   mutable rb: readbyte;
@@ -77,7 +76,7 @@ let send_message con msg =
     match ld_socket with
         Ssl s ->
           (try Ssl.write s buf off len
-           with Ssl.Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
+           with Ssl.Write_error _ -> raise (Unix.Unix_error (Unix.EPIPE, "Ssl.write", "")))
       | Plain s -> Unix.write s buf off len
   in
   let e_msg = encode_ldapmessage msg in
@@ -90,10 +89,10 @@ let send_message con msg =
           ((write con.socket e_msg !written (len - !written)) + !written)
       done
     with
-        Unix_error (EBADF, _, _)
-      | Unix_error (EPIPE, _, _)
-      | Unix_error (ECONNRESET, _, _)
-      | Unix_error (ECONNABORTED, _, _)
+        Unix.Unix_error (Unix.EBADF, _, _)
+      | Unix.Unix_error (Unix.EPIPE, _, _)
+      | Unix.Unix_error (Unix.ECONNRESET, _, _)
+      | Unix.Unix_error (Unix.ECONNABORTED, _, _)
       | _ ->
           (raise
              (LDAP_Failure
@@ -139,7 +138,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                  try
                    (List.rev_map
                       (fun addr -> (mech, addr, port))
-                      (Array.to_list ((gethostbyname host).h_addr_list)))
+                      (Array.to_list ((Unix.gethostbyname host).Unix.h_addr_list)))
                  with Not_found -> [])
               (List.map
                  (fun host ->
@@ -158,38 +157,38 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
               (mech, addr, port) :: tl ->
                 (try
                    if mech = `PLAIN then
-                     let s = socket PF_INET SOCK_STREAM 0 in
+                     let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
                        try
                          previous_signal :=
                            signal sigalrm
                              (Signal_handle (fun _ -> failwith "timeout"));
-                         ignore (alarm connect_timeout);
-                         connect s (ADDR_INET (addr, port));
-                         ignore (alarm 0);
+                         ignore (Unix.alarm connect_timeout);
+                         Unix.connect s (Unix.ADDR_INET (addr, port));
+                         ignore (Unix.alarm 0);
                          set_signal sigalrm !previous_signal;
                          Plain s
-                       with exn -> close s;raise exn
+                       with exn -> Unix.close s;raise exn
                    else
                      (previous_signal :=
                         signal sigalrm
                           (Signal_handle (fun _ -> failwith "timeout"));
-                      ignore (alarm connect_timeout);
+                      ignore (Unix.alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
                                        Ssl.SSLv23
-                                       (ADDR_INET (addr, port)))
+                                       (Unix.ADDR_INET (addr, port)))
                       in
-                        ignore (alarm 0);
+                        ignore (Unix.alarm 0);
                         set_signal sigalrm !previous_signal;
                         ssl)
                  with
-                     Unix_error (ECONNREFUSED, _, _)
-                   | Unix_error (EHOSTDOWN, _, _)
-                   | Unix_error (EHOSTUNREACH, _, _)
-                   | Unix_error (ECONNRESET, _, _)
-                   | Unix_error (ECONNABORTED, _, _)
+                     Unix.Unix_error (Unix.ECONNREFUSED, _, _)
+                   | Unix.Unix_error (Unix.EHOSTDOWN, _, _)
+                   | Unix.Unix_error (Unix.EHOSTUNREACH, _, _)
+                   | Unix.Unix_error (Unix.ECONNRESET, _, _)
+                   | Unix.Unix_error (Unix.ECONNABORTED, _, _)
                    | Ssl.Connection_error _
                    | Failure "timeout" ->
-                       ignore (alarm 0);
+                       ignore (Unix.alarm 0);
                        set_signal sigalrm !previous_signal;
                        open_con tl)
             | [] -> raise (LDAP_Failure (`SERVER_DOWN, "", ext_res))
@@ -331,7 +330,7 @@ let unbind con =
   try
     (match con.socket with
          Ssl s -> Ssl.shutdown s
-       | Plain s -> close s)
+       | Plain s -> Unix.close s)
   with _ -> ()
 
 let modify_s con ~dn ~mods =
