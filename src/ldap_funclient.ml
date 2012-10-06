@@ -20,7 +20,6 @@
 
 open Ldap_types
 open Ldap_protocol
-open Lber
 
 type msgid = Int32.t
 
@@ -28,7 +27,7 @@ type ld_socket = Ssl of Ssl.socket
                  | Plain of Unix.file_descr
 
 type conn = {
-  mutable rb: readbyte;
+  mutable rb: Lber.readbyte;
   mutable socket: ld_socket; (* communications channel to the ldap server *)
   mutable current_msgid: Int32.t; (* the largest message id allocated so far *)
   pending_messages: (int32, ldap_message Queue.t) Hashtbl.t;
@@ -120,9 +119,9 @@ let receive_message con msgid =
         read_message con msgid
       else Queue.take q
     with
-        Readbyte_error Transport_error ->
+        Lber.Readbyte_error Lber.Transport_error ->
           raise (LDAP_Failure (`SERVER_DOWN, "read error", ext_res))
-      | Readbyte_error End_of_stream ->
+      | Lber.Readbyte_error Lber.End_of_stream ->
           raise (LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
 
 let init ?(connect_timeout = 1) ?(version = 3) hosts =
