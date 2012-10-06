@@ -21,7 +21,6 @@
 open Ldap_types
 open Ldap_filterparser
 open Ldap_filterlexer
-open Str
 
 exception Invalid_filter of int * string
 
@@ -48,7 +47,7 @@ let of_string f =
       | Failure msg ->
           raise (Invalid_filter (lxbuf.Lexing.lex_curr_pos, msg))
 
-let double_star_rex = regexp "\\*\\*"
+let double_star_rex = Str.regexp "\\*\\*"
 let to_string (f:filter) =
   let rec to_string' buf f =
     match f with
@@ -82,7 +81,7 @@ let to_string (f:filter) =
           Buffer.add_string buf attrname;
           Buffer.add_char buf '=';
           Buffer.add_string buf
-            (global_replace double_star_rex "*"
+            (Str.global_replace double_star_rex "*"
                ((match initial with
                      [s] -> (escape_filterstring s) ^ "*"
                    | [] -> ""
