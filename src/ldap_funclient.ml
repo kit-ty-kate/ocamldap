@@ -21,7 +21,6 @@
 open Ldap_types
 open Ldap_protocol
 open Lber
-open Sys
 
 type msgid = Int32.t
 
@@ -152,7 +151,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                  hosts)))
       in
       let rec open_con addrs =
-        let previous_signal = ref Signal_default in
+        let previous_signal = ref Sys.Signal_default in
           match addrs with
               (mech, addr, port) :: tl ->
                 (try
@@ -160,25 +159,25 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                      let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
                        try
                          previous_signal :=
-                           signal sigalrm
-                             (Signal_handle (fun _ -> failwith "timeout"));
+                           Sys.signal Sys.sigalrm
+                             (Sys.Signal_handle (fun _ -> failwith "timeout"));
                          ignore (Unix.alarm connect_timeout);
                          Unix.connect s (Unix.ADDR_INET (addr, port));
                          ignore (Unix.alarm 0);
-                         set_signal sigalrm !previous_signal;
+                         Sys.set_signal Sys.sigalrm !previous_signal;
                          Plain s
                        with exn -> Unix.close s;raise exn
                    else
                      (previous_signal :=
-                        signal sigalrm
-                          (Signal_handle (fun _ -> failwith "timeout"));
+                        Sys.signal Sys.sigalrm
+                          (Sys.Signal_handle (fun _ -> failwith "timeout"));
                       ignore (Unix.alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
                                        Ssl.SSLv23
                                        (Unix.ADDR_INET (addr, port)))
                       in
                         ignore (Unix.alarm 0);
-                        set_signal sigalrm !previous_signal;
+                        Sys.set_signal Sys.sigalrm !previous_signal;
                         ssl)
                  with
                      Unix.Unix_error (Unix.ECONNREFUSED, _, _)
@@ -189,7 +188,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    | Ssl.Connection_error _
                    | Failure "timeout" ->
                        ignore (Unix.alarm 0);
-                       set_signal sigalrm !previous_signal;
+                       Sys.set_signal Sys.sigalrm !previous_signal;
                        open_con tl)
             | [] -> raise (LDAP_Failure (`SERVER_DOWN, "", ext_res))
       in
