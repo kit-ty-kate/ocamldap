@@ -19,7 +19,6 @@
 *)
 
 open Ldap_types
-open Ldap_protocol
 
 type msgid = Int32.t
 
@@ -77,7 +76,7 @@ let send_message con msg =
            with Ssl.Write_error _ -> raise (Unix.Unix_error (Unix.EPIPE, "Ssl.write", "")))
       | Plain s -> Unix.write s buf off len
   in
-  let e_msg = encode_ldapmessage msg in
+  let e_msg = Ldap_protocol.encode_ldapmessage msg in
   let len = String.length e_msg in
   let written = ref 0 in
     try
@@ -106,7 +105,7 @@ let receive_message con msgid =
     with Not_found -> raise (LDAP_Failure (`LOCAL_ERROR, "invalid message id", ext_res))
   in
   let rec read_message con msgid =
-    let msg = decode_ldapmessage con.rb in
+    let msg = Ldap_protocol.decode_ldapmessage con.rb in
       if msg.messageID = msgid then msg
       else
         (let q = q_for_msgid con msg.messageID in
