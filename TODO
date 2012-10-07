@@ -1,0 +1,2 @@
+* Cleaning and reindent all the code
+* Use Lwt or a monadic style fonctor
