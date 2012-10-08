@@ -21,13 +21,12 @@
 
 open Ldap_types
 open Ldap_dnparser
-open Ldap_dnlexer
 
 exception Invalid_dn of int * string
 
 let of_string dn_string =
   let lexbuf = Lexing.from_string dn_string in
-    try Ldap_dnparser.dn lexdn lexbuf
+    try Ldap_dnparser.dn Ldap_dnlexer.lexdn lexbuf
     with
         Parsing.Parse_error -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, "parse error"))
       | Failure msg -> raise (Invalid_dn (lexbuf.Lexing.lex_curr_pos, msg))
