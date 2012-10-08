@@ -22,7 +22,6 @@
 open Ldap_types
 open Ldap_dnparser
 open Ldap_dnlexer
-open Printf
 
 exception Invalid_dn of int * string
 
@@ -105,10 +104,10 @@ let to_string dn =
       (fun {attr_type=attr;attr_vals=vals} ->
          let rec string_values s attr vals =
            match vals with
-               valu :: [] -> sprintf "%s%s=%s" s attr (escape_value valu)
+               valu :: [] -> Printf.sprintf "%s%s=%s" s attr (escape_value valu)
              | valu :: tl ->
                  string_values
-                   (sprintf "%s%s=%s+"
+                   (Printf.sprintf "%s%s=%s+"
                       s attr (escape_value valu))
                    attr tl
              | [] -> s
@@ -124,8 +123,8 @@ let to_string dn =
   in
   let rec components_to_dn s comps =
     match comps with
-        comp :: [] -> sprintf "%s%s" s comp
-      | comp :: tl -> components_to_dn (sprintf "%s%s," s comp) tl
+        comp :: [] -> Printf.sprintf "%s%s" s comp
+      | comp :: tl -> components_to_dn (Printf.sprintf "%s%s," s comp) tl
       | [] -> s
   in
     components_to_dn "" (dn_to_strcomponents dn)
