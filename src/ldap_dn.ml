@@ -19,8 +19,6 @@
    USA
 *)
 
-open Ldap_types
-
 exception Invalid_dn of int * string
 
 let of_string dn_string =
@@ -99,7 +97,7 @@ let escape_value valu =
 let to_string dn =
   let dn_to_strcomponents dn =
     List.map
-      (fun {attr_type=attr;attr_vals=vals} ->
+      (fun {Ldap_types.attr_type=attr;attr_vals=vals} ->
          let rec string_values s attr vals =
            match vals with
                valu :: [] -> Printf.sprintf "%s%s=%s" s attr (escape_value valu)
