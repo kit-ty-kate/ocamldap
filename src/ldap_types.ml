@@ -264,10 +264,18 @@ type protocol_op = Bind_request of bind_request
                    | Extended_request of extended_request
                    | Extended_response of extended_response
 
+type paged_results_control_value = {
+  size: int;
+  cookie: string;
+}
+
+type control_details =
+  [`Paged_results_control of paged_results_control_value
+  |`Unknown_value of string ]
+
 type ldap_control = {
-  controlType: string;
   criticality: bool;
-  controlValue: string option
+  control_details: control_details;
 }
 
 type ldap_controls = ldap_control list
