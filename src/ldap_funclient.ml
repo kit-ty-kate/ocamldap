@@ -37,7 +37,12 @@ type result = Ldap_types.search_result_entry list
 type entry = Ldap_types.search_result_entry
 type authmethod = [ `SIMPLE | `SASL ]
 type search_result = [ `Entry of entry
-                     | `Referral of (string list) ]
+                     | `Referral of (string list)
+                     | `Success of (Ldap_types.ldap_controls option) ]
+type page_control =
+  [ `Noctrl
+  | `Initctrl of int
+  | `Subctrl of (int * string) ]
 
 let ext_res = {Ldap_types.ext_matched_dn="";
                ext_referral=None}
@@ -221,8 +226,20 @@ let bind_s ?(who = "") ?(cred = "") ?(auth_method = `SIMPLE) con =
     free_messageid con msgid
 
 let search ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
-  ?(sizelimit=0l) ?(timelimit=0l) ?(attrs = []) ?(attrsonly = false) con filter =
+  ?(sizelimit=0l) ?(timelimit=0l) ?(attrs = []) ?(attrsonly = false)
+  ?(page_control = `Noctrl) con filter =
   let msgid = allocate_messageid con in
+  let build_res_ctrl size cookie =
+    {Ldap_types.criticality = false;
+    Ldap_types.control_details=(`Paged_results_control {Ldap_types.size; Ldap_types.cookie})}
+  in
+  let controls = match (page_control) with
+    | `Noctrl -> None
+    | `Initctrl size | `Subctrl (size,_) when size < 1 ->
+      raise (Ldap_types.LDAP_Failure(`LOCAL_ERROR, "invalid page size", ext_res))
+    | `Initctrl size -> Some [(build_res_ctrl size "")]
+    | `Subctrl (size,cookie) -> Some [(build_res_ctrl size cookie)]
+   in
     try
       let e_filter = (try Ldap_filter.of_string filter
                       with _ ->
@@ -241,7 +258,7 @@ let search ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
                          typesOnly=attrsonly;
                          filter=e_filter;
                          s_attributes=attrs};
-           controls=None};
+           controls};
         msgid
     with exn -> free_messageid con msgid;raise exn
 
@@ -252,6 +269,20 @@ let get_search_entry con msgid =
       | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS}} ->
           raise (Ldap_types.LDAP_Failure (`SUCCESS, "success", ext_res))
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
+        raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
+                             {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
+                              ext_referral=res.Ldap_types.ldap_referral}))
+      | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "unexpected search response", ext_res))
+  with exn -> free_messageid con msgid;raise exn
+
+let get_search_entry_with_controls con msgid =
+  try
+    match receive_message con msgid with
+        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> `Entry e
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS};Ldap_types.controls=cntrls} ->
+        `Success cntrls
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
         raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                              {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
