@@ -31,8 +31,14 @@ type modattr = modify_optype * string * string list
 type result = Ldap_types.search_result_entry list
 type entry = Ldap_types.search_result_entry
 type authmethod = [ `SIMPLE | `SASL ]
-type search_result = [ `Entry of entry | `Referral of string list ]
-
+type search_result = 
+  [ `Entry of entry 
+  | `Referral of string list 
+  | `Success of (ldap_controls option) ]
+type page_control =
+  [ `Noctrl
+  | `Initctrl of int
+  | `Subctrl of (int * string) ]
 (** Initializes the conn data structure, and opens a connection to the
   server.  init
   [["ldap://rrhost.example.com/";"ldap://backup.example.com:1389"]].
@@ -116,7 +122,9 @@ val search :
   ?aliasderef:Ldap_types.alias_deref ->
   ?sizelimit:int32 ->
   ?timelimit:int32 ->
-  ?attrs:string list -> ?attrsonly:bool -> conn -> string -> msgid
+  ?attrs:string list -> 
+  ?attrsonly:bool -> 
+  ?page_control:page_control -> conn -> string -> msgid
 
 (** fetch a search entry from the wire using the given msgid. The
   entry could be a search entry, OR it could be a referral structure.
@@ -129,6 +137,23 @@ val get_search_entry :
   conn ->
   msgid ->
   [> `Entry of Ldap_types.search_result_entry | `Referral of string list ]
+
+(** fetch a search entry from the wire using the given msgid. The
+  entry could be a search entry, OR it could be a referral structure.
+
+  The version supports passing ldap_controls (like page control) through on
+  success. Returning an entry of type `SUCCESS was thus needed.
+
+  @raise LDAP_Failure for all results other than `SUCCESS (except referrals)
+  @raise Decoding_error for decoder errors (unlikely, probably a bug)
+  @raise Encoding_error for encoder errors (unlikely, probably a bug)
+*)
+val get_search_entry_with_controls :
+  conn ->
+  msgid ->
+  [> `Entry of Ldap_types.search_result_entry | 
+     `Referral of string list | 
+     `Success of (ldap_controls option) ]
 
 (** abandon the async request attached to msgid.
 

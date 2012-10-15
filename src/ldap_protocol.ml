@@ -129,6 +129,16 @@ let decode_resultcode code =
     | 80 -> `OTHER
     | i ->  `UNKNOWN_ERROR i
 
+let decode_control_type s =
+  match s with
+  | "1.2.840.113556.1.4.319" -> `Paged_results_control
+  | x -> `Unknown_type x
+
+let encode_control_type c =
+  match c.control_details with
+  | `Paged_results_control _ -> "1.2.840.113556.1.4.319"
+  | _ -> raise (LDAP_Encoder "encode_ldapcontrol: unknown control type")
+
 (* encode a standard sequence header *)
 let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =
   encode_ber_header
@@ -137,20 +147,67 @@ let encode_seq_hdr ?(cls=Universal) ?(tag=16) length =
      ber_primitive=false;
      ber_length=Definite length}
 
+let encode_ldapcontrol control =
+  let en_type = encode_ber_octetstring (encode_control_type control) in
+  let build_final_str hdr_len part_list =
+    let en_ctrl_hdr = encode_seq_hdr ~cls:Universal ~tag:16 hdr_len in
+    let body = String.concat "" part_list in
+    String.concat "" [en_ctrl_hdr; body]
+  in
+  match control.control_details with
+  | `Unknown_value c_val ->
+    let header_len = (String.length en_type) + (String.length c_val) in
+    build_final_str header_len [en_type; c_val]
+  | `Paged_results_control ctrl_val ->
+    let en_size = encode_ber_int32 (Int32.of_int ctrl_val.size) in
+    let en_cookie = encode_ber_octetstring ctrl_val.cookie in
+    let control_val_length = (String.length en_size) + (String.length en_cookie) in
+    let control_val_hdr = encode_seq_hdr ~cls:Universal ~tag:16 control_val_length in
+    let control_value = String.concat "" [control_val_hdr; en_size; en_cookie] in
+    let control_w_hdr =
+      encode_ber_octetstring ~cls:Universal ~tag:4 control_value
+    in
+    let header_len =
+      (String.length en_type) + (String.length control_w_hdr)
+    in
+    build_final_str header_len [en_type; control_w_hdr]
+
+let encode_ldapcontrol_list control_list =
+  let all_encoded_ctrls = List.fold_left
+    (fun str ctrl ->
+      String.concat str [(encode_ldapcontrol ctrl)])
+    ""
+    control_list
+  in
+  let all_ctrls_header =
+    encode_seq_hdr ~cls:Context_specific ~tag:0 ((String.length all_encoded_ctrls))
+  in
+  String.concat "" [all_ctrls_header; all_encoded_ctrls]
+
 let decode_ldapcontrol rb =
   match decode_ber_header rb with
       {ber_class=Universal;ber_tag=16;ber_length=len} ->
         let rb = readbyte_of_ber_element len rb in
-        let controlType = decode_ber_octetstring rb in
-        let criticality =
-          try decode_ber_bool rb
-          with Readbyte_error End_of_stream -> false
+        let control_type_string = decode_ber_octetstring rb in
+        let controlType = decode_control_type control_type_string in
+        (* not handling criticality *)
+          let _ = decode_ber_header rb in
+          let criticality = false in
+          let control_details =
+            begin match controlType with
+            | `Paged_results_control ->
+              begin
+              try
+                let _ = decode_ber_header rb in
+                let size = Int32.to_int (decode_ber_int32 rb) in
+                let cookie = decode_ber_octetstring rb in
+                `Paged_results_control {size=size; cookie=cookie}
+              with Readbyte_error End_of_stream -> `Unknown_value ""
+              end
+            | `Unknown_type _ -> `Unknown_value ""
+            end
         in
-        let controlValue =
-          try Some (decode_ber_octetstring rb)
-          with Readbyte_error End_of_stream -> None
-        in
-          {controlType=controlType;criticality=criticality;controlValue=controlValue}
+          {criticality=criticality;control_details=control_details}
     | _ -> raise (LDAP_Decoder "decode_ldapcontrol: expected sequence")
 
 let decode_ldapcontrols rb =
@@ -1042,6 +1099,22 @@ let encode_ldapmessage {messageID=msgid;protocolOp=protocol_op;controls=controls
       | Extended_request req -> encode_extendedrequest req
       | Extended_response res -> encode_extendedresponse res
   in
+  match controls with
+  | Some ctrl_lst ->
+    let en_ctrl_lst = encode_ldapcontrol_list ctrl_lst in
+    let buf =
+      Buffer.create ((String.length encoded_op) + 20 + (String.length en_ctrl_lst))
+    in
+    let msgid = encode_ber_int32 msgid in
+      Buffer.add_string buf (encode_seq_hdr (
+        (String.length encoded_op) +
+        (String.length msgid) +
+        (String.length en_ctrl_lst)));
+      Buffer.add_string buf msgid;
+      Buffer.add_string buf encoded_op;
+      Buffer.add_string buf en_ctrl_lst;
+      Buffer.contents buf
+  | None ->
   let buf = Buffer.create ((String.length encoded_op) + 20) in
   let msgid = encode_ber_int32 msgid in
     Buffer.add_string buf
