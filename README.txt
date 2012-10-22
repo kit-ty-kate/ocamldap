@@ -4,7 +4,7 @@ This is the README file for the ocamldap distribution.
 
 Ocamldap is an implementation of the Light Weight Directory Access Protocol
 
-See the files INSTALL.txt for building and installation instructions.
+See the files INSTALL.txt for building and installation instructions. 
 
 
 (* OASIS_STOP *)

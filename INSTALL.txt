@@ -1,15 +1,15 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 4d21938e2c35bd77dbf68cede79b64cb) *)
+(* DO NOT EDIT (digest: bbbe6e9973ef1b5ca6bb467e7666a3b3) *)
 This is the INSTALL file for the ocamldap distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
-full information.
+full information. 
 
 Dependencies
 ============
 
 In order to compile this package, you will need:
-* ocaml
+* ocaml for all, doc api
 * findlib
 * pcre for library ldap
 * ssl for library ldap
@@ -26,7 +26,7 @@ Installing
 Uninstalling
 ============
 
-1. Go to the root of the package
+1. Go to the root of the package 
 2. Run 'ocaml setup.ml -uninstall'
 
 OASIS
