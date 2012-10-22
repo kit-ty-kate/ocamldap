@@ -52,3 +52,14 @@ Library "toplevel"
   BuildDepends: ldap.ldif
   CompiledObject: byte
   ByteOpt: -I +compiler-libs # For ocaml-4.00.0 compatibility
+
+Document "api"
+  Title: API reference for Ocamldap
+  Type: ocamlbuild (0.3)
+  Install: true
+  InstallDir: $htmldir/api
+  BuildTools: ocamldoc
+  XOCamlbuildPath: ./
+  XOCamlbuildLibraries:
+    ldap,
+    ldap.ldif
