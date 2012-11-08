@@ -19,8 +19,10 @@
    USA
 *)
 
+module Make (M : Ldap_types.Monad) = struct
 
 open Ldap_types
+module Ldap_funclient = Ldap_funclient.Make(M)
 open Ldap_funclient
 open Ldap_schema
 open String
@@ -578,3 +580,5 @@ object (self)
         raise Not_found
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#rawschema
 end;;
+
+end

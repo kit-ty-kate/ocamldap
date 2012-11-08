@@ -19,6 +19,8 @@
    USA
 *)
 
+module Make : functor (M : Ldap_types.Monad) -> sig
+
 (** an implementation of the ldap wire protocol *)
 
 open Ldap_types
@@ -39,4 +41,6 @@ val encode_ldapmessage : ldap_message -> string
 
 (** decode an ldap_message from the wire, and build/return a
   structure of type ldap_message *)
-val decode_ldapmessage : readbyte -> ldap_message
+val decode_ldapmessage : Make(M).readbyte -> ldap_message
+
+end

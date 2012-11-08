@@ -20,6 +20,8 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *)
 
+module Make (M : Ldap_types.Monad) = struct
+
 exception Decoding_error of string
 exception Encoding_error of string
 
@@ -683,3 +685,5 @@ let rec decode_berval_list ?(lst=[]) dfun (readbyte:readbyte) =
     match res with
         Some item -> decode_berval_list ~lst:(item :: lst) dfun readbyte
       | None -> lst
+
+end

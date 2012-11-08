@@ -19,6 +19,8 @@
    USA
 *)
 
+module Make : functor (M : Ldap_types.Monad) -> sig
+
 (** an object oriented ldap client interface *)
 
 open Ldap_types
@@ -235,7 +237,7 @@ object
       to the chosen SASL mechanism. SASL binds have not been tested
       extensively. *)
   method bind :
-    ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
+    ?cred:string -> ?meth:Ldap_funclient.Make(M).authmethod -> string -> unit
 
   (** Deauthenticate and close the connection to the server *)
   method unbind : unit
@@ -730,3 +732,5 @@ object
   method set_dn : string -> unit
 end
 *)
+
+end

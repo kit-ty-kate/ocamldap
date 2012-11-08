@@ -19,6 +19,9 @@
 *)
 
 {
+module Make (M : Ldap_types.Monad) = struct
+
+  module Ldif_changerec_parser = Ldif_changerec_parser.Make(M)
   open Ldif_changerec_parser
   open Netencoding
 }
@@ -45,3 +48,7 @@ rule lexcr = parse
   | '-' nl {Dash}
   | nl + {Newline}
   | eof {End_of_input}
+
+{
+end
+}

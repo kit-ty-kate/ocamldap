@@ -20,8 +20,15 @@
    USA
 *)
 
+module Make (M : Ldap_types.Monad) = struct
+
+module Ldif_oo = Ldif_oo.Make(M)
+
+module Ldap_ooclient = Ldap_ooclient.Make(M)
 open Ldap_ooclient
+module Ldif_changerec_parser = Ldif_changerec_parser.Make(M)
 open Ldif_changerec_parser
+module Ldif_changerec_lexer = Ldif_changerec_lexer.Make(M)
 open Ldif_changerec_lexer
 
 exception Invalid_changerec of string
@@ -91,4 +98,6 @@ object (self)
     ignore (insert_change buf e);
     Buffer.output_buffer out_ch buf;
     Buffer.clear buf
+end
+
 end

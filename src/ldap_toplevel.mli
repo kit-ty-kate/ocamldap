@@ -20,6 +20,8 @@
    USA
 *)
 
+module Make : functor (M : Ldap_types.Monad) -> sig
+
 (** Functions which resemble the command line tools which many users
     are familar with, useful in the interactive environment *)
 
@@ -35,7 +37,7 @@ val ldapsearch :
   ?a:string list ->
   ?b:string ->
   ?d:string ->
-  ?w:string -> h:string -> string -> Ldap_ooclient.ldapentry list
+  ?w:string -> h:string -> string -> Ldap_ooclient.Make(M).ldapentry list
 
 (** connect to the specified host and perform one or more modifications.
     @param h The ldapurl which names the host and port to connect to
@@ -55,4 +57,6 @@ val ldapmodify :
     @param w The credentials of the object you wish to bind as, default anonymous
     The final argument is a list of objects you wish to add *)
 val ldapadd :
-  h:string -> d:string -> w:string -> Ldap_ooclient.ldapentry list -> unit
+  h:string -> d:string -> w:string -> Ldap_ooclient.Make(M).ldapentry list -> unit
+
+end

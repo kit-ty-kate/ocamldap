@@ -1,3 +1,5 @@
+module Make : functor (M : Ldap_types.Monad) -> sig
+
 open Ldap_ooclient
 
 (** functions for implementing mutexes on top of LDAP's built in test
@@ -48,4 +50,6 @@ object
   method lock: Ldap_types.dn -> unit
   (** unlock the specified dn, if it is not locked do nothing *)
   method unlock: Ldap_types.dn -> unit
+end
+
 end

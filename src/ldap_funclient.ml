@@ -18,6 +18,11 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 *)
 
+module Make (M : Ldap_types.Monad) = struct
+
+module Lber = Lber.Make(M)
+module Ldap_protocol = Ldap_protocol.Make(M)
+
 type msgid = Int32.t
 
 type ld_socket = Ssl of Ssl.socket
@@ -411,3 +416,5 @@ let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
 
 let create_grouping_s groupingType value = ()
 let end_grouping_s cookie value = ()
+
+end

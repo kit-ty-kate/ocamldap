@@ -30,3 +30,4 @@
 <src/*.ml{,i}>: pkg_pcre
 <src/*.ml{,i}>: pkg_ssl
 # OASIS_STOP
+true: use_menhir

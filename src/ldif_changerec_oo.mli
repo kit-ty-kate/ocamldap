@@ -20,6 +20,8 @@
    USA
 *)
 
+module Make : functor (M : Ldap_types.Monad) -> sig
+
 (** an object oriented interface to the ldif parser *)
 
 (** an exception raised when there is a parse error *)
@@ -41,8 +43,10 @@ class change:
   ?out_ch:Pervasives.out_channel ->
   unit ->
 object
-  method read_changerec: Ldap_ooclient.changerec
-  method of_string: string -> Ldap_ooclient.changerec
-  method to_string: Ldap_ooclient.changerec -> string
-  method write_changerec: Ldap_ooclient.changerec -> unit
+  method read_changerec: Ldap_ooclient.Make(M).changerec
+  method of_string: string -> Ldap_ooclient.Make(M).changerec
+  method to_string: Ldap_ooclient.Make(M).changerec -> string
+  method write_changerec: Ldap_ooclient.Make(M).changerec -> unit
+end
+
 end

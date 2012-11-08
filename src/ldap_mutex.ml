@@ -1,3 +1,6 @@
+module Make (M : Ldap_types.Monad) = struct
+
+module Ldap_ooclient = Ldap_ooclient.Make(M)
 open Ldap_ooclient
 open Ldap_types
 
@@ -113,4 +116,6 @@ object (self)
   method private addmutex = addmutex ldap mutextbldn
   method lock dn = lock ldap mutextbldn [(`ADD, "lockedObject", [Ldap_dn.to_string dn])]
   method unlock dn = unlock ldap mutextbldn [(`DELETE, "lockedObject", [Ldap_dn.to_string dn])]
+end
+
 end
