@@ -60,11 +60,11 @@ type page_control =
   @raise Failure May raise
   Failure "int_of_string" if you pass it a malformed url. May also
   raise various lexer errors under the same conditions. *)
-val init : ?connect_timeout:int -> ?version:int -> string list -> conn
+val init : ?connect_timeout:int -> ?version:int -> string list -> conn M.t
 
 (** close the connection to the server. You may not use the conn
   after you have unbound, if you do you will get an exception. *)
-val unbind : conn -> unit
+val unbind : conn -> unit M.t
 
 (** authenticatite to the server. In this version only simple binds
   are supported, however the ldap_protocol.ml module DOES implement
@@ -83,7 +83,7 @@ val unbind : conn -> unit
   @raise Encoding_error for encoder errors (unlikely, probably a bug)
 *)
 val bind_s :
-  ?who:string -> ?cred:string -> ?auth_method:[> `SIMPLE ] -> conn -> unit
+  ?who:string -> ?cred:string -> ?auth_method:[> `SIMPLE ] -> conn -> unit M.t
 
 (** Search for the given entry with the specified base node and search
   scope, optionally limiting the returned attributes to those listed in
@@ -126,7 +126,7 @@ val search :
   ?timelimit:int32 ->
   ?attrs:string list ->
   ?attrsonly:bool ->
-  ?page_control:page_control -> conn -> string -> msgid
+  ?page_control:page_control -> conn -> string -> msgid M.t
 
 (** fetch a search entry from the wire using the given msgid. The
   entry could be a search entry, OR it could be a referral structure.
@@ -138,7 +138,7 @@ val search :
 val get_search_entry :
   conn ->
   msgid ->
-  [> `Entry of Ldap_types.search_result_entry | `Referral of string list ]
+  [> `Entry of Ldap_types.search_result_entry | `Referral of string list ] M.t
 
 (** fetch a search entry from the wire using the given msgid. The
   entry could be a search entry, OR it could be a referral structure.
@@ -155,12 +155,12 @@ val get_search_entry_with_controls :
   msgid ->
   [> `Entry of Ldap_types.search_result_entry |
      `Referral of string list |
-     `Success of (ldap_controls option) ]
+     `Success of (ldap_controls option) ] M.t
 
 (** abandon the async request attached to msgid.
 
   @raise Encoding_error for encoder errors (unlikely, probably a bug) *)
-val abandon : conn -> msgid -> unit
+val abandon : conn -> msgid -> unit M.t
 
 (** This is the syncronus version of search. It blocks until the
   search is complete, and returns a list of objects. It is exactly the
@@ -176,7 +176,7 @@ val search_s :
   conn ->
   string ->
   [> `Entry of Ldap_types.search_result_entry | `Referral of string list ]
-  list
+  list M.t
 
 (** add entry to the directory
 
@@ -184,7 +184,7 @@ val search_s :
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
   @raise Encoding_error for encoder errors (unlikely, probably a bug)
 *)
-val add_s : conn -> entry -> unit
+val add_s : conn -> entry -> unit M.t
 
 (** delete the entry named by dn from the directory
 
@@ -192,7 +192,7 @@ val add_s : conn -> entry -> unit
   @raise Decoding_error for decoder errors (unlikely, probably a bug)
   @raise Encoding_error for encoder errors (unlikely, probably a bug)
 *)
-val delete_s : conn -> dn:string -> unit
+val delete_s : conn -> dn:string -> unit M.t
 
 (** apply the list of modifications to the named entry
 
@@ -206,7 +206,7 @@ val delete_s : conn -> dn:string -> unit
 val modify_s :
     conn ->
     dn:string ->
-    mods:(Ldap_types.modify_optype * string * string list) list -> unit
+    mods:(Ldap_types.modify_optype * string * string list) list -> unit M.t
 
 (** change the rdn, and optionally the superior entry of dn
 
@@ -221,6 +221,6 @@ val modify_s :
 *)
 val modrdn_s :
   ?deleteoldrdn:bool ->
-  ?newsup:'a option -> conn -> dn:string -> newdn:string -> unit
+  ?newsup:'a option -> conn -> dn:string -> newdn:string -> unit M.t
 
 end

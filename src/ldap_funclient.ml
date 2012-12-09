@@ -20,13 +20,15 @@
 
 module Make (M : Ldap_types.Monad) = struct
 
+let (>>=) = M.bind
+
 module Lber = Lber.Make(M)
 module Ldap_protocol = Ldap_protocol.Make(M)
 
 type msgid = Int32.t
 
-type ld_socket = Ssl of Ssl.socket
-                 | Plain of Unix.file_descr
+type ld_socket = Ssl of M.Ssl.socket
+                 | Plain of M.Unix.file_descr
 
 type conn = {
   mutable rb: Lber.readbyte;
@@ -79,31 +81,45 @@ let free_messageid con msgid =
 let send_message con msg =
   let write ld_socket buf off len =
     match ld_socket with
-        Ssl s ->
-          (try Ssl.write s buf off len
-           with Ssl.Write_error _ -> raise (Unix.Unix_error (Unix.EPIPE, "Ssl.write", "")))
-      | Plain s -> Unix.write s buf off len
+      | Ssl s ->
+          M.catch
+            (fun () -> M.Ssl.write s buf off len)
+            (function
+              | Ssl.Write_error _ ->
+                  M.fail (Unix.Unix_error (Unix.EPIPE, "Ssl.write", ""))
+              | exn -> M.fail exn
+            )
+      | Plain s -> M.Unix.write s buf off len
   in
   let e_msg = Ldap_protocol.encode_ldapmessage msg in
   let len = String.length e_msg in
-  let written = ref 0 in
-    try
-      while !written < len
-      do
-        written :=
-          ((write con.socket e_msg !written (len - !written)) + !written)
-      done
-    with
-        Unix.Unix_error (Unix.EBADF, _, _)
+  let rec result written =
+    M.catch
+      (fun () ->
+        if written < len then (
+          write con.socket e_msg written (len - written)
+          >>= fun old ->
+          result (old + written)
+        )
+        else
+          M.return ()
+      )
+    (function
+      | Unix.Unix_error (Unix.EBADF, _, _)
       | Unix.Unix_error (Unix.EPIPE, _, _)
       | Unix.Unix_error (Unix.ECONNRESET, _, _)
       | Unix.Unix_error (Unix.ECONNABORTED, _, _)
       | _ ->
-          (raise
-             (Ldap_types.LDAP_Failure
-                (`SERVER_DOWN,
-                 "the connection object is invalid, data cannot be written",
-                 ext_res)))
+          M.fail
+            (Ldap_types.LDAP_Failure
+               (`SERVER_DOWN,
+                "the connection object is invalid, data cannot be written",
+                ext_res
+               )
+            )
+    )
+  in
+  result 0
 
 (* recieve an ldapmessage for a particular message id (messages for
    all other ids will be read and queued. They can be retreived later) *)
@@ -113,8 +129,9 @@ let receive_message con msgid =
     with Not_found -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid message id", ext_res))
   in
   let rec read_message con msgid =
-    let msg = Ldap_protocol.decode_ldapmessage con.rb in
-      if msg.Ldap_types.messageID = msgid then msg
+    Ldap_protocol.decode_ldapmessage con.rb >>= fun msg ->
+      if msg.Ldap_types.messageID = msgid
+      then M.return msg
       else
         (let q = q_for_msgid con msg.Ldap_types.messageID in
            Queue.add msg q;
@@ -124,7 +141,7 @@ let receive_message con msgid =
     try
       if Queue.is_empty q then
         read_message con msgid
-      else Queue.take q
+      else M.return (Queue.take q)
     with
         Lber.Readbyte_error Lber.Transport_error ->
           raise (Ldap_types.LDAP_Failure (`SERVER_DOWN, "read error", ext_res))
@@ -161,30 +178,36 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
           match addrs with
               (mech, addr, port) :: tl ->
                 (try
-                   if mech = `PLAIN then
-                     let s = Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
-                       try
+                   if mech = `PLAIN then (
+                     let s = M.Unix.socket Unix.PF_INET Unix.SOCK_STREAM 0 in
+                     M.catch
+                       (fun () ->
                          previous_signal :=
                            Sys.signal Sys.sigalrm
                              (Sys.Signal_handle (fun _ -> failwith "timeout"));
                          ignore (Unix.alarm connect_timeout);
-                         Unix.connect s (Unix.ADDR_INET (addr, port));
+                         M.Unix.connect s (Unix.ADDR_INET (addr, port))
+                         >>= fun () ->
                          ignore (Unix.alarm 0);
                          Sys.set_signal Sys.sigalrm !previous_signal;
-                         Plain s
-                       with exn -> Unix.close s;raise exn
+                         M.return (Plain s)
+                       )
+                       (fun exn -> M.Unix.close s >>= fun () -> M.fail exn)
+                   )
                    else
                      (previous_signal :=
                         Sys.signal Sys.sigalrm
                           (Sys.Signal_handle (fun _ -> failwith "timeout"));
                       ignore (Unix.alarm connect_timeout);
-                      let ssl = Ssl (Ssl.open_connection
-                                       Ssl.SSLv23
-                                       (Unix.ADDR_INET (addr, port)))
+                      let ssl =
+                        M.Ssl.open_connection
+                        Ssl.SSLv23
+                        (Unix.ADDR_INET (addr, port))
+                        >>= (fun x -> M.return (Ssl x))
                       in
-                        ignore (Unix.alarm 0);
-                        Sys.set_signal Sys.sigalrm !previous_signal;
-                        ssl)
+                      ignore (Unix.alarm 0);
+                      Sys.set_signal Sys.sigalrm !previous_signal;
+                      ssl)
                  with
                      Unix.Unix_error (Unix.ECONNREFUSED, _, _)
                    | Unix.Unix_error (Unix.EHOSTDOWN, _, _)
@@ -200,35 +223,49 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
       in
         open_con addrs
     in
-      {rb=(match fd with
-               Ssl s -> Lber.readbyte_of_ssl s
-             | Plain s -> Lber.readbyte_of_fd s);
+    fd >>= fun fd ->
+    let rb = match fd with
+      | Ssl s -> Lber.readbyte_of_ssl s
+      | Plain s -> Lber.readbyte_of_fd s
+    in
+    M.return
+      {rb;
        socket=fd;
        current_msgid=1l;
        pending_messages=(Hashtbl.create 3);
-       protocol_version=version}
+       protocol_version=version;
+      }
 
 (* sync auth_method types between the two files *)
 let bind_s ?(who = "") ?(cred = "") ?(auth_method = `SIMPLE) con =
   let msgid = allocate_messageid con in
-    (try
-       send_message con
-         {Ldap_types.messageID=msgid;
-          Ldap_types.protocolOp=Ldap_types.Bind_request
-                       {Ldap_types.bind_version=con.protocol_version;
-                        bind_name=who;
-                        bind_authentication=(Ldap_types.Simple cred)};
-          controls=None};
-       match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result={Ldap_types.result_code=`SUCCESS}}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result=res}} ->
-             raise (Ldap_types.LDAP_Failure
-                      (res.Ldap_types.result_code, res.Ldap_types.error_message,
-                       {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
-                        ext_referral=res.Ldap_types.ldap_referral}))
-         | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid server response", ext_res))
-     with exn -> free_messageid con msgid;raise exn);
-    free_messageid con msgid
+  (try (
+    send_message con
+      {Ldap_types.messageID=msgid;
+       Ldap_types.protocolOp=Ldap_types.Bind_request
+          {Ldap_types.bind_version=con.protocol_version;
+           bind_name=who;
+           bind_authentication=(Ldap_types.Simple cred)};
+       controls=None}
+    >>= fun () ->
+    receive_message con msgid >>= function
+      | {Ldap_types.protocolOp =
+          Ldap_types.Bind_response
+            {Ldap_types.bind_result = {Ldap_types.result_code = `SUCCESS}}
+        } -> M.return ()
+      | {Ldap_types.protocolOp =
+          Ldap_types.Bind_response {Ldap_types.bind_result = res}
+        } ->
+          raise (Ldap_types.LDAP_Failure
+                   (res.Ldap_types.result_code, res.Ldap_types.error_message,
+                     {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
+                      ext_referral=res.Ldap_types.ldap_referral}))
+      | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid server response", ext_res))
+   )
+   with exn -> free_messageid con msgid; raise exn
+  )
+  >>= fun () ->
+  M.return (free_messageid con msgid)
 
 let search ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
   ?(sizelimit=0l) ?(timelimit=0l) ?(attrs = []) ?(attrsonly = false)
@@ -245,33 +282,35 @@ let search ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
     | `Initctrl size -> Some [(build_res_ctrl size "")]
     | `Subctrl (size,cookie) -> Some [(build_res_ctrl size cookie)]
    in
-    try
-      let e_filter = (try Ldap_filter.of_string filter
-                      with _ ->
-                        (raise
-                           (Ldap_types.LDAP_Failure
-                              (`LOCAL_ERROR, "bad search filter", ext_res))))
-      in
-        send_message con
-          {Ldap_types.messageID=msgid;
-           Ldap_types.protocolOp=Ldap_types.Search_request
-                        {Ldap_types.baseObject=base;
-                         scope=scope;
-                         derefAliases=aliasderef;
-                         sizeLimit=sizelimit;
-                         timeLimit=timelimit;
-                         typesOnly=attrsonly;
-                         filter=e_filter;
-                         s_attributes=attrs};
-           controls};
-        msgid
-    with exn -> free_messageid con msgid;raise exn
+  try begin
+    let e_filter = (try Ldap_filter.of_string filter
+      with _ ->
+        (raise
+           (Ldap_types.LDAP_Failure
+              (`LOCAL_ERROR, "bad search filter", ext_res))))
+    in
+    send_message con
+      {Ldap_types.messageID=msgid;
+       Ldap_types.protocolOp=Ldap_types.Search_request
+          {Ldap_types.baseObject=base;
+           scope=scope;
+           derefAliases=aliasderef;
+           sizeLimit=sizelimit;
+           timeLimit=timelimit;
+           typesOnly=attrsonly;
+           filter=e_filter;
+           s_attributes=attrs};
+       controls}
+    >>= fun () ->
+    M.return msgid
+  end
+  with exn -> free_messageid con msgid;raise exn
 
 let get_search_entry con msgid =
   try
-    match receive_message con msgid with
-        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> `Entry e
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
+    receive_message con msgid >>= function
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> M.return (`Entry e)
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> M.return (`Referral r)
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS}} ->
           raise (Ldap_types.LDAP_Failure (`SUCCESS, "success", ext_res))
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
@@ -283,11 +322,11 @@ let get_search_entry con msgid =
 
 let get_search_entry_with_controls con msgid =
   try
-    match receive_message con msgid with
-        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> `Entry e
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
+    receive_message con msgid >>= function
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> M.return (`Entry e)
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> M.return (`Referral r)
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS};Ldap_types.controls=cntrls} ->
-        `Success cntrls
+        M.return (`Success cntrls)
       | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
         raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                              {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
@@ -310,59 +349,84 @@ let search_s ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
   let msgid = search ~base:base ~scope:scope ~aliasderef:aliasderef ~sizelimit:sizelimit
                 ~timelimit:timelimit ~attrs:attrs ~attrsonly:attrsonly con filter
   in
-  let result = ref [] in
-    (try
-       while true
-       do
-         result := (get_search_entry con msgid) :: !result
-       done
-     with
-         Ldap_types.LDAP_Failure (`SUCCESS, _, _) -> ()
-       | Ldap_types.LDAP_Failure (code, msg, ext) -> raise (Ldap_types.LDAP_Failure (code, msg, ext))
-       | exn -> (try abandon con msgid with _ -> ());raise exn);
-    free_messageid con msgid;
-    !result
+  msgid >>= fun msgid ->
+  let rec f result =
+    M.catch
+      (fun () ->
+        get_search_entry con msgid >>= fun x ->
+        f (x :: result)
+      )
+      (function
+        | Ldap_types.LDAP_Failure (`SUCCESS, _, _) ->
+            M.return result
+        | Ldap_types.LDAP_Failure (code, msg, ext) ->
+            M.fail (Ldap_types.LDAP_Failure (code, msg, ext))
+        | exn ->
+            M.catch
+              (fun () -> abandon con msgid >>= fun _ -> M.return ())
+              (fun _ -> M.return ())
+            >>= fun () ->
+            M.fail exn
+      )
+  in
+  f [] >>= fun result ->
+  free_messageid con msgid;
+  M.return result
 
 let add_s con (entry: entry) =
   let msgid = allocate_messageid con in
-    (try
-       send_message con
-         {Ldap_types.messageID=msgid;
-          Ldap_types.protocolOp=Ldap_types.Add_request entry;
-          controls=None};
-       match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Add_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Add_response res} ->
-             raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
-                                  {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
-                                   ext_referral=res.Ldap_types.ldap_referral}))
-         | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid add response", ext_res))
-     with exn -> free_messageid con msgid;raise exn);
-    free_messageid con msgid
+  M.catch
+    (fun () ->
+      send_message con
+        {Ldap_types.messageID=msgid;
+         Ldap_types.protocolOp=Ldap_types.Add_request entry;
+         controls=None}
+      >>= fun () ->
+      receive_message con msgid >>= function
+        | {Ldap_types.protocolOp=Ldap_types.Add_response {Ldap_types.result_code=`SUCCESS}} ->
+            M.return ()
+        | {Ldap_types.protocolOp=Ldap_types.Add_response res} ->
+            M.fail (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
+                                            {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
+                                             ext_referral=res.Ldap_types.ldap_referral}))
+        | _ -> M.fail (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid add response", ext_res))
+    )
+    (fun exn -> free_messageid con msgid;raise exn)
+  >>= fun () ->
+  free_messageid con msgid;
+  M.return ()
 
 let delete_s con ~dn =
   let msgid = allocate_messageid con in
-    (try
-       send_message con
-         {Ldap_types.messageID=msgid;
-          Ldap_types.protocolOp=Ldap_types.Delete_request dn;
-          controls=None};
-       match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Delete_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Delete_response res} ->
-             raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
+  M.catch
+    (fun () ->
+      send_message con
+        {Ldap_types.messageID=msgid;
+         Ldap_types.protocolOp=Ldap_types.Delete_request dn;
+         controls=None}
+      >>= fun () ->
+      receive_message con msgid >>= function
+        | {Ldap_types.protocolOp=Ldap_types.Delete_response {Ldap_types.result_code=`SUCCESS}} ->
+            M.return ()
+        | {Ldap_types.protocolOp=Ldap_types.Delete_response res} ->
+            M.fail (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
-         | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid delete response", ext_res))
-     with exn -> free_messageid con msgid;raise exn);
-    free_messageid con msgid
+        | _ -> M.fail (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid delete response", ext_res))
+    )
+    (fun exn -> free_messageid con msgid;raise exn)
+  >>= fun () ->
+  free_messageid con msgid;
+  M.return ()
 
 let unbind con =
-  try
-    (match con.socket with
-         Ssl s -> Ssl.shutdown s
-       | Plain s -> Unix.close s)
-  with _ -> ()
+  M.catch
+    (fun () ->
+      match con.socket with
+        | Ssl s -> M.Ssl.shutdown s
+        | Plain s -> M.Unix.close s
+    )
+    (fun _ -> M.return ())
 
 let modify_s con ~dn ~mods =
   let rec convertmods ?(converted=[]) mods =
@@ -376,43 +440,55 @@ let modify_s con ~dn ~mods =
       | [] -> converted
   in
   let msgid = allocate_messageid con in
-    (try
-       send_message con
-         {Ldap_types.messageID=msgid;
-          Ldap_types.protocolOp=Ldap_types.Modify_request
-                       {Ldap_types.mod_dn=dn;
-                        modification=convertmods mods};
-          controls=None};
-       match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Modify_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Modify_response res} ->
-             raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
+  M.catch
+    (fun () ->
+      send_message con
+        {Ldap_types.messageID=msgid;
+         Ldap_types.protocolOp=Ldap_types.Modify_request
+            {Ldap_types.mod_dn=dn;
+             modification=convertmods mods};
+         controls=None}
+      >>= fun () ->
+      receive_message con msgid >>= function
+        | {Ldap_types.protocolOp=Ldap_types.Modify_response {Ldap_types.result_code=`SUCCESS}} ->
+            M.return ()
+        | {Ldap_types.protocolOp=Ldap_types.Modify_response res} ->
+            M.fail (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
-         | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid modify response", ext_res))
-     with exn -> free_messageid con msgid;raise exn);
-    free_messageid con msgid
+         | _ -> M.fail (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid modify response", ext_res))
+    )
+    (fun exn -> free_messageid con msgid;raise exn)
+  >>= fun () ->
+  free_messageid con msgid;
+  M.return ()
 
 let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
   let msgid = allocate_messageid con in
-    (try
-       send_message con
-         {Ldap_types.messageID=msgid;
-          Ldap_types.protocolOp=Ldap_types.Modify_dn_request
-                       {Ldap_types.modn_dn=dn;
-                        modn_newrdn=newdn;
-                        modn_deleteoldrdn=deleteoldrdn;
-                        modn_newSuperior=None};
-          controls=None};
-       match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Modify_dn_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Modify_dn_response res} ->
-             raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
+  M.catch
+    (fun () ->
+      send_message con
+        {Ldap_types.messageID=msgid;
+         Ldap_types.protocolOp=Ldap_types.Modify_dn_request
+            {Ldap_types.modn_dn=dn;
+             modn_newrdn=newdn;
+             modn_deleteoldrdn=deleteoldrdn;
+             modn_newSuperior=None};
+         controls=None}
+      >>= fun () ->
+      receive_message con msgid >>= function
+        | {Ldap_types.protocolOp=Ldap_types.Modify_dn_response {Ldap_types.result_code=`SUCCESS}} ->
+            M.return ()
+        | {Ldap_types.protocolOp=Ldap_types.Modify_dn_response res} ->
+            M.fail (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
-         | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid modify dn response", ext_res))
-     with exn -> free_messageid con msgid;raise exn);
-    free_messageid con msgid
+         | _ -> M.fail (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid modify dn response", ext_res))
+    )
+    (fun exn -> free_messageid con msgid;raise exn)
+  >>= fun () ->
+  free_messageid con msgid;
+  M.return ()
 
 let create_grouping_s groupingType value = ()
 let end_grouping_s cookie value = ()
