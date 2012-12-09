@@ -35,7 +35,7 @@ type readbyte_error = End_of_stream
                       | Not_implemented
 exception Readbyte_error of readbyte_error
 
-type readbyte = ?peek:bool -> int -> string
+type readbyte = ?peek:bool -> int -> string M.t
 type writebyte = char -> unit
 type ber_class = Universal | Application | Context_specific | Private
 type ber_length = Definite of int | Indefinite
@@ -65,20 +65,20 @@ val readbyte_of_ber_element : ber_length -> readbyte -> readbyte
     rb_of_ber_element, even with blocking fds.
 
     @raise Readbyte_error in the event of a an io error, or the end of file *)
-val readbyte_of_fd: Unix.file_descr -> readbyte
+val readbyte_of_fd: M.Unix.file_descr -> readbyte
 
 (** a readbyte implementation which reads from an SSL socket. It is
     otherwise the same as readbyte_of_fd.
 
     @raise Readbyte_error in the event of a an io error, or the end of file *)
-val readbyte_of_ssl: Ssl.socket -> readbyte
+val readbyte_of_ssl: M.Ssl.socket -> readbyte
 
 (** decoding and encoding of the ber header *)
-val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header
+val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header M.t
 val encode_ber_header : ber_val_header -> string
 
 (** reads the contents octets *)
-val read_contents : ?peek:bool -> readbyte -> ber_length -> string
+val read_contents : ?peek:bool -> readbyte -> ber_length -> string M.t
 
 (**
   ENCODING and DECODING Functions
@@ -101,7 +101,7 @@ val read_contents : ?peek:bool -> readbyte -> ber_length -> string
   function encodes a valid ber type, including the header and length
   octets. *)
 val decode_ber_bool : ?peek:bool -> ?cls:ber_class -> ?tag:int ->
-  ?contents:string option -> readbyte -> bool
+  ?contents:string option -> readbyte -> bool M.t
 val encode_ber_bool : ?cls:ber_class -> ?tag:int -> bool -> string
 
 (** Encoding/Decoding of the integer primative ASN.1 type.  Note, in
@@ -111,7 +111,7 @@ val encode_ber_bool : ?cls:ber_class -> ?tag:int -> bool -> string
   however for now, this will have to do. Encode function encodes a
   valid ber type, including the header and length octets *)
 val decode_ber_int32 : ?peek:bool -> ?cls:ber_class -> ?tag:int ->
-  ?contents:string option -> readbyte -> int32
+  ?contents:string option -> readbyte -> int32 M.t
 val encode_ber_int32 : ?cls:ber_class -> ?tag:int -> int32 -> string
 
 (** Encoding/Decoding of enum primative ASN.1 type. Enums are simply
@@ -119,7 +119,7 @@ val encode_ber_int32 : ?cls:ber_class -> ?tag:int -> int32 -> string
   function encodes a valid ber type, including the header and length
   octets *)
 val decode_ber_enum : ?peek:bool -> ?cls:ber_class -> ?tag:int ->
-  ?contents:string option -> readbyte -> int32
+  ?contents:string option -> readbyte -> int32 M.t
 val encode_ber_enum : ?cls:ber_class -> ?tag:int -> int32 -> string
 
 (** Encoding/Decoding of octetstring ASN.1 types. The Nested or
@@ -127,13 +127,13 @@ val encode_ber_enum : ?cls:ber_class -> ?tag:int -> int32 -> string
   is not yet supported. Encode function encodes a valid ber type,
   including the header and length octets *)
 val decode_ber_octetstring : ?peek:bool -> ?cls:ber_class -> ?tag:int ->
-  ?contents:string option -> readbyte -> string
+  ?contents:string option -> readbyte -> string M.t
 val encode_ber_octetstring : ?cls:ber_class -> ?tag:int -> string -> string
 
 (** Encoding/Decoding of Null ASN.1 type.  Almost useful as an
   assertion-type operation *)
 val decode_ber_null : ?peek: bool -> ?cls:ber_class -> ?tag:int ->
-  ?contents:string option -> readbyte -> unit
+  ?contents:string option -> readbyte -> unit M.t
 val encode_ber_null : ?cls:ber_class -> ?tag:int -> unit -> string
 
 (** this function is for encoding lists of bervals, a common case.
@@ -149,6 +149,6 @@ val encode_berval_list : ?buf:Buffer.t -> ('a -> string) -> 'a list -> string
   when you reach the end of input. Otherwise this function will explode. That said,
   it is usually not practical to pass anything but a readbyte created by
   readbyte_of_string so this should not be a huge problem. *)
-val decode_berval_list : ?lst:'a list -> (readbyte -> 'a) -> readbyte -> 'a list
+val decode_berval_list : ?lst:'a list -> (readbyte -> 'a M.t) -> readbyte -> 'a list M.t
 
 end
