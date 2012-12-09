@@ -27,6 +27,8 @@ open Ldap_funclient
 open Ldap_schema
 open String
 
+let (>>=) = M.bind
+
 (* types used throughout the library *)
 (* add types *)
 type op = string * string list
@@ -407,53 +409,126 @@ object (self)
   val mutable reconnect_successful = true
   val mutable con = init ~connect_timeout:connect_timeout ~version:version hosts
   method private reconnect =
-    if bound then unbind con;
+    con >>= fun conn ->
+    (if bound then unbind conn else M.return ()) >>= fun () ->
     bound <- false;
     reconnect_successful <- false;
     con <- init ~connect_timeout:connect_timeout ~version:version hosts;
     bound <- true;
-    bind_s ~who: bdn ~cred: pwd ~auth_method: mth con;
+    bind_s ~who: bdn ~cred: pwd ~auth_method: mth conn;
     reconnect_successful <- true;
+    M.return ()
 
-  method unbind = if bound then (unbind con;bound <- false)
+  method unbind =
+    con >>= fun conn ->
+    if bound then
+      unbind conn >>= (fun () ->
+        bound <- false;
+        M.return ()
+      )
+    else
+      M.return ()
 
   method update_entry (e:ldapentry) =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try self#modify e#dn (List.rev e#changes); e#flush_changes
-    with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#update_entry e
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        self#modify e#dn (List.rev e#changes) >>= fun () ->
+        e#flush_changes;
+        M.return ()
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () -> self#update_entry e
+        | exn -> M.fail exn
+      )
 
   method bind ?(cred = "") ?(meth:authmethod = `SIMPLE) dn =
     if not bound then begin
       con <- init ~connect_timeout:connect_timeout ~version: version hosts;
       bound <- true
     end;
-    bind_s ~who: dn ~cred: cred ~auth_method: meth con;
+    con >>= fun conn ->
+    bind_s ~who: dn ~cred: cred ~auth_method: meth conn;
     reconnect_successful <- true;
-    bdn <- dn; pwd <- cred; mth <- meth
+    bdn <- dn; pwd <- cred; mth <- meth;
+    M.return ()
 
   method add (entry: ldapentry) =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try add_s con (of_entry entry)
-    with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;self#add entry
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
+        add_s conn (of_entry entry)
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#add entry
+        | exn -> M.fail exn
+      )
 
   method delete dn =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try delete_s con dn
-    with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;self#delete dn
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
+        delete_s conn dn
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#delete dn
+        | exn -> M.fail exn
+      )
 
   method modify dn mods =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try modify_s con dn mods
-    with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;self#modify dn mods
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
+        modify_s conn dn mods
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#modify dn mods
+        | exn -> M.fail exn
+      )
 
   method modrdn dn ?(deleteoldrdn = true) ?(newsup: string option=None) newrdn =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try modrdn_s con ~dn ~newdn:newrdn ~deleteoldrdn ~newsup
-    with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;self#modrdn dn ~deleteoldrdn:deleteoldrdn newrdn
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
+        modrdn_s conn ~dn ~newdn:newrdn ~deleteoldrdn ~newsup
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#modrdn dn ~deleteoldrdn:deleteoldrdn newrdn
+        | exn -> M.fail exn
+      )
 
   method search
     ?(scope = `SUBTREE)
@@ -463,18 +538,29 @@ object (self)
     ?(sizelimit = 0l)
     ?(timelimit = 0l)
     filter =
-    if not (reconnect_successful && bound) then self#reconnect;
-    try
-      List.rev_map to_entry
-        (search_s
-           ~scope ~base ~attrs
-           ~attrsonly ~sizelimit
-           ~timelimit con filter)
-    with LDAP_Failure(`SERVER_DOWN, _, _) ->
-      self#reconnect;
-      self#search
-        ~scope ~attrs ~attrsonly
-        ~base ~sizelimit ~timelimit filter
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
+        search_s
+          ~scope ~base ~attrs
+          ~attrsonly ~sizelimit
+          ~timelimit conn filter
+        >>= fun x ->
+        M.return (List.rev_map to_entry x)
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#search
+              ~scope ~attrs ~attrsonly
+              ~base ~sizelimit ~timelimit filter
+        | exn -> M.fail exn
+      )
 
   method search_a
     ?(scope = `SUBTREE)
@@ -495,87 +581,129 @@ object (self)
     let fetch_result con (msgid:msgid) first_entry ?(abandon=false) () =
       if abandon then
         (Ldap_funclient.abandon con msgid;
-         self#reconnect;
-         to_entry (`Entry {sr_dn="";sr_attributes=[]}))
+         self#reconnect >>= fun () ->
+         M.return (to_entry (`Entry {sr_dn="";sr_attributes=[]})))
       else
         match !first_entry with (* are we on the first entry of the search? *)
-            `No -> to_entry (get_search_entry con msgid)
+          | `No ->
+              get_search_entry con msgid
+              >>= fun x ->
+              M.return (to_entry x)
           | `Yes e ->
               first_entry := `No;
-              to_entry e
+              M.return (to_entry e)
           | `NoResults -> (* this search has no results *)
               raise
                 (LDAP_Failure
                    (`SUCCESS, "success",
                     {ext_matched_dn = ""; ext_referral = None}))
     in
-      if not (reconnect_successful && bound) then self#reconnect;
-      try
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
+    M.catch
+      (fun () ->
+        con >>= fun conn ->
         let first_entry = ref `No in
         let msgid =
           search
             ~scope ~base ~attrs ~attrsonly
             ~sizelimit ~timelimit
-            con filter
+            conn filter
         in
+        msgid >>= fun msgid ->
           (* make sure the server is really still there *)
-          (try first_entry := `Yes (get_search_entry con msgid)
+          (try
+             get_search_entry conn msgid >>= fun x ->
+             first_entry := `Yes x;
+             M.return ()
            with LDAP_Failure (`SUCCESS, _, _) ->
              (* the search is already complete and has no results *)
-             first_entry := `NoResults);
-          fetch_result con msgid first_entry
-      with LDAP_Failure(`SERVER_DOWN, _, _) ->
-        self#reconnect;
-        self#search_a
-          ~scope ~attrs ~attrsonly ~base
-          ~sizelimit ~timelimit filter
+             first_entry := `NoResults;
+             M.return ()
+          );
+          M.return (fetch_result conn msgid first_entry)
+      )
+      (function
+        | LDAP_Failure(`SERVER_DOWN, _, _) ->
+            self#reconnect >>= fun () ->
+            self#search_a
+              ~scope ~attrs ~attrsonly ~base
+              ~sizelimit ~timelimit filter
+        | exn -> M.fail exn
+      )
 
   method schema =
-    if not (reconnect_successful && bound) then self#reconnect;
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
     try
-      if version = 3 then
-        let schema_base = (match (self#search
-                                    ~base: ""
-                                    ~scope: `BASE
-                                    ~attrs: ["subschemasubentry"]
-                                    "(objectclass=*)")
-                           with
-                               [e] -> List.hd (e#get_value "subschemasubentry")
-                             |  _  -> raise Not_found) in
-          (match (self#search
-                    ~base: schema_base
-                    ~scope: `BASE
-                    ~attrs: ["objectClasses";"attributeTypes";
-                             "matchingRules";"ldapSyntaxes"]
-                    "(objectclass=subschema)") with
-               [e] ->
-                 readSchema
+      if version = 3 then begin
+        let schema_base =
+          self#search
+            ~base: ""
+            ~scope: `BASE
+            ~attrs: ["subschemasubentry"]
+            "(objectclass=*)"
+          >>= function
+            | [e] -> M.return (List.hd (e#get_value "subschemasubentry"))
+            |  _  -> raise Not_found
+        in
+        schema_base >>= fun schema_base ->
+        self#search
+          ~base: schema_base
+          ~scope: `BASE
+          ~attrs: ["objectClasses";"attributeTypes";
+                   "matchingRules";"ldapSyntaxes"]
+          "(objectclass=subschema)"
+        >>= function
+          | [e] ->
+              M.return
+                (readSchema
                    (e#get_value "objectclasses")
                    (e#get_value "attributetypes")
-             |  _  -> raise Not_found)
+                )
+          |  _  -> raise Not_found
+      end
       else
         raise Not_found
-    with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#schema
+    with LDAP_Failure(`SERVER_DOWN, _, _) ->
+      self#reconnect >>= fun () ->
+      self#schema
 
   method rawschema =
-    if not (reconnect_successful && bound) then self#reconnect;
+    (if not (reconnect_successful && bound)
+     then self#reconnect
+     else M.return ()
+    )
+    >>= fun () ->
     try
-      if version = 3 then
-        let schema_base = (match (self#search
-                                    ~base: ""
-                                    ~scope: `BASE
-                                    ~attrs: ["subschemasubentry"]
-                                    "(objectclass=*)") with
-                               [e] -> List.hd (e#get_value "subschemasubentry")
-                             |  _  -> raise Not_found) in
-          (match (self#search
-                    ~base: schema_base
-                    ~scope: `BASE
-                    ~attrs: ["objectClasses";"attributeTypes";
-                             "matchingRules";"ldapSyntaxes"]
-                    "(objectclass=*)") with
-               [e] -> e
-             |  _  -> raise Not_found)
+      if version = 3 then begin
+        let schema_base =
+          self#search
+            ~base: ""
+            ~scope: `BASE
+            ~attrs: ["subschemasubentry"]
+            "(objectclass=*)"
+          >>= function
+            | [e] -> M.return (List.hd (e#get_value "subschemasubentry"))
+            |  _  -> raise Not_found
+        in
+        schema_base >>= fun schema_base ->
+        self#search
+          ~base: schema_base
+          ~scope: `BASE
+          ~attrs: ["objectClasses";"attributeTypes";
+                   "matchingRules";"ldapSyntaxes"]
+          "(objectclass=*)"
+        >>= function
+          | [e] -> M.return e
+          |  _  -> raise Not_found
+      end
       else
         raise Not_found
     with LDAP_Failure(`SERVER_DOWN, _, _) -> self#reconnect;self#rawschema

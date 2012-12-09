@@ -237,10 +237,10 @@ object
       to the chosen SASL mechanism. SASL binds have not been tested
       extensively. *)
   method bind :
-    ?cred:string -> ?meth:Ldap_funclient.Make(M).authmethod -> string -> unit
+    ?cred:string -> ?meth:Ldap_funclient.Make(M).authmethod -> string -> unit M.t
 
   (** Deauthenticate and close the connection to the server *)
-  method unbind : unit
+  method unbind : unit M.t
 
   (** {2 Searching} *)
 
@@ -275,7 +275,7 @@ object
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string ->
     ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
-    string -> ldapentry list
+    string -> ldapentry list M.t
 
   (** Search the directory asyncronously, otherwise the same as
       search. *)
@@ -284,24 +284,24 @@ object
     ?attrs:string list ->
     ?attrsonly:bool -> ?base:string ->
     ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
-    string -> (?abandon:bool -> unit -> ldapentry)
+    string -> (?abandon:bool -> unit -> ldapentry M.t) M.t
 
   (** Fetch the raw (unparsed) schema from the directory using the
       standard mechanism (requires protocol version 3) *)
-  method rawschema : ldapentry
+  method rawschema : ldapentry M.t
 
   (** Fetch and parse the schema from the directory via the standard
       mechanism (requires version 3). Return a structured
       representation of the schema indexed by canonical name, and oid. *)
-  method schema : Ldap_schema.schema
+  method schema : Ldap_schema.schema M.t
 
   (** {2 Making Modifications} *)
 
   (** add an entry to the database *)
-  method add : ldapentry -> unit
+  method add : ldapentry -> unit M.t
 
   (** Delete the object named by dn from the database *)
-  method delete : string -> unit
+  method delete : string -> unit M.t
 
   (** Modify the entry named by dn, applying mods
 
@@ -311,11 +311,11 @@ object
   *)
   method modify :
     string ->
-    (Ldap_types.modify_optype * string * string list) list -> unit
+    (Ldap_types.modify_optype * string * string list) list -> unit M.t
 
   (** Syncronize changes made locally to an ldapentry with the
       directory. *)
-  method update_entry : ldapentry -> unit
+  method update_entry : ldapentry -> unit M.t
 
   (** Modify the rdn of the object named by dn, if the protocol
       version is 3 you may additionally change the superior, the rdn
@@ -334,7 +334,7 @@ object
       @param newsup Default [None], only valid when the protocol
       version is 3, change the object's location in the tree, making
       its superior equal to the specified object. *)
-  method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
+  method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit M.t
 end
 
 (** {1 Iterators Over Streams of ldapentry Objects} *)
