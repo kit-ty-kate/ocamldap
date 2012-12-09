@@ -30,9 +30,9 @@ end
 class mutex: string list -> string -> string -> string ->
 object
   (** lock the mutex. This WILL block if the mutex is already locked *)
-  method lock: unit
+  method lock: unit M.t
   (** unlock the mutex *)
-  method unlock: unit
+  method unlock: unit M.t
 end
 
 (** used to apply some function, first locking the mutex, unlocking it
@@ -41,15 +41,15 @@ end
     unlocks the mutex before reraising the exception. Generally
     garentees that the mutex will always be used consistantly when
     performing an action. *)
-val apply_with_mutex: mutex -> (unit -> 'a) -> 'a
+val apply_with_mutex: mutex -> (unit -> 'a) -> 'a M.t
 
 (** new object_lock_table ldapurls binddn bindpw mutexdn *)
 class object_lock_table: string list -> string -> string -> string ->
 object
   (** lock the specified dn, if it is already locked, then block until the lock can be aquired *)
-  method lock: Ldap_types.dn -> unit
+  method lock: Ldap_types.dn -> unit M.t
   (** unlock the specified dn, if it is not locked do nothing *)
-  method unlock: Ldap_types.dn -> unit
+  method unlock: Ldap_types.dn -> unit M.t
 end
 
 end

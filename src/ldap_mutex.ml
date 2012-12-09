@@ -4,6 +4,8 @@ module Ldap_ooclient = Ldap_ooclient.Make(M)
 open Ldap_ooclient
 open Ldap_types
 
+let (>>=) = M.bind
+
 (* ldap mutexes *)
 exception Ldap_mutex of string * exn
 
@@ -39,27 +41,30 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
           ~base:mutexdn
           ~scope:`BASE
           "objectclass=*"
-      with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
+      with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> M.return []
     in
+    obj >>= fun obj ->
       if List.length obj = 0 then begin
         addmutex ldap mutexdn;
         lock ldap mutexdn lockval
       end
-      else if List.length obj = 1 then
+      else if List.length obj = 1 then begin
         while true
         do
           try
             ldap#modify (List.hd obj)#dn lockval;
             failwith "locked"
           with (* the mutex is locked already *)
-              LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
+            | LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
             | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) ->
                 (* this is so evil *)
                 ignore (Unix.select [] [] [] 0.25) (* wait 1/4 of a second *)
-        done
+        done;
+        M.return ()
+      end
       else failwith "huge error, multiple objects with the same dn"
   with
-      Failure "locked" -> ()
+      Failure "locked" -> M.return ()
     | (Ldap_mutex _) as exn -> raise exn
     | exn -> raise (Ldap_mutex ("lock", exn))
 
@@ -71,8 +76,9 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
           ~base:mutexdn
           ~scope:`BASE
           "objectclass=*"
-      with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> []
+      with LDAP_Failure (`NO_SUCH_OBJECT, _, _) -> M.return []
     in
+    obj >>= fun obj ->
       if List.length obj = 0 then begin
         addmutex ldap mutexdn;
         unlock ldap mutexdn unlockval
@@ -80,10 +86,13 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
       else if List.length obj = 1 then
         try
           ldap#modify
-            (List.hd obj)#dn unlockval
-        with LDAP_Failure (`NO_SUCH_ATTRIBUTE, _, _) -> ()
+            (List.hd obj)#dn unlockval;
+          M.return ()
+        with LDAP_Failure (`NO_SUCH_ATTRIBUTE, _, _) -> M.return ()
+      else
+        M.return ()
   with
-      (Ldap_mutex _) as exn -> raise exn
+    | (Ldap_mutex _) as exn -> raise exn
     | exn -> raise (Ldap_mutex ("unlock", exn))
 
 
@@ -100,12 +109,14 @@ object (self)
 end
 
 let apply_with_mutex mutex f =
-  mutex#lock;
+  mutex#lock >>= fun () ->
   try
     let result = f () in
-      mutex#unlock;
-      result
-  with exn -> (try mutex#unlock with _ -> ());raise exn
+    mutex#unlock >>= fun () ->
+    M.return result
+  with exn ->
+    M.catch (fun () -> mutex#unlock) M.fail >>= fun () ->
+    M.fail exn
 
 class object_lock_table ldapurls binddn bindpw mutextbldn =
 object (self)
