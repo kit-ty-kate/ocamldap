@@ -61,14 +61,14 @@ let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
 let ldapmodify ~h ~d ~w mods =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap ->
-       List.iter
+       M.List.iter
          (fun (dn, ldmod) -> ldap#modify dn ldmod)
          mods)
 
 let ldapadd ~h ~d ~w entries =
   ldap_cmd_harness ~h ~d ~w
     (fun ldap ->
-       List.iter
+       M.List.iter
          (fun entry -> ldap#add entry)
          entries)
 
