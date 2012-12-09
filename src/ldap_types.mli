@@ -314,21 +314,36 @@ module type Monad = sig
   type +'a t
 
   val return : 'a -> 'a t
-  val bind : 'a -> ('a -> 'b) -> 'b
+  val bind : 'a t -> ('a -> 'b t) -> 'b t
   val fail : exn -> 'a t
   val catch : (unit -> 'a t) -> (exn -> 'a t) -> 'a t
 
-  module type Unix = sig
-    type file_descr
-    type sockaddr
-    type socket_domain
-    type socket_type
+  module Ssl : sig
+    type socket
 
-    val close : file_descr -> unit t
+    val read : socket -> string -> int -> int -> int t
+    val write : socket -> string -> int -> int -> int t
+    val close : socket -> unit t
+    val shutdown : socket -> unit t
+    val open_connection : Ssl.protocol -> Unix.sockaddr -> socket t
+  end
+
+  module Unix : sig
+    type file_descr
+
     val read : file_descr -> string -> int -> int -> int t
     val write : file_descr -> string -> int -> int -> int t
+    val close : file_descr -> unit t
+    val socket : Unix.socket_domain -> Unix.socket_type -> int -> file_descr
+    val connect : file_descr -> Unix.sockaddr -> unit t
+    val accept : file_descr -> (file_descr * Unix.sockaddr) t
+    val setsockopt : file_descr -> Unix.socket_bool_option -> bool -> unit
+    val bind : file_descr -> Unix.sockaddr -> unit
+    val listen : file_descr -> int -> unit
+    val getsockname : file_descr -> Unix.sockaddr
+  end
 
-    val connect : file_descr -> sockaddr -> unit t
-    val socket : socket_domain -> socket_type -> int -> file_descr
+  module List : sig
+    val iter : ('a -> unit t) -> 'a list -> unit t
   end
 end
