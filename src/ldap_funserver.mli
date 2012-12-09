@@ -72,7 +72,7 @@ type server_info
 val init : ?log:(log_level -> string -> unit) -> ?port:int -> backendInfo -> server_info
 
 (** Shutdown the server *)
-val shutdown : server_info -> unit
+val shutdown : server_info -> unit M.t
 
 (** Using the supplied server context, begin processing ldap operations. This
     function should never terminate unless there is an exceptional condition, in
