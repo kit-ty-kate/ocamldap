@@ -31,7 +31,7 @@ in
 object (self)
   inherit ldapcon ~connect_timeout ~referral_policy ~version hosts as super
   initializer
-    super#bind binddn ~cred:bindpw
+    ignore (super#bind binddn ~cred:bindpw) (* !!! *)
 
   val lock_table = new object_lock_table hosts binddn bindpw mutextbldn
 
@@ -84,13 +84,13 @@ object (self)
               {ext_matched_dn="";ext_referral=None}))
 
   method disassociate_entries txn entries =
-    List.iter (self#disassociate_entry txn) entries
+    M.List.iter (self#disassociate_entry txn) entries
 
   method commit_txn txn =
     self#check_dead txn;
     txn.dead <- true;
     try
-      List.iter
+      M.List.iter
         (fun (_, e) -> lock_table#unlock (Ldap_dn.of_string e#dn))
         (Hashtbl.fold
            (fun k (original_entry, modified_entry) successful_so_far ->
@@ -159,15 +159,15 @@ object (self)
              []
              successful_so_far))
        with
-           [] ->
+         | [] ->
              Hashtbl.iter
-               (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+               (fun k (e, _) -> ignore (lock_table#unlock (Ldap_dn.of_string e#dn))) (* !!! Hashtable *)
                txn.entries;
              (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
              raise (Txn_commit_failure ("rollback successful", exn, None))
          | not_rolled_back ->
              Hashtbl.iter
-               (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+               (fun k (e, _) -> ignore (lock_table#unlock (Ldap_dn.of_string e#dn))) (* !!! Hashtable *)
                txn.entries;
              (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
              raise

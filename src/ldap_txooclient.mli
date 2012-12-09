@@ -42,36 +42,36 @@ class ldapadvisorytxcon :
   ?version:int ->
   string list -> string -> string -> string -> (* hosts binddn bindpw mutextbldn *)
   object
-    method add : Make(M).ldapentry -> unit
+    method add : Make(M).ldapentry -> unit M.t
     method bind :
-      ?cred:string -> ?meth:Ldap_funclient.Make(M).authmethod -> string -> unit
-    method delete : string -> unit
+      ?cred:string -> ?meth:Ldap_funclient.Make(M).authmethod -> string -> unit M.t
+    method delete : string -> unit M.t
     method modify :
       string ->
-      (Ldap_types.modify_optype * string * string list) list -> unit
-    method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit
-    method rawschema : Make(M).ldapentry
-    method schema : Ldap_schema.schema
+      (Ldap_types.modify_optype * string * string list) list -> unit M.t
+    method modrdn : string -> ?deleteoldrdn:bool -> ?newsup:string option -> string -> unit M.t
+    method rawschema : Make(M).ldapentry M.t
+    method schema : Ldap_schema.schema M.t
     method search :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
       ?attrsonly:bool -> ?base:string ->
       ?sizelimit:Int32.t -> ?timelimit:Int32.t ->
-      string -> Make(M).ldapentry list
+      string -> Make(M).ldapentry list M.t
     method search_a :
       ?scope:Ldap_types.search_scope ->
       ?attrs:string list ->
       ?attrsonly:bool -> ?base:string ->
       ?sizelimit:Int32.t ->  ?timelimit:Int32.t ->
-      string -> (?abandon:bool -> unit -> Make(M).ldapentry)
-    method unbind : unit
-    method update_entry : Make(M).ldapentry -> unit
+      string -> (?abandon:bool -> unit -> Make(M).ldapentry M.t) M.t
+    method unbind : unit M.t
+    method update_entry : Make(M).ldapentry -> unit M.t
     method begin_txn : txn
     method associate_entry : txn -> Make(M).ldapentry_t -> unit
     method associate_entries : txn -> Make(M).ldapentry_t list -> unit
-    method disassociate_entry : txn -> Make(M).ldapentry_t -> unit
-    method disassociate_entries : txn -> Make(M).ldapentry_t list -> unit
-    method commit_txn : txn -> unit
+    method disassociate_entry : txn -> Make(M).ldapentry_t -> unit M.t
+    method disassociate_entries : txn -> Make(M).ldapentry_t list -> unit M.t
+    method commit_txn : txn -> unit M.t
     method rollback_txn : txn -> unit
   end
 
