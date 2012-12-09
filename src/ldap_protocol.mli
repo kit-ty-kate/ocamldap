@@ -41,6 +41,6 @@ val encode_ldapmessage : ldap_message -> string
 
 (** decode an ldap_message from the wire, and build/return a
   structure of type ldap_message *)
-val decode_ldapmessage : Make(M).readbyte -> ldap_message
+val decode_ldapmessage : Make(M).readbyte -> ldap_message M.t
 
 end
