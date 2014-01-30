@@ -22,6 +22,8 @@
 
 module Make (M : Ldap_types.Monad) = struct
 
+let (>>=) = M.bind
+
 open Str
 open Netencoding
 module Ldap_ooclient = Ldap_ooclient.Make(M)
@@ -112,18 +114,19 @@ object (self)
     try
       let contents = Buffer.contents (entry2ldif outbuf e) in
         Buffer.clear outbuf;
-        contents
+        M.return contents
     with exn ->
       Buffer.clear outbuf;
-      raise exn
+      M.fail exn
 
   method write_entry (e:ldapentry_t) =
     try
       Buffer.output_buffer out_ch (entry2ldif outbuf e);
-      Buffer.clear outbuf
+      Buffer.clear outbuf;
+      M.return ()
     with exn ->
       Buffer.clear outbuf;
-      raise exn
+      M.fail exn
 end
 
 let read_ldif_file file =
@@ -132,15 +135,16 @@ let read_ldif_file file =
       let ldif = new ldif ~in_ch:fd () in
       let entries = fold (fun l e -> e :: l) [] ldif in
         close_in fd;
-        entries
-    with exn -> close_in fd;raise exn
+        M.return entries
+    with exn -> close_in fd;M.fail exn
 
 let write_ldif_file file entries =
   let fd = open_out file in
     try
       let ldif = new ldif ~out_ch:fd () in
-        List.iter ldif#write_entry entries;
-        close_out fd
-    with exn -> close_out fd;raise exn
+        M.List.iter ldif#write_entry entries >>= fun () ->
+        close_out fd;
+        M.return ()
+    with exn -> close_out fd;M.fail exn
 
 end

@@ -41,10 +41,10 @@ val entry2ldif : ?ext:bool -> Buffer.t ->
   string list; .. > -> Buffer.t
 
 (** read all the entries in the named ldif file and return them in a list *)
-val read_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list
+val read_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list M.t
 
 (** write all the entries in the given list to the named file in ldif format *)
-val write_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list -> unit
+val write_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list -> unit M.t
 
 class ldif:
   ?in_ch:Pervasives.in_channel ->
@@ -53,8 +53,8 @@ class ldif:
 object
   method read_entry: Ldap_ooclient.Make(M).ldapentry
   method of_string: string -> Ldap_ooclient.Make(M).ldapentry
-  method to_string: Ldap_ooclient.Make(M).ldapentry -> string
-  method write_entry: Ldap_ooclient.Make(M).ldapentry -> unit
+  method to_string: Ldap_ooclient.Make(M).ldapentry -> string M.t
+  method write_entry: Ldap_ooclient.Make(M).ldapentry -> unit M.t
 end
 
 end
