@@ -1,0 +1,28 @@
+# OASIS_START
+# DO NOT EDIT (digest: c857afbd2fd175d9de6d7d576d0ccd95)
+Ldap_types
+Ldap_filter
+Ldap_filterparser
+Ldap_filterlexer
+Lber
+Ldap_protocol
+Ldap_dn
+Ldap_dnparser
+Ldap_dnlexer
+Ldap_error
+Ldap_funclient
+Ldap_url
+Ldap_urllexer
+Ldap_funserver
+Ldap_ooclient
+Ldap_schema
+Ldap_schemalexer
+Ldap_mutex
+Ulist
+Utils
+Ldap_txooclient
+Ldap_syntaxes
+Ldap_matchingrules
+Ldap_schemavalidator
+Ldap_schemacheck
+# OASIS_STOP

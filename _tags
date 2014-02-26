@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: a1cff2371fece72af9ad69b540e233e8)
+# DO NOT EDIT (digest: 476f20639b44670fec1e4ef03362175e)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -24,10 +24,10 @@
 "src/toplevel.cmxs": use_toplevel
 "src/toplevel.cma": oasis_library_toplevel_byte
 <src/*.ml{,i}>: oasis_library_toplevel_byte
-<src/*.ml{,i}>: use_ldif
-<src/*.ml{,i}>: use_ldap
 <src/*.ml{,i}>: pkg_netstring
 <src/*.ml{,i}>: pkg_pcre
 <src/*.ml{,i}>: pkg_ssl
+<src/*.ml{,i}>: use_ldap
+<src/*.ml{,i}>: use_ldif
 # OASIS_STOP
 true: use_menhir

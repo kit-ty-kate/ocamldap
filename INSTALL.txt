@@ -1,9 +1,9 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: d8c60638d2ffef144977d89e31d1da71) *)
+(* DO NOT EDIT (digest: b8b7ad91455390b118cd0b3b8c97027d) *)
 This is the INSTALL file for the ocamldap distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
-full information. 
+full information.
 
 Dependencies
 ============
