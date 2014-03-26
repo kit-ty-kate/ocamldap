@@ -1,5 +1,6 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: b8b7ad91455390b118cd0b3b8c97027d) *)
+(* DO NOT EDIT (digest: f34bfafee5291415471074e70d0de249) *)
+
 This is the INSTALL file for the ocamldap distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
@@ -9,6 +10,7 @@ Dependencies
 ============
 
 In order to compile this package, you will need:
+
 * ocaml for all, doc api
 * findlib
 * pcre for library ldap
