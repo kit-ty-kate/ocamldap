@@ -1,11 +1,17 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: b692906925410259277e40125b45495a) *)
-This is the README file for the ocamldap distribution.
+(* DO NOT EDIT (digest: 3a2553096481e52f778a989cbe6e4b75) *)
 
-Ocamldap is an implementation of the Light Weight Directory Access Protocol
+ocamldap - Ocamldap is an implementation of the Light Weight Directory Access Protocol
+======================================================================================
 
-See the files INSTALL.txt for building and installation instructions. 
+See the file [INSTALL.txt](INSTALL.txt) for building and installation
+instructions.
 
+Copyright and license
+---------------------
+
+ocamldap is distributed under the terms of the GNU Lesser General Public
+License version 2.1 with OCaml linking exception.
 
 (* OASIS_STOP *)
 ---------------------------------------------------------------------------

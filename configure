@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # OASIS_START
-# DO NOT EDIT (digest: 425187ed8bfdbdd207fd76392dd243a7)
+# DO NOT EDIT (digest: 82230d61386befb40bc7377608e1f16e)
 set -e
 
 FST=true
-for i in "$@"; do 
+for i in "$@"; do
   if $FST; then
     set --
     FST=false
@@ -23,5 +23,5 @@ for i in "$@"; do
   esac
 done
 
-ocaml setup.ml -configure "$@"
+make configure CONFIGUREFLAGS="$@"
 # OASIS_STOP
