@@ -25,7 +25,6 @@ open Ldap_types
 module Ldap_funclient = Ldap_funclient.Make(M)
 open Ldap_funclient
 open Ldap_schema
-open String
 
 (* types used throughout the library *)
 (* add types *)
@@ -195,13 +194,13 @@ object (self)
   method flush_changes = changes <- []
   method changes = changes
 
-  method exists x = Hashtbl.mem data (lowercase x)
+  method exists x = Hashtbl.mem data (String.lowercase x)
   method add (x:op_lst) =
     let rec do_add (x:op_lst) =
       match x with
           [] -> ()
         | (name, value) :: lst ->
-            let lcname = lowercase name in
+            let lcname = String.lowercase name in
               try
                 Ulist.addlst (Hashtbl.find data lcname) value; do_add lst
               with Not_found ->
@@ -264,7 +263,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst ->
-            let lcname = lowercase attr in
+            let lcname = String.lowercase attr in
               match values with
                   [] -> Hashtbl.remove data lcname;do_delete lst
                 | _  ->
@@ -282,7 +281,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst -> let n = Ulist.create 5 in
-            Ulist.addlst n values; Hashtbl.replace data (lowercase attr) n;
+            Ulist.addlst n values; Hashtbl.replace data (String.lowercase attr) n;
             do_replace lst;
     in
       do_replace x; self#push_change `REPLACE x
@@ -305,7 +304,7 @@ object (self)
     in
       keys data
 
-  method get_value attr = Ulist.tolst (Hashtbl.find data (lowercase attr))
+  method get_value attr = Ulist.tolst (Hashtbl.find data (String.lowercase attr))
   method set_dn x = dn <- x
   method dn = dn
   method print =
