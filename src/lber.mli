@@ -21,8 +21,6 @@
   USA
 *)
 
-module Make : functor (M : Ldap_types.Monad) -> sig
-
 (** This library implements the subset of ber *)
 
 exception Decoding_error of string
@@ -150,5 +148,3 @@ val encode_berval_list : ?buf:Buffer.t -> ('a -> string) -> 'a list -> string
   it is usually not practical to pass anything but a readbyte created by
   readbyte_of_string so this should not be a huge problem. *)
 val decode_berval_list : ?lst:'a list -> (readbyte -> 'a) -> readbyte -> 'a list
-
-end

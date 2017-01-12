@@ -20,6 +20,11 @@
    USA
 *)
 
+open Ldap_ooclient
+open Ldap_types
+open Ldif_oo
+open Ldap_schema
+
 let eval s =
   let l = Lexing.from_string s in
   let ph = !Toploop.parse_toplevel_phrase l in
@@ -33,15 +38,6 @@ eval "#install_printer Ldap_schema.format_oidset;;";;
 eval "#install_printer Ldap_schema.format_lcstring;;";;
 eval "#install_printer Ldap_schema.format_schema;;";;
 
-module Make (M : Ldap_types.Monad) = struct
-
-module Ldap_ooclient = Ldap_ooclient.Make(M)
-open Ldap_ooclient
-open Ldap_types
-module Ldif_oo = Ldif_oo.Make(M)
-open Ldif_oo
-open Ldap_schema
-
 let ldap_cmd_harness ~h ~d ~w f =
   let ldap = new ldapcon [h] in
     try
@@ -50,6 +46,7 @@ let ldap_cmd_harness ~h ~d ~w f =
         ldap#unbind;
         res
     with exn -> ldap#unbind;raise exn
+;;
 
 let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
   ldap_cmd_harness ~h ~d ~w
@@ -57,6 +54,7 @@ let ldapsearch ?(s=`SUBTREE) ?(a=[]) ?(b="") ?(d="") ?(w="") ~h filter =
        ldap#search
          ~base:b ~scope:s
          ~attrs:a filter)
+;;
 
 let ldapmodify ~h ~d ~w mods =
   ldap_cmd_harness ~h ~d ~w
@@ -64,6 +62,7 @@ let ldapmodify ~h ~d ~w mods =
        List.iter
          (fun (dn, ldmod) -> ldap#modify dn ldmod)
          mods)
+;;
 
 let ldapadd ~h ~d ~w entries =
   ldap_cmd_harness ~h ~d ~w
@@ -71,5 +70,4 @@ let ldapadd ~h ~d ~w entries =
        List.iter
          (fun entry -> ldap#add entry)
          entries)
-
-end;;
+;;

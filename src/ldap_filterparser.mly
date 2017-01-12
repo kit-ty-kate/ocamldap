@@ -21,6 +21,18 @@
 
 %{
   open Ldap_types
+
+  let star_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\2a")
+  let lparen_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\28")
+  let rparen_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\29")
+  let backslash_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\5c")
+  let null_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\00")
+  let unescape s =
+    (Pcre.qreplace ~rex:star_escape_rex ~templ:"*"
+       (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
+          (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
+             (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
+                (Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
 %}
 
 %token WHSP LPAREN RPAREN AND OR NOT EOF
@@ -47,24 +59,24 @@ filter:
 | LPAREN NOT filter RPAREN {`Not $3}
 | LPAREN filter RPAREN {$2}
 | ATTREQUALSUB {`Substrings {attrtype=(fst $1);substrings=(snd $1)}}
-| ATTREQUAL {`EqualityMatch {attributeDesc=(fst $1);assertionValue=(Utils.unescape (snd $1))}}
-| ATTRGTE {`GreaterOrEqual {attributeDesc=(fst $1);assertionValue=(Utils.unescape (snd $1))}}
-| ATTRLTE {`LessOrEqual {attributeDesc=(fst $1);assertionValue=(Utils.unescape (snd $1))}}
+| ATTREQUAL {`EqualityMatch {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTRGTE {`GreaterOrEqual {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
+| ATTRLTE {`LessOrEqual {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
 | ATTRPRESENT {`Present $1}
-| ATTRAPPROX {`ApproxMatch {attributeDesc=(fst $1);assertionValue=(Utils.unescape (snd $1))}}
+| ATTRAPPROX {`ApproxMatch {attributeDesc=(fst $1);assertionValue=(unescape (snd $1))}}
 | ATTREXTENDEDMATCH {let (a, oid, v) = $1 in
                        `ExtensibleMatch
-                         {matchingRule=(Some (Utils.unescape oid));
-                          ruletype=(Some (Utils.unescape a));
-                          matchValue=(Utils.unescape v);
+                         {matchingRule=(Some (unescape oid));
+                          ruletype=(Some (unescape a));
+                          matchValue=(unescape v);
                           dnAttributes=false}}
 | ATTREXTENDEDDN {let (a, oid, v) = $1 in
                     `ExtensibleMatch
                       {matchingRule=(match oid with
-                                         Some s -> Some (Utils.unescape s)
+                                         Some s -> Some (unescape s)
                                        | None -> None);
-                       ruletype=(Some (Utils.unescape a));
-                       matchValue=(Utils.unescape v);
+                       ruletype=(Some (unescape a));
+                       matchValue=(unescape v);
                        dnAttributes=true}}
 ;
 

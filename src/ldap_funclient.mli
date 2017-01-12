@@ -19,8 +19,6 @@
    USA
 *)
 
-module Make : functor (M : Ldap_types.Monad) -> sig
-
 (** a functional ldap client interface *)
 
 open Unix
@@ -33,9 +31,9 @@ type modattr = modify_optype * string * string list
 type result = Ldap_types.search_result_entry list
 type entry = Ldap_types.search_result_entry
 type authmethod = [ `SIMPLE | `SASL ]
-type search_result =
-  [ `Entry of entry
-  | `Referral of string list
+type search_result = 
+  [ `Entry of entry 
+  | `Referral of string list 
   | `Success of (ldap_controls option) ]
 type page_control =
   [ `Noctrl
@@ -124,8 +122,8 @@ val search :
   ?aliasderef:Ldap_types.alias_deref ->
   ?sizelimit:int32 ->
   ?timelimit:int32 ->
-  ?attrs:string list ->
-  ?attrsonly:bool ->
+  ?attrs:string list -> 
+  ?attrsonly:bool -> 
   ?page_control:page_control -> conn -> string -> msgid
 
 (** fetch a search entry from the wire using the given msgid. The
@@ -153,8 +151,8 @@ val get_search_entry :
 val get_search_entry_with_controls :
   conn ->
   msgid ->
-  [> `Entry of Ldap_types.search_result_entry |
-     `Referral of string list |
+  [> `Entry of Ldap_types.search_result_entry | 
+     `Referral of string list | 
      `Success of (ldap_controls option) ]
 
 (** abandon the async request attached to msgid.
@@ -222,5 +220,3 @@ val modify_s :
 val modrdn_s :
   ?deleteoldrdn:bool ->
   ?newsup:'a option -> conn -> dn:string -> newdn:string -> unit
-
-end

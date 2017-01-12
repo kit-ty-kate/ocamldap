@@ -20,9 +20,7 @@
    USA
 *)
 
-module Make (M : Ldap_types.Monad) = struct
 
-module Lber = Lber.Make(M)
 open Lber
 open Ldap_types
 
@@ -1198,5 +1196,3 @@ let decode_ldapmessage rb =
         let controls = decode_ldapcontrols rb in
           {messageID=messageid;protocolOp=protocol_op;controls=controls}
     | _ -> raise (LDAP_Decoder "decode_ldapmessage: expected sequence")
-
-end

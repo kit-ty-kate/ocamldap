@@ -6750,7 +6750,6 @@ let setup_t =
                            "Ldap_schemalexer";
                            "Ldap_mutex";
                            "Ulist";
-                           "Utils";
                            "Ldap_txooclient";
                            "Ldap_syntaxes";
                            "Ldap_matchingrules";

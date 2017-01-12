@@ -30,4 +30,3 @@
 <src/*.ml{,i}>: use_ldap
 <src/*.ml{,i}>: use_ldif
 # OASIS_STOP
-true: use_menhir

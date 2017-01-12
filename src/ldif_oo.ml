@@ -20,11 +20,9 @@
    USA
 *)
 
-module Make (M : Ldap_types.Monad) = struct
 
 open Str
 open Netencoding
-module Ldap_ooclient = Ldap_ooclient.Make(M)
 open Ldap_ooclient
 open Ldif_parser
 open Ldap_types
@@ -142,5 +140,3 @@ let write_ldif_file file entries =
         List.iter ldif#write_entry entries;
         close_out fd
     with exn -> close_out fd;raise exn
-
-end

@@ -20,8 +20,6 @@
    USA
 *)
 
-module Make : functor (M : Ldap_types.Monad) -> sig
-
 (** an object oriented interface to the ldif parser *)
 
 (** Ldif_oo.iter f ldif, iterate accross all ldif entries in the
@@ -41,20 +39,18 @@ val entry2ldif : ?ext:bool -> Buffer.t ->
   string list; .. > -> Buffer.t
 
 (** read all the entries in the named ldif file and return them in a list *)
-val read_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list
+val read_ldif_file : string -> Ldap_ooclient.ldapentry list
 
 (** write all the entries in the given list to the named file in ldif format *)
-val write_ldif_file : string -> Ldap_ooclient.Make(M).ldapentry list -> unit
+val write_ldif_file : string -> Ldap_ooclient.ldapentry list -> unit
 
 class ldif:
   ?in_ch:Pervasives.in_channel ->
   ?out_ch:Pervasives.out_channel ->
   unit ->
 object
-  method read_entry: Ldap_ooclient.Make(M).ldapentry
-  method of_string: string -> Ldap_ooclient.Make(M).ldapentry
-  method to_string: Ldap_ooclient.Make(M).ldapentry -> string
-  method write_entry: Ldap_ooclient.Make(M).ldapentry -> unit
-end
-
+  method read_entry: Ldap_ooclient.ldapentry
+  method of_string: string -> Ldap_ooclient.ldapentry
+  method to_string: Ldap_ooclient.ldapentry -> string
+  method write_entry: Ldap_ooclient.ldapentry -> unit
 end

@@ -18,9 +18,9 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-%parameter < M : Ldap_types.Monad >
-
 %{
+  open Ldap_ooclient
+
   let check_attrs attr attrs =
     List.rev_map
       (fun (declared_attr, valu) ->
@@ -47,7 +47,7 @@
 %token Change_type_modify Change_type_delete Dash Newline
 %token <string> AttributeType Dn Add Delete Replace
 %token <string * string> Attr
-%type <Ldap_ooclient.Make(M).changerec> changerec
+%type <Ldap_ooclient.changerec> changerec
 %start changerec
 %%
 
@@ -90,12 +90,8 @@ entry:
 
 changerec:
   Dn Change_type_modify modifications {`Modification ($1, List.rev $3)}
-| Dn Change_type_add entry {let module Ldap_ooclient = Ldap_ooclient.Make(M) in
-                            let e = new Ldap_ooclient.ldapentry in
-                            e#set_dn $1;
-                            e#add $3;
-                            `Addition e
-                           }
+| Dn Change_type_add entry {let e = new ldapentry in
+                              e#set_dn $1;e#add $3;`Addition e}
 | Dn Change_type_delete newline {`Delete $1}
 | Dn Change_type_modrdn Attr Attr newline {`Modrdn
                                              ($1,

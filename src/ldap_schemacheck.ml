@@ -8,10 +8,6 @@
 (* for the schema checker, should never be seen by
    the user *)
 
-module Make (M : Ldap_types.Monad) = struct
-
-module Ldap_ooclient = Ldap_ooclient.Make(M)
-
 open Ldap_schema
 open Ldap_types
 open Ldap_matchingrules
@@ -1116,5 +1112,3 @@ object (self)
     self#resolve_missing
 end;;
 *)
-
-end

@@ -18,8 +18,6 @@
    USA
 *)
 
-module Make : functor (M : Ldap_types.Monad) -> sig
-
 (** A functional ldap server construction kit *)
 
 open Ldap_types
@@ -79,5 +77,3 @@ val shutdown : server_info -> unit
     which case the exception will be raised. In many cases it is safe to restart
     the server process when an exception happens. *)
 val run : server_info -> unit
-
-end
