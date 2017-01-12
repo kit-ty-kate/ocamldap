@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: b2e5181d6e40cd4923102f94fcd837c1)
+# DO NOT EDIT (digest: 585d1ad77b7228f037e957a4acf516c8)
 src/Ldap_types
 src/Ldap_filter
 src/Ldap_filterparser
@@ -19,7 +19,6 @@ src/Ldap_schema
 src/Ldap_schemalexer
 src/Ldap_mutex
 src/Ulist
-src/Utils
 src/Ldap_txooclient
 src/Ldap_syntaxes
 src/Ldap_matchingrules
