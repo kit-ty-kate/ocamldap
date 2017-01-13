@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 7e53a4364060f049af2bbc3c858548b6) *)
+(* DO NOT EDIT (digest: 5a47cd1c01b1305c9fbc765587ca0e9a) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -888,7 +888,7 @@ let package_default =
           ("ldif", ["src"], []);
           ("toplevel", ["src"], [])
        ];
-     lib_c = [("ldap", "src", [])];
+     lib_c = [];
      flags =
        [
           (["oasis_library_toplevel_byte"; "ocaml"; "link"; "byte"],

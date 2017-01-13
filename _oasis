@@ -36,8 +36,6 @@ Library "ldap"
     Ldap_matchingrules,
     Ldap_schemavalidator,
     Ldap_schemacheck
-  CSources:
-    caseIgnoreCompare.c
   BuildDepends: pcre, ssl
 
 Library "ldif"

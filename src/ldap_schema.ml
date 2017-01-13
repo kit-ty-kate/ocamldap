@@ -22,43 +22,37 @@
 
 open Ldap_schemalexer;;
 
-(* Uncomment this, and comment out the external to use the Ocaml implementation
-(* pure Ocaml *)
-exception Different
-let caseIgnoreCompare v1 v2 =
-  (* does not cons unless v1 and v2 are different,
-     then only conses a small amount *)
-  let lv1 = String.length v1 in
-  let lv2 = String.length v2 in
-    if lv1 < lv2 then -1
-    else if lv1 = lv2 then begin
-      if String.compare v1 v2 = 0 then 0
+let caseIgnoreCompare =
+  let to_lowercase char =
+    let c = Char.code char in
+    if (c >= Char.code 'A' && c <= Char.code 'Z') ||
+       (c >= 192 && c <= 214) ||
+       (c >= 216 && c <= 222) then
+      Char.chr (c + 32)
+    else
+      char
+  in
+  fun v1 v2 ->
+    if v1 == v2 then
+      0
+    else
+      let len1 = String.length v1 in
+      let len2 = String.length v2 in
+      if len1 < len2 then
+        -1
+      else if len1 > len2 then
+        1
       else
-        let result = ref 0 in
-          try
-            for i=0 to lv1 - 1
-            do
-              if v1.[i] <> v2.[i] then
-                let v1lc = Char.lowercase v1.[i]
-                and v2lc = Char.lowercase v2.[i] in
-                  if v1lc <> v2lc then begin
-                    result := Char.compare v1lc v2lc;
-                    raise Different
-                  end
-            done;
+        let rec aux i v1 v2 =
+          if i < len1 then
+            if to_lowercase v1.[i] = to_lowercase v2.[i] then
+              aux (succ i) v1 v2
+            else
+              Char.compare v1.[i] v2.[i]
+          else
             0
-          with Different -> !result
-    end else 1
-*)
-
-(* The C implementation is 10 times faster, almost as fast as
-   Pervasives.compare. As a point of interest, the C implementation is
-   actually slower than the Ocaml implementation unless it is compiled
-   with -O, at at which point it gains an order of magnitude. I
-   suspect this may be due to gcc's ability to optimize loops, which
-   are not used much on Ocaml code. It gains its maximum (cross
-   platform) performance when compiled with -O3 *)
-external caseIgnoreCompare : string -> string -> int = "caseIgnoreCompare"
+        in
+        aux 0 v1 v2
 
 module Oid =
   (struct

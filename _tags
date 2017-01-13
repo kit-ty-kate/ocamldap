@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 3e6cad70cbf3be329f897e90f513382d)
+# DO NOT EDIT (digest: 927b08b5de2dedaa303afab9a28b6200)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -16,9 +16,6 @@ true: annot, bin_annot
 "_darcs": not_hygienic
 # Library ldap
 "src/ldap.cmxs": use_ldap
-<src/ldap.{cma,cmxa}>: use_libldap_stubs
-"src/caseIgnoreCompare.c": pkg_pcre
-"src/caseIgnoreCompare.c": pkg_ssl
 # Library ldif
 "src/ldif.cmxs": use_ldif
 # Library toplevel
