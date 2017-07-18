@@ -437,10 +437,10 @@ object (self)
     bdn <- dn; pwd <- cred; mth <- meth
 
   method add (entry: ldapentry) = 
-      if not (reconnect_successful && bound) then self#reconnect;
-      try add_s con (of_entry entry)
-      with LDAP_Failure(`SERVER_DOWN, _, _) ->
-	self#reconnect;self#add entry
+    if not (reconnect_successful && bound) then self#reconnect;
+    try add_s con (of_entry entry)
+    with LDAP_Failure(`SERVER_DOWN, _, _) ->
+      self#reconnect;self#add entry
 	
   method delete dn =
     if not (reconnect_successful && bound) then self#reconnect;
@@ -503,15 +503,20 @@ object (self)
 	 self#reconnect;
 	 to_entry (`Entry {sr_dn="";sr_attributes=[]}))
       else
-	match !first_entry with
-	    None -> to_entry (get_search_entry con msgid)
-	  | Some e ->
-	      first_entry := None;
+	match !first_entry with (* are we on the first entry of the search? *)
+	    `No -> to_entry (get_search_entry con msgid)
+	  | `Yes e ->
+	      first_entry := `No;
 	      to_entry e
+	  | `NoResults -> (* this search has no results *)
+	      raise 
+		(LDAP_Failure 
+		   (`SUCCESS, "success", 
+		    {ext_matched_dn = ""; ext_referral = None}))
     in
       if not (reconnect_successful && bound) then self#reconnect;
       try 
-	let first_entry = ref None in
+	let first_entry = ref `No in
 	let msgid = 
 	  search
 	    ~scope ~base ~attrs ~attrsonly
@@ -519,7 +524,10 @@ object (self)
 	    con filter
 	in
 	  (* make sure the server is really still there *)
-	  first_entry := Some (get_search_entry con msgid);
+	  (try first_entry := `Yes (get_search_entry con msgid)
+	   with LDAP_Failure (`SUCCESS, _, _) -> 
+	     (* the search is already complete and has no results *)
+	     first_entry := `NoResults);
 	  fetch_result con msgid first_entry
       with LDAP_Failure(`SERVER_DOWN, _, _) ->
 	self#reconnect;

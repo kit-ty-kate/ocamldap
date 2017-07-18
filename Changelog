@@ -1,4 +1,12 @@
+2.1.7
+	* Fixed a bug in search_a, if a search results in zero results an
+	exception (LDAP_Failure (`SUCCESS, ..)) was being raised by the
+	search_a function instead of by the closure which it returnes.
+	2.1.7 handles this case correctly, the exception is only raised by
+	the closure which is returned.
 2.1.6
+	* Fixed a bug in the filter parser, it was rejecting
+	filters of the form uid=cn=... which are valid filters.
 	* fixed several bugs in the output of ldif change records
 	* Ldap_ooclient.fold now runs in constant stack space 
 	in the presence of arbitrarially complex exception 

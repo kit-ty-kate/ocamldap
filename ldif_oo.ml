@@ -87,11 +87,11 @@ let iter (f: ('a -> unit)) ldif =
 let fold f ldif v = 
   let objects = 
     let objects = ref [] in
-      try
-	while true
-	do
+    try
+      while true
+      do
 	  objects := (ldif#read_entry) :: !objects
-	done;
+      done;
 	!objects
       with End -> !objects
   in
