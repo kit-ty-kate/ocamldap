@@ -4,3 +4,4 @@ B _build/src
 PKG pcre
 PKG ssl
 PKG netstring
+PKG bytes

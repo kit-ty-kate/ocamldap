@@ -157,7 +157,7 @@ let readbyte_of_string octets =
 
 let readbyte_of_readfun rfun =
   let bufsize = 16384 in (* must be this for ssl *)
-  let buf = String.create (bufsize * 2) in
+  let buf = Bytes.create (bufsize * 2) in
   let buf_len = ref 0 in
   let buf_pos = ref 0 in
   let peek_pos = ref 0 in
@@ -181,7 +181,7 @@ let readbyte_of_readfun rfun =
     if length <= 0 then raise (Invalid_argument "Readbyte.length");
     if length > bufsize then (
       if length > Sys.max_string_length then raise (Readbyte_error Request_too_large);
-      let result = String.create length in
+      let result = Bytes.create length in
       let total = ref 0 in
         while !total < length
         do
@@ -194,17 +194,17 @@ let readbyte_of_readfun rfun =
             String.blit iresult 0 result !total nbytes_to_read;
             total := !total + nbytes_to_read
         done;
-        result
+        Bytes.to_string result
     )
     else if not peek then (
       if length <= !buf_len - !buf_pos then (
-        let result = String.sub buf !buf_pos length in
+        let result = Bytes.sub_string buf !buf_pos length in
           buf_pos := !buf_pos + length;
           peek_pos := !buf_pos;
           result
       )
       else (
-        let result = String.create length in
+        let result = Bytes.create length in
         let nbytes_really_in_buffer = (!buf_len - !buf_pos) + !peek_buf_len in
         let nbytes_in_buffer =
           if nbytes_really_in_buffer > length then length
@@ -212,49 +212,49 @@ let readbyte_of_readfun rfun =
         in
         let nbytes_to_read = length - nbytes_in_buffer in
           if nbytes_in_buffer > 0 then
-            String.blit buf !buf_pos result 0 nbytes_in_buffer;
+            Bytes.blit buf !buf_pos result 0 nbytes_in_buffer;
           if nbytes_to_read > 0 then (
             let nbytes_read = read_at_least_nbytes buf 0 bufsize nbytes_to_read in
-              String.blit buf 0 result nbytes_in_buffer nbytes_to_read;
+              Bytes.blit buf 0 result nbytes_in_buffer nbytes_to_read;
               buf_pos := nbytes_to_read;
               buf_len := nbytes_read;
               peek_pos := !buf_pos;
               peek_buf_len := 0;
-              result
+              Bytes.to_string result
           )
           else (
-            String.blit buf 0 buf (!buf_pos + length) (nbytes_really_in_buffer - length);
+            Bytes.blit buf 0 buf (!buf_pos + length) (nbytes_really_in_buffer - length);
             buf_len := (nbytes_really_in_buffer - length);
             buf_pos := 0;
             peek_pos := !buf_pos;
             peek_buf_len := 0;
-            result
+            Bytes.to_string result
           )
       )
     ) (* if not peek *)
     else (
       if length <= (!buf_len + !peek_buf_len) - !peek_pos then (
-        let result = String.sub buf !peek_pos length in
+        let result = Bytes.sub_string buf !peek_pos length in
           peek_pos := !peek_pos + length;
           result
       )
       else (
         if length + !peek_pos > 2 * bufsize then raise (Readbyte_error Peek_error);
-        let result = String.create length in
+        let result = Bytes.create length in
         let nbytes_in_buffer = (!buf_len + !peek_buf_len) - !peek_pos in
         let nbytes_to_read = length - nbytes_in_buffer in
         let read_start_pos = !peek_pos + nbytes_in_buffer in
-          String.blit buf !peek_pos result 0 nbytes_in_buffer;
+          Bytes.blit buf !peek_pos result 0 nbytes_in_buffer;
           let nbytes_read =
             read_at_least_nbytes buf
               read_start_pos
               (bufsize - (!buf_len + !peek_buf_len))
               nbytes_to_read
           in
-            String.blit buf read_start_pos result nbytes_in_buffer nbytes_read;
+            Bytes.blit buf read_start_pos result nbytes_in_buffer nbytes_read;
             peek_buf_len := !peek_buf_len + nbytes_read;
             peek_pos := !peek_pos + length;
-            result
+            Bytes.to_string result
       )
     )
   in

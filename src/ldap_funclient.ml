@@ -80,7 +80,8 @@ let send_message con msg =
       | Plain s -> Unix.write s buf off len
   in
   let e_msg = Ldap_protocol.encode_ldapmessage msg in
-  let len = String.length e_msg in
+  let e_msg = Bytes.of_string e_msg in
+  let len = Bytes.length e_msg in
   let written = ref 0 in
     try
       while !written < len

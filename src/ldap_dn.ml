@@ -50,10 +50,10 @@ let hexpair_of_char c =
       | n -> raise (Invalid_argument ("invalid hex digit: " ^ (string_of_int n)))
   in
   let i = int_of_char c in
-  let buf = String.create 2 in
-    buf.[0] <- hexify ((lsr) i 4);
-    buf.[1] <- hexify ((land) i 0b0000_1111);
-    buf
+  let buf = Bytes.create 2 in
+    Bytes.set buf 0 (hexify (i lsr 4));
+    Bytes.set buf 1 (hexify (i land 0b0000_1111));
+    Bytes.to_string buf
 
 let escape_value valu =
   let strm = Stream.of_string valu in

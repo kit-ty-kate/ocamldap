@@ -19,6 +19,7 @@ depends: [
   "ocamlnet" {>= "3.6.0"}
   "pcre"
   "ssl"
+  "base-bytes"
 ]
 available: ocaml-version >= "3.12.1"
 tags: [
