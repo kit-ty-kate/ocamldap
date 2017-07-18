@@ -94,7 +94,8 @@ let log_result conn_id op_nr si msg =
 
 let send_message si conn_id op_nr fd msg =
   let e_msg = encode_ldapmessage msg in
-  let len = String.length e_msg in
+  let e_msg = Bytes.of_string e_msg in
+  let len = Bytes.length e_msg in
   let written = ref 0 in
     try
       while !written < len

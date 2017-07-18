@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: f34bfafee5291415471074e70d0de249) *)
+(* DO NOT EDIT (digest: 5acd99d985c77a357382d6c3f61701fd) *)
 
 This is the INSTALL file for the ocamldap distribution.
 
@@ -15,6 +15,7 @@ In order to compile this package, you will need:
 * findlib
 * pcre for library ldap
 * ssl for library ldap
+* bytes for library ldap
 * netstring for library ldif
 
 Installing
