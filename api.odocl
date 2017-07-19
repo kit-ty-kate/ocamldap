@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 585d1ad77b7228f037e957a4acf516c8)
+# DO NOT EDIT (digest: 538d488898bd626d057a5c5c86da309a)
 src/Ldap_types
 src/Ldap_filter
 src/Ldap_filterparser
@@ -24,9 +24,9 @@ src/Ldap_syntaxes
 src/Ldap_matchingrules
 src/Ldap_schemavalidator
 src/Ldap_schemacheck
-src/Ldif_oo
-src/Ldif_parser
-src/Ldif_changerec_oo
-src/Ldif_changerec_lexer
-src/Ldif_changerec_parser
+src/ldif/Ldif_oo
+src/ldif/Ldif_parser
+src/ldif/Ldif_changerec_oo
+src/ldif/Ldif_changerec_lexer
+src/ldif/Ldif_changerec_parser
 # OASIS_STOP

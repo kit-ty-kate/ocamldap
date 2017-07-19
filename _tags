@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 3aa7046c26689325798d924a1832ac3d)
+# DO NOT EDIT (digest: 3c2dec8345c7dbfa1596641c2eedc44b)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -16,18 +16,26 @@ true: annot, bin_annot
 "_darcs": not_hygienic
 # Library ldap
 "src/ldap.cmxs": use_ldap
-# Library ldif
-"src/ldif.cmxs": use_ldif
-# Library toplevel
-"src/toplevel.cmxs": use_toplevel
-"src/toplevel.cma": oasis_library_toplevel_byte
-<src/*.ml{,i,y}>: oasis_library_toplevel_byte
 <src/*.ml{,i,y}>: pkg_bytes
-<src/*.ml{,i,y}>: pkg_netstring
 <src/*.ml{,i,y}>: pkg_pcre
 <src/*.ml{,i,y}>: pkg_ssl
-<src/*.ml{,i,y}>: use_ldap
-<src/*.ml{,i,y}>: use_ldif
+# Library ldif
+"src/ldif/ldif.cmxs": use_ldif
+<src/ldif/*.ml{,i,y}>: pkg_bytes
+<src/ldif/*.ml{,i,y}>: pkg_netstring
+<src/ldif/*.ml{,i,y}>: pkg_pcre
+<src/ldif/*.ml{,i,y}>: pkg_ssl
+<src/ldif/*.ml{,i,y}>: use_ldap
+# Library toplevel
+"src/toplevel/toplevel.cmxs": use_toplevel
+"src/toplevel/toplevel.cma": oasis_library_toplevel_byte
+<src/toplevel/*.ml{,i,y}>: oasis_library_toplevel_byte
+<src/toplevel/*.ml{,i,y}>: pkg_bytes
+<src/toplevel/*.ml{,i,y}>: pkg_netstring
+<src/toplevel/*.ml{,i,y}>: pkg_pcre
+<src/toplevel/*.ml{,i,y}>: pkg_ssl
+<src/toplevel/*.ml{,i,y}>: use_ldap
+<src/toplevel/*.ml{,i,y}>: use_ldif
 # OASIS_STOP
 
 true: safe_string

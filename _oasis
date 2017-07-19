@@ -39,7 +39,7 @@ Library "ldap"
   BuildDepends: pcre, ssl, bytes
 
 Library "ldif"
-  Path: src
+  Path: src/ldif
   Modules:
     Ldif_oo,
     Ldif_parser,
@@ -50,7 +50,7 @@ Library "ldif"
   BuildDepends: ldap, netstring
 
 Library "toplevel"
-  Path: src
+  Path: src/toplevel
   Modules:
     Ldap_toplevel
   FindlibParent: ldap
