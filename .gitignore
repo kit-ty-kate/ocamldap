@@ -1,6 +1,7 @@
 /_build
 /setup.data
 /setup.log
+/setup.exe
 /page_result_control_test.native
 /page_result_control_test.byte
 /lber_tests.native
@@ -11,3 +12,4 @@
 /testldif.byte
 /testoo.native
 /testoo.byte
+/api.docdir
