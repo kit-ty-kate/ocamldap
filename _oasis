@@ -31,7 +31,7 @@ Library "ldap"
     Ldap_mutex,
     Ulist,
     Ldap_txooclient
-  BuildDepends: pcre, ssl, bytes
+  BuildDepends: str, pcre, ssl, bytes
 
 Library "ldif"
   Path: src/ldif
