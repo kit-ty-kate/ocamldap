@@ -15,41 +15,41 @@
 	* Fixed a bug in the filter parser, it was rejecting
 	filters of the form uid=cn=... which are valid filters.
 	* fixed several bugs in the output of ldif change records
-	* Ldap_ooclient.fold now runs in constant stack space 
-	in the presence of arbitrarially complex exception 
+	* Ldap_ooclient.fold now runs in constant stack space
+	in the presence of arbitrarially complex exception
 	handlers.
-	* Ldap_ooclient.ldapcon.search_a makes an effort to 
-	detect if the server is really still there before 
+	* Ldap_ooclient.ldapcon.search_a makes an effort to
+	detect if the server is really still there before
 	returning the cursor function.
 	It does this by trying to download the first object.
-	This should eliminate errors when starting an async 
-	search with a connection which has timed out (it 
+	This should eliminate errors when starting an async
+	search with a connection which has timed out (it
 	will now reconnect automatically).
-	* Ldap_ooclient.ldapcon.search_a, the cursor now does a 
-	reconnect when the operation is abandoned. This clears 
-	a lot of common problems, however one gotcha is that 
-	all currently active async operations will be ended if 
-	one of them abandons. This is usually not a problem 
-	however, since an abandon is almost always caused 
+	* Ldap_ooclient.ldapcon.search_a, the cursor now does a
+	reconnect when the operation is abandoned. This clears
+	a lot of common problems, however one gotcha is that
+	all currently active async operations will be ended if
+	one of them abandons. This is usually not a problem
+	however, since an abandon is almost always caused
 	by a serious error.
 2.1.5
-	* Fixed a bug in the delete method of ldapentry, it would not 
+	* Fixed a bug in the delete method of ldapentry, it would not
 	correctly process a list of deleteions in a certian case
-	* Added two new functions to ldif_oo, read_ldif_file, and 
-	write_ldif_file. The former reads all the entries in an ldif file 
-	into a list of entries, while the latter writes all the entries in 
+	* Added two new functions to ldif_oo, read_ldif_file, and
+	write_ldif_file. The former reads all the entries in an ldif file
+	into a list of entries, while the latter writes all the entries in
 	the given list to an ldif file.
-	* Added an object locking table to ldap_mutex, which allows 
+	* Added an object locking table to ldap_mutex, which allows
 	individual objects to be locked (advisory locking like POSIX flock)
-	* Applied a patch which makes the toplevel printers to pass all 
-	data through String.escaped, and which adds a close bracket which 
+	* Applied a patch which makes the toplevel printers to pass all
+	data through String.escaped, and which adds a close bracket which
 	was missing in some cases.Thanks to Victor Seletsky for this patch.
 	* Changed the toplevel printer to print a max of 50 entries, to
 	avoid overwhelming emacs. At some point I want to make this
 	configurable.
 	* Added a function to return the canonical dn to Ldap_dn.
 	* Improved (drastically) the ldap_strerror, and ldap_perror functions,
-	they now print out something which looks exactly like the string 
+	they now print out something which looks exactly like the string
 	representation of an LDAP_Failure exception in the toplevel. Avid users
 	of the toplevel will hopefully appreciate this as much as I do.
 2.1.4
@@ -68,16 +68,16 @@
 	cause data loss to occurr if peeking very far ahead.
 	* The print method of ldapentry is now deprecated
 2.1.3
-	* Added toplevel pretty printers for Oid.t, Lcstring.t, 
+	* Added toplevel pretty printers for Oid.t, Lcstring.t,
 	and ldapentry_t
 	* fixed in readbyte_of_fd, upon reading the C code for this
 	function I realized that under some conditions
-	Unix.in_channel_of_fd may fail. 
-	I was not aware of this previously. We now catch the 
-	resulting Sys_error, and change it to a Transport_error. 
+	Unix.in_channel_of_fd may fail.
+	I was not aware of this previously. We now catch the
+	resulting Sys_error, and change it to a Transport_error.
 	It is very unlikely that this would ever happen.
 	* Added a parser and pretty printer for extended ldif as used
-	by openldap. ldif change records can now be read and written 
+	by openldap. ldif change records can now be read and written
 	from and to nice data structures. I implemented this because
 	I needed to read replogs from slurpd.
 	* Fixed the ldap_url module, it will now raise Invalid_ldap_url
@@ -97,7 +97,7 @@
 	* Added documentation for the ldap_toplevel module, and improved
 	the modify command.
 2.1.2
-	* fixed a bug in the encoding of substring filters, the 
+	* fixed a bug in the encoding of substring filters, the
 	length was not being computed correctly.
 	* fixed a bug in diff, when syncing attributes it was not
 	considering values which were not on the master, but were on
@@ -164,7 +164,7 @@
        custom one
      - Implemented a logging harness. You pass in a function (optional) to
        init which takes a log level, and a string. The server will send your
-       function log lines which exactly match the log format of OpenLDAP. 
+       function log lines which exactly match the log format of OpenLDAP.
        The default function does nothing with the log lines. A parser for
        this log format is in the works and will be released as a seperate
        library.
@@ -175,13 +175,13 @@
    * RFC 2252 schema parser/lexer
      - Fixed a typo in the lexer which would cause it
        not to correctly lex non numeric OIDs
-     - Fixed bad lexing of X- attributes. There was an error in 
+     - Fixed bad lexing of X- attributes. There was an error in
        the definition of qdstring which would cause the lexer to eat
-       all of the X- attributes in one pass. Tested fix 
+       all of the X- attributes in one pass. Tested fix
        with Active Directory 2003, OpenLDAP, and Novell eDirectory.
      - Changed the type of the attribute length field in the attribute
-       record of the schema parser to be an Int64. The standard 
-       does not define the numeric range, and vendors 
+       record of the schema parser to be an Int64. The standard
+       does not define the numeric range, and vendors
        (Novell) use huge numbers.
    * Schema Checker
      - Handled the case where the entry being checked does not have the
@@ -215,7 +215,7 @@
      - Pure Ocaml lber, and ldap protocol implementation. Ocamldap is
        no longer a C binding.
      - Server side as well as client side encoding/decoding
-       functions. You can now make ldap servers with Ocamldap, 
+       functions. You can now make ldap servers with Ocamldap,
        as well as be a client!
      - No code optimization has been done yet, however the decoding
        performance is within 50% of the C library on the same hardware!
@@ -237,7 +237,7 @@
 1.6.3
    * Fixed a subtle bug in transparent reconnections which would
      occurr if your ldap server did not come back up fast after
-     the connection failed. It would cause 
+     the connection failed. It would cause
      LDAP_Failure `STRONG_AUTH_REQUIRED to be raised for every
      operation after the server went down. There are still some bugs
      which I have not found. Spesifically, it is not a good idea to
@@ -263,7 +263,7 @@
    * reimplemented the glue code for search. The new code uses the
      async calls, and has some efficency problems removed. The
      low level api is broken in a small way by this, the type of entry
-     has changed. attributes are now a list, instead of an array. 
+     has changed. attributes are now a list, instead of an array.
    * Added an async search call to the high level OO environment.
      search_a. It returns a function of type (unit -> ldapentry) which
      you can call to get your results. Also added iterator functions
@@ -331,7 +331,7 @@
    * fixed a bug in transparent reconnections which would cause an
      infinite loop.
 1.4.4
-   * exposed an exception called "Cannot_sort_dependancies of string list" 
+   * exposed an exception called "Cannot_sort_dependancies of string list"
    which indicates that circular dependancies have been detected among
    the attributes of the list. The exception will be raised when calling
    the generate method of an ldapaccount
@@ -339,7 +339,7 @@
    * changed the way the delta between an object and a service is computed.
    Instead of always doing a case sensitive match of the attribute values
    we now look up the matching rule in the schema and try to apply something
-   close. We currently understand objectIdentifierMatch, caseIgnoreMatch, and 
+   close. We currently understand objectIdentifierMatch, caseIgnoreMatch, and
    caseExactIA5Match. I will probably add more later.
 1.4.2
    * adds modrdn support in ooldap, which was horribly omitted previously
@@ -423,7 +423,7 @@
 
 1.1.0
     * Eric Stokes has taken over maintanence of the project
-    * added a new object oriented interface modeled after 
+    * added a new object oriented interface modeled after
       Net::LDAP in perl.
     * added an optional argument to init which allows
       selection of the protocal version. It defaults to 3.
@@ -446,12 +446,12 @@
     * added modrdn methods
     * most function arguments are lists now
     * fixed crash bug in search_s
-    
+
 0.2
     * add, modify, and delete are implemented
     * all ldap error codes are supported with the help of varcc
     * silly bugs fixed in bind and unbind
 
-0.1 
+0.1
     * first Release by Miles Egan
     * only synchronous searches are supported

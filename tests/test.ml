@@ -3,16 +3,16 @@
    Copyright (C) 2004 Eric Stokes, and The California State University
    at Northridge
 
-   This library is free software; you can redistribute it and/or               
-   modify it under the terms of the GNU Lesser General Public                  
-   License as published by the Free Software Foundation; either                
-   version 2.1 of the License, or (at your option) any later version.          
-   
-   This library is distributed in the hope that it will be useful,             
-   but WITHOUT ANY WARRANTY; without even the implied warranty of              
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU           
-   Lesser General Public License for more details.                             
-   
+   This library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
+
+   This library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Lesser General Public License for more details.
+
    You should have received a copy of the GNU Lesser General Public
    License along with this library; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
@@ -27,7 +27,7 @@ open Arg
 open Printf
 
 let ldif_buffer = Buffer.create 3124
-let print_entry e =  
+let print_entry e =
   match e with
       `Entry {sr_dn=dn;sr_attributes=attrs} ->
 	Buffer.add_string ldif_buffer "dn: ";
@@ -36,7 +36,7 @@ let print_entry e =
 	List.iter
 	  (fun {attr_type=name;attr_vals=vals} ->
 	     List.iter
-	       (fun aval -> 
+	       (fun aval ->
 		  Buffer.add_string ldif_buffer name;
 		  Buffer.add_string ldif_buffer ": ";
 		  Buffer.add_string ldif_buffer aval;
@@ -48,7 +48,7 @@ let print_entry e =
 	Buffer.clear ldif_buffer
     | `Referral f -> ()
 
-let main () = 
+let main () =
   let usg = "test -H <ldapurl> -D <dn> -w <pass> -b <base> <filter>" in
   let host = ref "" in
   let port = ref 389 in
