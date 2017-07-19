@@ -206,7 +206,12 @@ let dispatch_request si conn_id op_nr rb fd =
 	  (match bi.bi_op_search with
 	       Some f -> 
 		 let get_srch_result = f conn_id message in		   
-		   (fun () -> send_message si conn_id op_nr fd (get_srch_result ()))
+		 (fun () ->
+		    let msg = get_srch_result () in
+		    send_message si conn_id op_nr fd msg;
+		    match msg.protocolOp with
+			Search_result_done _ -> raise Finished
+		      | _ -> ())
 	     | None -> (fun () -> send_message si conn_id op_nr fd 
 			  (not_imp message (Search_result_done not_implemented));
 			  raise Finished))
