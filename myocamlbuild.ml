@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 060a18f9dbeaae6255e9303a35a29288) *)
+(* DO NOT EDIT (digest: 940e3c0f90b7596d7ad57803a0625ee6) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -882,8 +882,8 @@ let package_default =
      MyOCamlbuildBase.lib_ocaml =
        [
           ("ldap", ["src"], []);
-          ("ldif", ["src"], []);
-          ("toplevel", ["src"], [])
+          ("ldif", ["src/ldif"], []);
+          ("toplevel", ["src/toplevel"], [])
        ];
      lib_c = [];
      flags =
@@ -895,7 +895,7 @@ let package_default =
           (["oasis_library_toplevel_byte"; "ocaml"; "compile"; "byte"],
             [(OASISExpr.EBool true, S [A "-I"; A "+compiler-libs"])])
        ];
-     includes = []
+     includes = [("src/toplevel", ["src/ldif"]); ("src/ldif", ["src"])]
   }
   ;;
 
