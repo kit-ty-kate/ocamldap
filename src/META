@@ -1,6 +1,6 @@
 # OASIS_START
-# DO NOT EDIT (digest: d04774401e32a74494a0473f4384aa2f)
-version = "2.2"
+# DO NOT EDIT (digest: cc37590fd4285a1ac09c7db66979d759)
+version = "2.3.0"
 description =
 "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
 requires = "str pcre ssl bytes"
@@ -10,7 +10,7 @@ archive(native) = "ldap.cmxa"
 archive(native, plugin) = "ldap.cmxs"
 exists_if = "ldap.cma"
 package "toplevel" (
- version = "2.2"
+ version = "2.3.0"
  description =
  "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
  requires = "ldap.ldif"
@@ -20,7 +20,7 @@ package "toplevel" (
 )
 
 package "ldif" (
- version = "2.2"
+ version = "2.3.0"
  description =
  "Ocamldap is an implementation of the Light Weight Directory Access Protocol"
  requires = "ldap netstring"

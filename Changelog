@@ -1,3 +1,13 @@
+2.3.0
+    * Enable OCaml >= 4.02 compatibility
+    * Enable safe-string compatibility
+    * Backport fixes from 2.1.8
+    * Use OASIS to build the documentation
+    * Bug fixed: Ldap_protocol doesn't handle SASL correctly (RFC 4511 4.2.2)
+      (Patch by David Allsopp)
+    * Added paged result control
+      (Patch by Christian Wills)
+    * Fix: Add Str to the build dependencies
 2.2
     * OCaml 4 compatibility
     * Modularize the library in sub-libraries: ldap ldap.ldif ldap.toplevel

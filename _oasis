@@ -1,6 +1,6 @@
 OASISFormat: 0.3
 Name:        ocamldap
-Version:     2.2
+Version:     2.3.0
 Synopsis:    Ocamldap is an implementation of the Light Weight Directory Access Protocol
 Authors:     Eric Stokes,
              Jacques-Pascal Deplaix
