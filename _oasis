@@ -1,6 +1,6 @@
 OASISFormat: 0.4
 Name:        ocamldap
-Version:     2.2
+Version:     2.3.0
 Synopsis:    Ocamldap is an implementation of the Light Weight Directory Access Protocol
 Authors:     Eric Stokes,
              Jacques-Pascal Deplaix
@@ -36,7 +36,7 @@ Library "ldap"
     Ldap_matchingrules,
     Ldap_schemavalidator,
     Ldap_schemacheck
-  BuildDepends: pcre, ssl, bytes
+  BuildDepends: str, pcre, ssl, bytes
 
 Library "ldif"
   Path: src/ldif
@@ -68,3 +68,48 @@ Document "api"
   XOCamlbuildLibraries:
     ldap,
     ldap.ldif
+
+Executable "lber-tests"
+  Path: tests
+  Install: false
+  CompiledObject: best
+  MainIs: lber_tests.ml
+  Build$: flag(tests)
+  BuildDepends: ldap
+
+Executable "testldif"
+  Path: tests
+  Install: false
+  CompiledObject: best
+  MainIs: testldif.ml
+  Build$: flag(tests)
+  BuildDepends: ldap.ldif
+
+Executable "test"
+  Path: tests
+  Install: false
+  CompiledObject: best
+  MainIs: test.ml
+  Build$: flag(tests)
+  BuildDepends: ldap
+
+Executable "testoo"
+  Path: tests
+  Install: false
+  CompiledObject: best
+  MainIs: testoo.ml
+  Build$: flag(tests)
+  BuildDepends: ldap.ldif
+
+Executable "test-page-control"
+  Path: tests
+  Install: false
+  CompiledObject: best
+  MainIs: page_result_control_test.ml
+  Build$: flag(tests)
+  BuildDepends: ldap
+
+Test "all"
+  Command: $test_page_control
+  TestTools: test-page-control
+  Run$: flag(tests)
