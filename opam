@@ -11,6 +11,8 @@ homepage: "https://github.com/jpdeplaix/ocamldap"
 dev-repo: "https://github.com/jpdeplaix/ocamldap.git"
 bug-reports: "https://github.com/jpdeplaix/ocamldap/issues"
 build: [make]
+build-doc: [make "doc"]
+build-test: [make "test"]
 install: [make "install"]
 remove: ["ocamlfind" "remove" "ldap"]
 depends: [
