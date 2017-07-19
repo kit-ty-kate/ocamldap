@@ -1,3 +1,13 @@
-_build/
-setup.data
-setup.log
+/_build
+/setup.data
+/setup.log
+/page_result_control_test.native
+/page_result_control_test.byte
+/lber_tests.native
+/lber_tests.byte
+/test.native
+/test.byte
+/testldif.native
+/testldif.byte
+/testoo.native
+/testoo.byte

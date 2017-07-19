@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 5acd99d985c77a357382d6c3f61701fd) *)
+(* DO NOT EDIT (digest: 87fb8517156b8d1f0ce120d5d9577d3c) *)
 
 This is the INSTALL file for the ocamldap distribution.
 
@@ -11,7 +11,7 @@ Dependencies
 
 In order to compile this package, you will need:
 
-* ocaml for all, doc api
+* ocaml for all, test all, doc api
 * findlib
 * pcre for library ldap
 * ssl for library ldap

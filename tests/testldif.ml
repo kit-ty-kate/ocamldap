@@ -22,9 +22,9 @@
 
 (* $Id$ *)
 
-open Ooldif
+open Ldif_oo
 
 let _ =
-  let ldif = new Ooldif.ldif () in
+  let ldif = new Ldif_oo.ldif () in
     ldif#write_entry ldif#read_entry,
     flush_all

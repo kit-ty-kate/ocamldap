@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 3c2dec8345c7dbfa1596641c2eedc44b)
+# DO NOT EDIT (digest: ccc52f16136f57ba53116ca0607e245a)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -36,6 +36,41 @@ true: annot, bin_annot
 <src/toplevel/*.ml{,i,y}>: pkg_ssl
 <src/toplevel/*.ml{,i,y}>: use_ldap
 <src/toplevel/*.ml{,i,y}>: use_ldif
+# Executable lber-tests
+<tests/lber_tests.{native,byte}>: pkg_bytes
+<tests/lber_tests.{native,byte}>: pkg_pcre
+<tests/lber_tests.{native,byte}>: pkg_ssl
+<tests/lber_tests.{native,byte}>: use_ldap
+# Executable testldif
+<tests/testldif.{native,byte}>: pkg_bytes
+<tests/testldif.{native,byte}>: pkg_netstring
+<tests/testldif.{native,byte}>: pkg_pcre
+<tests/testldif.{native,byte}>: pkg_ssl
+<tests/testldif.{native,byte}>: use_ldap
+<tests/testldif.{native,byte}>: use_ldif
+# Executable test
+<tests/test.{native,byte}>: pkg_bytes
+<tests/test.{native,byte}>: pkg_pcre
+<tests/test.{native,byte}>: pkg_ssl
+<tests/test.{native,byte}>: use_ldap
+# Executable testoo
+<tests/testoo.{native,byte}>: pkg_bytes
+<tests/testoo.{native,byte}>: pkg_netstring
+<tests/testoo.{native,byte}>: pkg_pcre
+<tests/testoo.{native,byte}>: pkg_ssl
+<tests/testoo.{native,byte}>: use_ldap
+<tests/testoo.{native,byte}>: use_ldif
+<tests/*.ml{,i,y}>: pkg_netstring
+<tests/*.ml{,i,y}>: use_ldif
+# Executable test-page-control
+<tests/page_result_control_test.{native,byte}>: pkg_bytes
+<tests/page_result_control_test.{native,byte}>: pkg_pcre
+<tests/page_result_control_test.{native,byte}>: pkg_ssl
+<tests/page_result_control_test.{native,byte}>: use_ldap
+<tests/*.ml{,i,y}>: pkg_bytes
+<tests/*.ml{,i,y}>: pkg_pcre
+<tests/*.ml{,i,y}>: pkg_ssl
+<tests/*.ml{,i,y}>: use_ldap
 # OASIS_STOP
 
 true: safe_string
