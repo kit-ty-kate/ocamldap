@@ -1,121 +1,123 @@
 2.2
-	* OCaml 4 compatibility
-	* Modularize the library in sub-libraries: ldap ldap.ldif ldap.toplevel
-	* Use oasis
-	* Repository cleaning
-	* Maintainer changed
-	* Switch from svn to git
+    * OCaml 4 compatibility
+    * Modularize the library in sub-libraries: ldap ldap.ldif ldap.toplevel
+    * Use oasis
+    * Repository cleaning
+    * Maintainer changed
+    * Switch from svn to git
+2.1.8
+    * Fix (See c89bddc)
 2.1.7
-	* Fixed a bug in search_a, if a search results in zero results an
-	exception (LDAP_Failure (`SUCCESS, ..)) was being raised by the
-	search_a function instead of by the closure which it returnes.
-	2.1.7 handles this case correctly, the exception is only raised by
-	the closure which is returned.
+    * Fixed a bug in search_a, if a search results in zero results an
+    exception (LDAP_Failure (`SUCCESS, ..)) was being raised by the
+    search_a function instead of by the closure which it returnes.
+    2.1.7 handles this case correctly, the exception is only raised by
+    the closure which is returned.
 2.1.6
-	* Fixed a bug in the filter parser, it was rejecting
-	filters of the form uid=cn=... which are valid filters.
-	* fixed several bugs in the output of ldif change records
-	* Ldap_ooclient.fold now runs in constant stack space
-	in the presence of arbitrarially complex exception
-	handlers.
-	* Ldap_ooclient.ldapcon.search_a makes an effort to
-	detect if the server is really still there before
-	returning the cursor function.
-	It does this by trying to download the first object.
-	This should eliminate errors when starting an async
-	search with a connection which has timed out (it
-	will now reconnect automatically).
-	* Ldap_ooclient.ldapcon.search_a, the cursor now does a
-	reconnect when the operation is abandoned. This clears
-	a lot of common problems, however one gotcha is that
-	all currently active async operations will be ended if
-	one of them abandons. This is usually not a problem
-	however, since an abandon is almost always caused
-	by a serious error.
+    * Fixed a bug in the filter parser, it was rejecting
+    filters of the form uid=cn=... which are valid filters.
+    * fixed several bugs in the output of ldif change records
+    * Ldap_ooclient.fold now runs in constant stack space
+    in the presence of arbitrarially complex exception
+    handlers.
+    * Ldap_ooclient.ldapcon.search_a makes an effort to
+    detect if the server is really still there before
+    returning the cursor function.
+    It does this by trying to download the first object.
+    This should eliminate errors when starting an async
+    search with a connection which has timed out (it
+    will now reconnect automatically).
+    * Ldap_ooclient.ldapcon.search_a, the cursor now does a
+    reconnect when the operation is abandoned. This clears
+    a lot of common problems, however one gotcha is that
+    all currently active async operations will be ended if
+    one of them abandons. This is usually not a problem
+    however, since an abandon is almost always caused
+    by a serious error.
 2.1.5
-	* Fixed a bug in the delete method of ldapentry, it would not
-	correctly process a list of deleteions in a certian case
-	* Added two new functions to ldif_oo, read_ldif_file, and
-	write_ldif_file. The former reads all the entries in an ldif file
-	into a list of entries, while the latter writes all the entries in
-	the given list to an ldif file.
-	* Added an object locking table to ldap_mutex, which allows
-	individual objects to be locked (advisory locking like POSIX flock)
-	* Applied a patch which makes the toplevel printers to pass all
-	data through String.escaped, and which adds a close bracket which
-	was missing in some cases.Thanks to Victor Seletsky for this patch.
-	* Changed the toplevel printer to print a max of 50 entries, to
-	avoid overwhelming emacs. At some point I want to make this
-	configurable.
-	* Added a function to return the canonical dn to Ldap_dn.
-	* Improved (drastically) the ldap_strerror, and ldap_perror functions,
-	they now print out something which looks exactly like the string
-	representation of an LDAP_Failure exception in the toplevel. Avid users
-	of the toplevel will hopefully appreciate this as much as I do.
+    * Fixed a bug in the delete method of ldapentry, it would not
+    correctly process a list of deleteions in a certian case
+    * Added two new functions to ldif_oo, read_ldif_file, and
+    write_ldif_file. The former reads all the entries in an ldif file
+    into a list of entries, while the latter writes all the entries in
+    the given list to an ldif file.
+    * Added an object locking table to ldap_mutex, which allows
+    individual objects to be locked (advisory locking like POSIX flock)
+    * Applied a patch which makes the toplevel printers to pass all
+    data through String.escaped, and which adds a close bracket which
+    was missing in some cases.Thanks to Victor Seletsky for this patch.
+    * Changed the toplevel printer to print a max of 50 entries, to
+    avoid overwhelming emacs. At some point I want to make this
+    configurable.
+    * Added a function to return the canonical dn to Ldap_dn.
+    * Improved (drastically) the ldap_strerror, and ldap_perror functions,
+    they now print out something which looks exactly like the string
+    representation of an LDAP_Failure exception in the toplevel. Avid users
+    of the toplevel will hopefully appreciate this as much as I do.
 2.1.4
-	* Changed the type of the result of the low level ldif parser
-	(Ldif_parser) to produce search_result_entry instead of its own
-	type. This allows better cross module communication, and simplified
-	the Ldif_oo module's job a bit.
-	* Fixed a bug in the ldif pretty printer. It would print values
-	containing only white space, or with leading white space
-	without base64 encoding them, this is an error.
-	* 2.5x decoder speedup. (4.0 MB/s sustained on an 800Mhz G4). The
-	bytecode decoder is now 10% faster than the original native code
-	compiled decoder released in 2.0, and it is 14 times faster than
-	Perl's Net::LDAP library.
-	* Fixed a bug in the ssl readbyte implementation which could
-	cause data loss to occurr if peeking very far ahead.
-	* The print method of ldapentry is now deprecated
+    * Changed the type of the result of the low level ldif parser
+    (Ldif_parser) to produce search_result_entry instead of its own
+    type. This allows better cross module communication, and simplified
+    the Ldif_oo module's job a bit.
+    * Fixed a bug in the ldif pretty printer. It would print values
+    containing only white space, or with leading white space
+    without base64 encoding them, this is an error.
+    * 2.5x decoder speedup. (4.0 MB/s sustained on an 800Mhz G4). The
+    bytecode decoder is now 10% faster than the original native code
+    compiled decoder released in 2.0, and it is 14 times faster than
+    Perl's Net::LDAP library.
+    * Fixed a bug in the ssl readbyte implementation which could
+    cause data loss to occurr if peeking very far ahead.
+    * The print method of ldapentry is now deprecated
 2.1.3
-	* Added toplevel pretty printers for Oid.t, Lcstring.t,
-	and ldapentry_t
-	* fixed in readbyte_of_fd, upon reading the C code for this
-	function I realized that under some conditions
-	Unix.in_channel_of_fd may fail.
-	I was not aware of this previously. We now catch the
-	resulting Sys_error, and change it to a Transport_error.
-	It is very unlikely that this would ever happen.
-	* Added a parser and pretty printer for extended ldif as used
-	by openldap. ldif change records can now be read and written
-	from and to nice data structures. I implemented this because
-	I needed to read replogs from slurpd.
-	* Fixed the ldap_url module, it will now raise Invalid_ldap_url
-	when it fails to parse the url, instead of raising a generic
-	exception such as Failure.
-	* Fixed the regular expression for safe-string to actually detect
-	non safe strings, which will be base64 encoded.
-	* Fixed the encoding/decoding of substring filters, which did not
-	perfectly follow the standard.
-	* Fixed a bug in the filter grammar which would not allow multiple
-	substring components
-	* Fixed multiple bugs in the changerec parser and lexer
-	* Added a new module, ldap_mutex, which implements mutexes in
-	an ldap database using it's build in test and set mechanism. You
-	can use this to implement advisory locking around various database
-	operations such as the allocation of unique ids, and transactions.
-	* Added documentation for the ldap_toplevel module, and improved
-	the modify command.
+    * Added toplevel pretty printers for Oid.t, Lcstring.t,
+    and ldapentry_t
+    * fixed in readbyte_of_fd, upon reading the C code for this
+    function I realized that under some conditions
+    Unix.in_channel_of_fd may fail.
+    I was not aware of this previously. We now catch the
+    resulting Sys_error, and change it to a Transport_error.
+    It is very unlikely that this would ever happen.
+    * Added a parser and pretty printer for extended ldif as used
+    by openldap. ldif change records can now be read and written
+    from and to nice data structures. I implemented this because
+    I needed to read replogs from slurpd.
+    * Fixed the ldap_url module, it will now raise Invalid_ldap_url
+    when it fails to parse the url, instead of raising a generic
+    exception such as Failure.
+    * Fixed the regular expression for safe-string to actually detect
+    non safe strings, which will be base64 encoded.
+    * Fixed the encoding/decoding of substring filters, which did not
+    perfectly follow the standard.
+    * Fixed a bug in the filter grammar which would not allow multiple
+    substring components
+    * Fixed multiple bugs in the changerec parser and lexer
+    * Added a new module, ldap_mutex, which implements mutexes in
+    an ldap database using it's build in test and set mechanism. You
+    can use this to implement advisory locking around various database
+    operations such as the allocation of unique ids, and transactions.
+    * Added documentation for the ldap_toplevel module, and improved
+    the modify command.
 2.1.2
-	* fixed a bug in the encoding of substring filters, the
-	length was not being computed correctly.
-	* fixed a bug in diff, when syncing attributes it was not
-	considering values which were not on the master, but were on
-	the replica. This has been fixed.
-	* added a dn parser and pretty printer which conforms to rfc 2253
-	* added an exception Invalid_filter to the filter parser, it will
-	raise this exception whenever there is an error. In addition to a
-	string the exception contains an int, which indicates at which
-	charachter the parser failed.
-	* fixed a bug in the filter parser which allowed it to accept
-	filters with garbage at the end.
-	* exposed the escaping functions for attribute values in the dn
-	parser, and the filter parser. These functions are intended to be
-	used when you are manually manipulating stringified versions of
-	the dn or filter via regular expressions or other means.
-	* added some functions which are designed to be used from the
-	toplevel for quick searches, and modifies. These are a work
-	in progress.
+    * fixed a bug in the encoding of substring filters, the
+    length was not being computed correctly.
+    * fixed a bug in diff, when syncing attributes it was not
+    considering values which were not on the master, but were on
+    the replica. This has been fixed.
+    * added a dn parser and pretty printer which conforms to rfc 2253
+    * added an exception Invalid_filter to the filter parser, it will
+    raise this exception whenever there is an error. In addition to a
+    string the exception contains an int, which indicates at which
+    charachter the parser failed.
+    * fixed a bug in the filter parser which allowed it to accept
+    filters with garbage at the end.
+    * exposed the escaping functions for attribute values in the dn
+    parser, and the filter parser. These functions are intended to be
+    used when you are manually manipulating stringified versions of
+    the dn or filter via regular expressions or other means.
+    * added some functions which are designed to be used from the
+    toplevel for quick searches, and modifies. These are a work
+    in progress.
 2.1.1
    * Changed Lcstring to work like it used to, added a new module
      CaseInsensitiveString which does case preserving case insensitive
