@@ -23,7 +23,7 @@ depends: [
   "ocamlbuild" {build}
   "ocamlnet" {>= "3.6.0"}
   "pcre"
-  "ssl"
+  "ssl" {>= "0.5.3"}
   "base-bytes"
 ]
 available: ocaml-version >= "3.12.1"
