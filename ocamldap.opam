@@ -9,12 +9,5 @@ authors: [
 homepage: "https://github.com/kit-ty-kate/ocamldap"
 dev-repo: "https://github.com/kit-ty-kate/ocamldap.git"
 bug-reports: "https://github.com/kit-ty-kate/ocamldap/issues"
-build: ["jbuilder" "build" "-p" name "-j" jobs]
-build-test: ["jbuilder" "runtest" "-p" name "-j" jobs]
-depends: [
-  "jbuilder" {build}
-  "ocamlnet" {>= "3.6.0"}
-  "pcre"
-  "ssl" {>= "0.5.3"}
-]
+depends: ["ldap"]
 tags: ["ldap"]
