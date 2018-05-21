@@ -1,0 +1,10 @@
+(jbuild_version 1)
+
+(ocamlyacc (ldif_changerec_parser))
+(ocamllex (ldif_changerec_lexer))
+
+(library
+ ((name ldif)
+  (public_name ldap.ldif)
+  (wrapped false)
+  (libraries (ldap netstring))))

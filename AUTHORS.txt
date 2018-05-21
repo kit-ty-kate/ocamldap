@@ -1,9 +1,0 @@
-(* OASIS_START *)
-(* DO NOT EDIT (digest: 0c86f7602200c799a8e3131484bc9a90) *)
-
-Authors of ocamldap:
-
-* Eric Stokes
-* Jacques-Pascal Deplaix
-
-(* OASIS_STOP *)
