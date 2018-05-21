@@ -7,4 +7,6 @@
  ((name ldif)
   (public_name ldap.ldif)
   (wrapped false)
-  (libraries (ldap netstring))))
+  (libraries (ldap threads netstring))))
+
+; TODO: remove threads. See https://gitlab.camlcity.org/gerd/lib-ocamlnet3/issues/14
