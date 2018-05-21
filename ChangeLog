@@ -20,6 +20,9 @@ dev
     will no longer make any changes explicitly to the object, it will
     only signal errors. Making informed decisions is left to the user,
     or to one of scldapentries' subclasses.
+2.4.0
+    * Switched from OASIS to dune
+    * ocamldap is now a meta-package in opam that pulls a newly created ldap package.
 2.3.0
     * Enable OCaml >= 4.02 compatibility
     * Enable safe-string compatibility
