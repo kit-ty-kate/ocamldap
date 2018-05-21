@@ -1,3 +1,6 @@
+2.4.0
+    * Switched from OASIS to dune
+    * ocamldap is now a meta-package in opam that pulls a newly created ldap package.
 2.3.0
     * Enable OCaml >= 4.02 compatibility
     * Enable safe-string compatibility
