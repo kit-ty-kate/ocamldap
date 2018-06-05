@@ -1,5 +1,5 @@
 opam-version: "1.2"
-version: "2.4.0"
+version: "transition"
 license: "LGPL-2.1 with OCaml linking exception"
 maintainer: "Kate <kit.ty.kate@disroot.org>"
 authors: [
