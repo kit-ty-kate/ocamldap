@@ -23,7 +23,7 @@
 
 open Ldap_types
 
-(** {2 Basic Data Types} *)
+(** {1 Basic Data Types} *)
 
 (** the type of an operation, eg. [("cn", ["foo";"bar"])] *)
 type op = string * string list
@@ -37,7 +37,7 @@ type referral_policy = [ `FOLLOW | `RETURN ]
     it's behavior *)
 type changetype = [ `ADD | `DELETE | `MODDN | `MODIFY | `MODRDN ]
 
-(** {2 Local Representation of LDAP Objects} *)
+(** {1 Local Representation of LDAP Objects} *)
 
 (** The base type of an ldap entry represented in memory. *)
 class type ldapentry_t =
@@ -151,7 +151,7 @@ type changerec =
     | `Delete of string
     | `Modrdn of string * int * string]
 
-(** {0 Communication With {!Ldap_funclient}} *)
+(** {1 Communication With {!Ldap_funclient}} *)
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
@@ -164,13 +164,13 @@ val to_entry :
     ldap_funserver. *)
 val of_entry : ldapentry -> search_result_entry
 
-(** {2 Interacting with LDAP Servers} *)
+(** {1 Interacting with LDAP Servers} *)
 
 (** This class abstracts a connection to an LDAP server (or servers),
     an instance will be connected to the server you specify and can be
     used to perform operations on that server.
 
-    {0 Example}
+    {2 Example}
 
     [new ldapcon ~connect_timeout:5 ~version:3
     ["ldap://first.ldap.server";"ldap://second.ldap.server"]].
@@ -179,7 +179,7 @@ val of_entry : ldapentry -> search_result_entry
     and those names are bound to multiple addresses, then all possible
     addresses will be tried.
 
-    {0 Example}
+    {2 Example}
 
     [new ldapcon ["ldaps://rrldap.csun.edu"]]
 
@@ -213,17 +213,17 @@ class ldapcon :
   ?version:int ->
   string list ->
 object
-  (** {2 Authentication} *)
+  (** {1 Authentication} *)
 
   (** bind to the database using dn.
 
-      {0 Simple Bind Example}
+      {2 Simple Bind Example}
 
       [ldap#bind ~cred:"password" "cn=foo,ou=people,ou=auth,o=bar"]
 
       To bind anonymously, omit ~cred, and leave dn blank eg.
 
-      {0 Example}
+      {2 Example}
 
       [ldap#bind ""]
 
@@ -240,12 +240,12 @@ object
   (** Deauthenticate and close the connection to the server *)
   method unbind : unit
 
-  (** {2 Searching} *)
+  (** {1 Searching} *)
 
   (** Search the directory syncronously for an entry which matches the
       search criteria.
 
-      {0 Example}
+      {2 Example}
 
       [ldap#search ~base:"dc=foo,dc=bar" ~attrs:["cn"] "uid=*"]
 
@@ -293,7 +293,7 @@ object
       representation of the schema indexed by canonical name, and oid. *)
   method schema : Ldap_schemaparser.schema
 
-  (** {2 Making Modifications} *)
+  (** {1 Making Modifications} *)
 
   (** add an entry to the database *)
   method add : ldapentry -> unit
@@ -303,7 +303,7 @@ object
 
   (** Modify the entry named by dn, applying mods
 
-      {0 Example}
+      {2 Example}
 
       [ldap#modify "uid=foo,ou=people,dc=bar,dc=baz" [(`DELETE, "cn", ["foo";"bar"])]]
   *)
@@ -320,7 +320,7 @@ object
       will be changed to the attribute represented (as a string) by
       newrdn,
 
-      {0 Example With New Superior}
+      {2 Example With New Superior}
 
       [ldap#modrdn ~newsup:(Some "o=csun") "cn=bob,ou=people,o=org" "uid=bperson"]
 
@@ -356,9 +356,9 @@ val map : (ldapentry -> 'a) -> (?abandon:bool -> unit -> ldapentry) -> 'a list
   intial))) see List.fold_right. *)
 val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry) -> 'a
 
-(** {2 Schema Aware ldapentry Derivatives} *)
+(** {1 Schema Aware ldapentry Derivatives} *)
 
-(** {1 General Schema Aware Entry} {!Ldap_ooclient.scldapentry}, A
+(** {2 General Schema Aware Entry} {!Ldap_ooclient.scldapentry}, A
     schema aware derivative of {!Ldap_ooclient.ldapentry}. It contains
     an rfc2252 schema checker, and given the database schema, it can
     be used to garentee that operations performed in memory are valid
