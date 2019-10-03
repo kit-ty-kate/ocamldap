@@ -527,7 +527,7 @@ let encode_ber_int32 ?(cls=Universal) ?(tag=2) value =
               (Int32.logor (* flip what WILL be the sign bit in the encoded byte ON *)
                  0b1000_0000l
                  (Int32.logand (* flip the sign bit for the WHOLE word OFF *)
-                    0b00000000_00000000_00000000_1111111l
+                    0b00000000_00000000_00000000_11111111l
                     value)))
        else if value > 0b11111111_11111111_10000000_00000000l then
          (* fits in 15 bits + sign bit *)
