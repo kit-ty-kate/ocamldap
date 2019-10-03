@@ -1,4 +1,5 @@
-opam-version: "1.2"
+opam-version: "2.0"
+synopsis: "Implementation of the Light Weight Directory Access Protocol (transition package, deprecated)"
 version: "transition"
 license: "LGPL-2.1 with OCaml linking exception"
 maintainer: "Kate <kit.ty.kate@disroot.org>"
@@ -7,7 +8,7 @@ authors: [
   "Eric Stokes <letaris@me.com>"
 ]
 homepage: "https://github.com/kit-ty-kate/ocamldap"
-dev-repo: "https://github.com/kit-ty-kate/ocamldap.git"
+dev-repo: "git://github.com/kit-ty-kate/ocamldap.git"
 bug-reports: "https://github.com/kit-ty-kate/ocamldap/issues"
 depends: ["ldap"]
 tags: ["ldap"]
