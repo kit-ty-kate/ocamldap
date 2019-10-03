@@ -1,5 +1,9 @@
+2.4.1
+    * Switched from jbuilder to dune
+    * Fix suspicious int literal (by @hhugo)
+    * Fix up mli to conform to ocamldoc levels (avoiding 0) (by @bluddy)
 2.4.0
-    * Switched from OASIS to dune
+    * Switched from OASIS to jbuilder
     * ocamldap is now a meta-package in opam that pulls a newly created ldap package.
 2.3.0
     * Enable OCaml >= 4.02 compatibility
