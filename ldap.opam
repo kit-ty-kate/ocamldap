@@ -23,4 +23,7 @@ depends: [
   "pcre"
   "ssl" {>= "0.5.3"}
 ]
+conflicts: [
+  "ocamldap" {!= "transition"}
+]
 tags: ["ldap"]
