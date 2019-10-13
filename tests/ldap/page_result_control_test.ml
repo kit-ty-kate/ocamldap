@@ -75,15 +75,20 @@ let search_function conn page_control =
     "(objectclass=*)"
 
 let () =
-  let conn = Ldap_funclient.init [default_server] in
-  Ldap_funclient.bind_s
-    conn
-    ~who:default_who
-    ~cred:default_cred
-    ~auth_method:`SIMPLE;
-  let msgid = search_function conn (`Initctrl default_page_size) in
-  let elist =
-    entry_list_builder (search_function conn) default_page_size msgid conn
-  in
-  printf "got %d entries\n" (List.length elist)
-
+  match
+    try Some (Ldap_funclient.init [default_server])
+    with Ldap_types.LDAP_Failure _ | Unix.Unix_error _ -> None
+  with
+  | Some conn ->
+      Ldap_funclient.bind_s
+        conn
+        ~who:default_who
+        ~cred:default_cred
+        ~auth_method:`SIMPLE;
+      let msgid = search_function conn (`Initctrl default_page_size) in
+      let elist =
+        entry_list_builder (search_function conn) default_page_size msgid conn
+      in
+      printf "got %d entries\n" (List.length elist)
+  | None ->
+      prerr_endline "Couldn't connect to the server, abort."
