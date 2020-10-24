@@ -21,9 +21,6 @@
 *)
 
 open Ldap_ooclient
-open Ldap_types
-open Ldif_oo
-open Ldap_schema
 
 let eval s =
   let l = Lexing.from_string s in

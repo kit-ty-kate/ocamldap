@@ -28,6 +28,8 @@ let addmutex ldap mutexdn =
     try ldap#add mt
     with exn -> raise (Ldap_mutex ("addmutex", exn))
 
+exception Locked
+
 let rec lock (ldap:ldapcon) mutexdn lockval =
   try
     let obj =
@@ -47,7 +49,7 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
         do
           try
             ldap#modify (List.hd obj)#dn lockval;
-            failwith "locked"
+            raise Locked
           with (* the mutex is locked already *)
               LDAP_Failure (`TYPE_OR_VALUE_EXISTS, _, _)
             | LDAP_Failure (`OBJECT_CLASS_VIOLATION, _, _) ->
@@ -56,7 +58,7 @@ let rec lock (ldap:ldapcon) mutexdn lockval =
         done
       else failwith "huge error, multiple objects with the same dn"
   with
-      Failure "locked" -> ()
+      Locked -> ()
     | (Ldap_mutex _) as exn -> raise exn
     | exn -> raise (Ldap_mutex ("lock", exn))
 
@@ -85,7 +87,7 @@ let rec unlock (ldap:ldapcon) mutexdn unlockval =
 
 
 class mutex ldapurls binddn bindpw mutexdn =
-object (self)
+object (_self)
   val ldap =
     let ldap = new ldapcon ldapurls in
       ldap#bind binddn ~cred:bindpw;
@@ -105,7 +107,7 @@ let apply_with_mutex mutex f =
   with exn -> (try mutex#unlock with _ -> ());raise exn
 
 class object_lock_table ldapurls binddn bindpw mutextbldn =
-object (self)
+object (_self)
   val ldap =
     let ldap = new ldapcon ldapurls in
       ldap#bind binddn ~cred:bindpw;

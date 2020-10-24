@@ -151,10 +151,10 @@ let attributeType s =
 
 let attributeDescription s =
   let name = (attributeType s) in
-  let options = (match (optval (Stream.peek s.stream)) with
+  let _options = (match (optval (Stream.peek s.stream)) with
                      ';' -> options s (* there are options *)
                    |  _  -> "") in
-  let colon = (match (optval (Stream.peek s.stream)) with
+  let _colon = (match (optval (Stream.peek s.stream)) with
                    ':' -> (Stream.junk s.stream);""
                  |  _  -> failwith "Parse, error. Missing colon in attribute spec")
   in
@@ -174,24 +174,24 @@ let value_spec s =
     |  c  -> raise (Illegal_char (c, s.line))
 
 let rec attrval_spec ?(attrs=[]) s =
-  let lc = String.lowercase in
+  let lc = String.lowercase_ascii in
     try
       ignore (sep s);attrs
     with
         Illegal_char(_,_) ->
           let attr = (attributeDescription s) in
           let valu = (value_spec s) in
-          let sep  = (sep s) in
-            (try
-               let {attr_type=name;attr_vals=vals} = List.hd attrs in
-                 if (lc attr) = (lc name) then
-                   attrval_spec
-                     ~attrs:({attr_type=name;
-                              attr_vals=(valu :: vals)} :: (List.tl attrs)) s
-                 else
-                   attrval_spec
-                     ~attrs:({attr_type=attr;attr_vals=[valu]} :: attrs) s
-             with Failure "hd" ->
+          let _sep  = (sep s) in
+          (match attrs with
+           | {attr_type=name;attr_vals=vals} :: tl ->
+               if (lc attr) = (lc name) then
+                 attrval_spec
+                   ~attrs:({attr_type=name;
+                            attr_vals=(valu :: vals)} :: tl) s
+               else
+                 attrval_spec
+                   ~attrs:({attr_type=attr;attr_vals=[valu]} :: attrs) s
+           | [] ->
                attrval_spec ~attrs:[{attr_type=attr;attr_vals=[valu]}] s)
       | End -> attrs
 

@@ -70,19 +70,19 @@ let insert_change buf cr =
         buf
 
 class change ?(in_ch=stdin) ?(out_ch=stdout) () =
-object (self)
+object (_self)
   val lxbuf = Lexing.from_channel in_ch
   val buf = Buffer.create 1
   method read_changerec =
     try changerec lexcr lxbuf
     with
-        Failure "end" -> raise End_of_changerecs
+      Failure "end" [@ocaml.warning "-52"] (* TODO: find a way to remove this *) -> raise End_of_changerecs
       | Failure s -> raise (Invalid_changerec s)
   method of_string (s:string) =
     let lx = Lexing.from_string s in
       try changerec lexcr lx
       with
-          Failure "end" -> raise End_of_changerecs
+          Failure "end" [@ocaml.warning "-52"] (* TODO: find a way to remove this *) -> raise End_of_changerecs
         | Failure s -> raise (Invalid_changerec s)
   method to_string (e:changerec) =
     let res = Buffer.contents (insert_change buf e) in

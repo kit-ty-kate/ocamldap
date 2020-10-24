@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.4.0"
+version: "2.4.1"
 synopsis: "Implementation of the Light Weight Directory Access Protocol"
 license: "LGPL-2.1 with OCaml linking exception"
 maintainer: "Kate <kit.ty.kate@disroot.org>"
@@ -22,5 +22,8 @@ depends: [
   "ocamlnet" {>= "3.6.0"}
   "pcre"
   "ssl" {>= "0.5.3"}
+]
+conflicts: [
+  "ocamldap" {!= "transition"}
 ]
 tags: ["ldap"]

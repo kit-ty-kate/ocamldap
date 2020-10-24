@@ -31,7 +31,6 @@ type conn = {
   protocol_version: int;
 }
 
-type attr = { attr_name: string; attr_values: string list }
 type modattr = Ldap_types.modify_optype * string * string list
 type result = Ldap_types.search_result_entry list
 type entry = Ldap_types.search_result_entry
@@ -127,6 +126,8 @@ let receive_message con msgid =
       | Lber.Readbyte_error Lber.End_of_stream ->
           raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
 
+exception Timeout
+
 let init ?(connect_timeout = 1) ?(version = 3) hosts =
   if ((version < 2) || (version > 3)) then
     raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid protocol version", ext_res))
@@ -162,7 +163,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                        try
                          previous_signal :=
                            Sys.signal Sys.sigalrm
-                             (Sys.Signal_handle (fun _ -> failwith "timeout"));
+                             (Sys.Signal_handle (fun _ -> raise Timeout));
                          ignore (Unix.alarm connect_timeout);
                          Unix.connect s (Unix.ADDR_INET (addr, port));
                          ignore (Unix.alarm 0);
@@ -172,7 +173,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    else
                      (previous_signal :=
                         Sys.signal Sys.sigalrm
-                          (Sys.Signal_handle (fun _ -> failwith "timeout"));
+                          (Sys.Signal_handle (fun _ -> failwith Timout));
                       ignore (Unix.alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
                                        Ssl.SSLv23
@@ -188,7 +189,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    | Unix.Unix_error (Unix.ECONNRESET, _, _)
                    | Unix.Unix_error (Unix.ECONNABORTED, _, _)
                    | Ssl.Connection_error _
-                   | Failure "timeout" ->
+                   | Timeout ->
                        ignore (Unix.alarm 0);
                        Sys.set_signal Sys.sigalrm !previous_signal;
                        open_con tl)
@@ -206,6 +207,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
 
 (* sync auth_method types between the two files *)
 let bind_s ?(who = "") ?(cred = "") ?(auth_method = `SIMPLE) con =
+  let _ = auth_method in (* TODO: usused?? *)
   let msgid = allocate_messageid con in
     (try
        send_message con
@@ -280,11 +282,11 @@ let get_search_entry con msgid =
 let get_search_entry_with_controls con msgid =
   try
     match receive_message con msgid with
-        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> `Entry e
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS};Ldap_types.controls=cntrls} ->
+        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e;_} -> `Entry e
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r;_} -> `Referral r
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS;_};Ldap_types.controls=cntrls;_} ->
         `Success cntrls
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done res;_} ->
         raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                              {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                               ext_referral=res.Ldap_types.ldap_referral}))
@@ -390,6 +392,7 @@ let modify_s con ~dn ~mods =
     free_messageid con msgid
 
 let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
+  let _ = newsup in (* TODO: not used?? *)
   let msgid = allocate_messageid con in
     (try
        send_message con
@@ -409,6 +412,3 @@ let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
          | _ -> raise (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid modify dn response", ext_res))
      with exn -> free_messageid con msgid;raise exn);
     free_messageid con msgid
-
-let create_grouping_s groupingType value = ()
-let end_grouping_s cookie value = ()

@@ -37,8 +37,8 @@ val iter : ('a -> unit) -> < read_changerec : 'a; .. > -> unit
 val fold : ('a -> 'b -> 'a) -> < read_changerec : 'b; .. > -> 'a -> 'a
 
 class change:
-  ?in_ch:Pervasives.in_channel ->
-  ?out_ch:Pervasives.out_channel ->
+  ?in_ch:in_channel ->
+  ?out_ch:out_channel ->
   unit ->
 object
   method read_changerec: Ldap_ooclient.changerec

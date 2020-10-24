@@ -24,12 +24,12 @@
 type t = (string, string) Hashtbl.t;;
 
 let create n = Hashtbl.create n;;
-let mem lst item = Hashtbl.mem lst (String.lowercase item);;
+let mem lst item = Hashtbl.mem lst (String.lowercase_ascii item);;
 let add lst item =
-  let lcitem = String.lowercase item in
+  let lcitem = String.lowercase_ascii item in
     if (Hashtbl.mem lst lcitem) = false then
       Hashtbl.add lst lcitem item; ();;
 let addlst lst lst1 = List.iter (fun i -> add lst i) lst1;;
-let remove lst item = Hashtbl.remove lst (String.lowercase item);;
-let iter func lst = Hashtbl.iter (fun key valu -> func key) lst;;
-let tolst lst = Hashtbl.fold (fun k v l -> v :: l) lst [];;
+let remove lst item = Hashtbl.remove lst (String.lowercase_ascii item);;
+let iter func lst = Hashtbl.iter (fun key _v -> func key) lst;;
+let tolst lst = Hashtbl.fold (fun _k v l -> v :: l) lst [];;

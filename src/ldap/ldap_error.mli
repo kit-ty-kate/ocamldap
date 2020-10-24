@@ -1,5 +1,3 @@
-open Ldap_types
-
 (** given an ldap error code return a string describing it *)
 val err2string :
   [> `ADMINLIMIT_EXCEEDED

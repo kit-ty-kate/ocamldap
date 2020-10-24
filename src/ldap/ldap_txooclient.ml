@@ -89,7 +89,7 @@ object (self)
       List.iter
         (fun (_, e) -> lock_table#unlock (Ldap_dn.of_string e#dn))
         (Hashtbl.fold
-           (fun k (original_entry, modified_entry) successful_so_far ->
+           (fun _k (original_entry, modified_entry) successful_so_far ->
               try
                 (match modified_entry#changetype with
                      `MODIFY -> super#update_entry modified_entry
@@ -113,10 +113,10 @@ object (self)
            txn.entries
            [])
     with Rollback (exn, successful_so_far) ->
-      (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
+      (Hashtbl.iter (fun _k (_, e) -> e#flush_changes) txn.entries);
       (match
          ((Hashtbl.iter (* rollback everything in memory *)
-             (fun k (original_entry, modified_entry) ->
+             (fun _k (original_entry, modified_entry) ->
                 match modified_entry#changetype with
                     `MODIFY -> modified_entry#modify (original_entry#diff modified_entry)
                   | `ADD -> ()
@@ -157,15 +157,15 @@ object (self)
        with
            [] ->
              Hashtbl.iter
-               (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+               (fun _k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
                txn.entries;
-             (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
+             (Hashtbl.iter (fun _k (_, e) -> e#flush_changes) txn.entries);
              raise (Txn_commit_failure ("rollback successful", exn, None))
          | not_rolled_back ->
              Hashtbl.iter
-               (fun k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
+               (fun _k (e, _) -> lock_table#unlock (Ldap_dn.of_string e#dn))
                txn.entries;
-             (Hashtbl.iter (fun k (_, e) -> e#flush_changes) txn.entries);
+             (Hashtbl.iter (fun _k (_, e) -> e#flush_changes) txn.entries);
              raise
                (Txn_commit_failure
                   ("rollback failed", exn,
@@ -174,7 +174,7 @@ object (self)
   method rollback_txn txn =
     txn.dead <- true;
     Hashtbl.iter
-      (fun k (original_entry, modified_entry) ->
+      (fun _k (original_entry, modified_entry) ->
          try
            lock_table#unlock (Ldap_dn.of_string original_entry#dn);
            modified_entry#modify (original_entry#diff modified_entry);

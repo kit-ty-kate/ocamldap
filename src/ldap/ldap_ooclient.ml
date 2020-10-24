@@ -53,30 +53,6 @@ object
   method print : unit
 end;;
 
-class type ldapcon_t =
-object
-  method add : ldapentry_t -> unit
-  method bind :
-    ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
-  method delete : string -> unit
-  method modify :
-    string ->
-    (Ldap_types.modify_optype * string * string list) list -> unit
-  method modrdn : string -> ?deleteoldrdn:bool -> string -> unit
-  method rawschema : ldapentry_t
-  method schema : Ldap_schema.schema
-  method search :
-    ?scope:Ldap_types.search_scope ->
-    ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> ldapentry_t list
-  method search_a :
-    ?scope:Ldap_types.search_scope ->
-    ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry_t)
-  method unbind : unit
-  method update_entry : ldapentry_t -> unit
-end
-
 let format_entry e =
   Format.open_box 0;
   Format.open_box 2;
@@ -113,6 +89,8 @@ let format_entry e =
     Format.print_string ">";
     Format.close_box ()
 
+exception Limit
+
 let format_entries lst =
   let length = List.length lst in
   let i = ref 0 in
@@ -122,7 +100,7 @@ let format_entries lst =
       try
         List.iter
           (fun e ->
-             if !i > 49 then failwith "limit"
+             if !i > 49 then raise Limit
              else if !i < length - 1 then begin
                Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
                Format.print_cut ();
@@ -130,7 +108,7 @@ let format_entries lst =
              end else
                Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
           lst
-      with Failure "limit" -> Format.print_string "..."
+      with Limit -> Format.print_string "..."
     else
       List.iter
         (fun e ->
@@ -147,7 +125,7 @@ let format_entries lst =
 module CaseInsensitiveString =
   (struct
      type t = string * string
-     let of_string s = (s, String.lowercase s)
+     let of_string s = (s, String.lowercase_ascii s)
      let to_string x = fst x
      let compare x y = String.compare (snd x) (snd y)
    end
@@ -192,13 +170,13 @@ object (self)
   method flush_changes = changes <- []
   method changes = changes
 
-  method exists x = Hashtbl.mem data (String.lowercase x)
+  method exists x = Hashtbl.mem data (String.lowercase_ascii x)
   method add (x:op_lst) =
     let rec do_add (x:op_lst) =
       match x with
           [] -> ()
         | (name, value) :: lst ->
-            let lcname = String.lowercase name in
+            let lcname = String.lowercase_ascii name in
               try
                 Ulist.addlst (Hashtbl.find data lcname) value; do_add lst
               with Not_found ->
@@ -261,7 +239,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst ->
-            let lcname = String.lowercase attr in
+            let lcname = String.lowercase_ascii attr in
               match values with
                   [] -> Hashtbl.remove data lcname;do_delete lst
                 | _  ->
@@ -279,7 +257,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst -> let n = Ulist.create 5 in
-            Ulist.addlst n values; Hashtbl.replace data (String.lowercase attr) n;
+            Ulist.addlst n values; Hashtbl.replace data (String.lowercase_ascii attr) n;
             do_replace lst;
     in
       do_replace x; self#push_change `REPLACE x
@@ -302,7 +280,7 @@ object (self)
     in
       keys data
 
-  method get_value attr = Ulist.tolst (Hashtbl.find data (String.lowercase attr))
+  method get_value attr = Ulist.tolst (Hashtbl.find data (String.lowercase_ascii attr))
   method set_dn x = dn <- x
   method dn = dn
   method print =
@@ -397,6 +375,8 @@ let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapent
 (* a connection to an ldap server *)
 class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts =
 object (self)
+  val _referral_policy = referral_policy (* TODO: not used?? *)
+
   val mutable bdn = ""
   val mutable pwd = ""
   val mutable mth = `SIMPLE
@@ -436,13 +416,13 @@ object (self)
 
   method delete dn =
     if not (reconnect_successful && bound) then self#reconnect;
-    try delete_s con dn
+    try delete_s con ~dn
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#delete dn
 
   method modify dn mods =
     if not (reconnect_successful && bound) then self#reconnect;
-    try modify_s con dn mods
+    try modify_s con ~dn ~mods
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#modify dn mods
 

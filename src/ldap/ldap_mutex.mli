@@ -1,5 +1,3 @@
-open Ldap_ooclient
-
 (** functions for implementing mutexes on top of LDAP's built in test
     and set mechanism. In order to use this module you must load
     mutex.schema, which is an rfc2252 format schema file.  raised when
@@ -29,6 +27,7 @@ class mutex: string list -> string -> string -> string ->
 object
   (** lock the mutex. This WILL block if the mutex is already locked *)
   method lock: unit
+
   (** unlock the mutex *)
   method unlock: unit
 end
@@ -46,6 +45,7 @@ class object_lock_table: string list -> string -> string -> string ->
 object
   (** lock the specified dn, if it is already locked, then block until the lock can be aquired *)
   method lock: Ldap_types.dn -> unit
+
   (** unlock the specified dn, if it is not locked do nothing *)
   method unlock: Ldap_types.dn -> unit
 end

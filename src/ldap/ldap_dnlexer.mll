@@ -20,6 +20,8 @@
 
 {
   open Ldap_dnparser
+
+  [@@@ocaml.warning "-26"]
 }
 
 let whsp = [ '\t' ' ' ]*

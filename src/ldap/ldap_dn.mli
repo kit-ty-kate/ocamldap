@@ -19,9 +19,6 @@
    USA
 *)
 
-open Ldap_types
-open Ldap_dnparser
-
 (** operations on ldap dns *)
 
 (** raised when something goes wrong with conversion to or from a

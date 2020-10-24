@@ -603,32 +603,34 @@ end
 
 (** The structure of a generator *)
 type generator = {
-  (** The name of the generator, this should also be its key in the hashtbl *)
-  gen_name : string;
 
+  gen_name : string;
+  (** The name of the generator, this should also be its key in the hashtbl *)
+
+  required : string list;
   (** A list of names of attributes which are required by this
       generator. The names need not be canonical. *)
-  required : string list;
 
+  genfun : ldapentry_t -> string list;
   (** A function which returns a list of values for the attribute,
       given the entire object. *)
-  genfun : ldapentry_t -> string list;
 }
 
 (** The structure of a service *)
 type service = {
-  (** The name of the service, should also be its key in the hashtbl. *)
-  svc_name : string;
 
+  svc_name : string;
+  (** The name of the service, should also be its key in the hashtbl. *)
+
+  static_attrs : (string * string list) list;
   (** A list of attributes and values which must be present for the
       service to be satisfied. *)
-  static_attrs : (string * string list) list;
 
-  (** A list of attributes to generate. *)
   generate_attrs : string list;
+  (** A list of attributes to generate. *)
 
-  (** A list of services on which this service depends. *)
   depends : string list;
+  (** A list of services on which this service depends. *)
 }
 
 (** The type of error raised by attribute generators *)
