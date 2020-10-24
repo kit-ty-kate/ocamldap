@@ -88,8 +88,8 @@ object (self)
       | None -> raise Ordering_matching_rule_not_defined
   method greater_than_or_equal_match v = self#ordering_match (-1) v
   method less_than_or_equal_match v = self#ordering_match 1 v
-  method approximate_match (v: string) = false
-  method extensible_match (v: string) (r: string -> string -> int) = false
+  method approximate_match (_v: string) = false
+  method extensible_match (_v: string) (_r: string -> string -> int) = false
 end
 
 (* equality matching rules *)
@@ -585,11 +585,11 @@ let octet_string_ordering_match = case_ignore_ordering_match
 
 
 
-
+exception Local_break
 
 (* substring matching rules *)
 let begins_with case v initial =
-  let lc = Char.lowercase in
+  let lc = Char.lowercase_ascii in
   let l = String.length v in
   let il = String.length initial in
     if il = 0 then true
@@ -599,14 +599,14 @@ let begins_with case v initial =
         for i=0 to il - 1 do
           if v.[i] <> initial.[i] then
             match case with
-                `Ignore -> if lc v.[i] <> lc initial.[i] then failwith ""
-              | `Exact -> failwith ""
+                `Ignore -> if lc v.[i] <> lc initial.[i] then raise Local_break
+              | `Exact -> raise Local_break
         done;
         true
-      with Failure "" -> false
+      with Local_break -> false
 
 let ends_with case v ends =
-  let lc = Char.lowercase in
+  let lc = Char.lowercase_ascii in
   let l = String.length v in
   let el = String.length ends in
     if el = 0 then true
@@ -618,16 +618,16 @@ let ends_with case v ends =
             if v.[!j] <> ends.[i] then
               match case with
                   `Ignore ->
-                    if lc v.[!j] <> lc ends.[i] then failwith ""
+                    if lc v.[!j] <> lc ends.[i] then raise Local_break
                     else j := !j - 1
-                | `Exact -> failwith ""
+                | `Exact -> raise Local_break
             else j := !j - 1
           done;
           true
-      with Failure "" -> false
+      with Local_break -> false
 
 let contains case v sub =
-  let lc = Char.lowercase in
+  let lc = Char.lowercase_ascii in
   let l = String.length v in
   let sl = String.length sub in
   let test_position i =
@@ -639,13 +639,13 @@ let contains case v sub =
             if sub.[j] <> v.[!i] then
               match case with
                   `Ignore ->
-                    if lc sub.[j] <> lc v.[!i] then failwith ""
+                    if lc sub.[j] <> lc v.[!i] then raise Local_break
                     else i := !i + 1
-                | `Exact -> failwith ""
+                | `Exact -> raise Local_break
             else i := !i + 1
           done;
           true
-        with Failure "" -> false
+        with Local_break -> false
   in
   let index_from case v i c =
     let lc_c = lc c in
@@ -653,14 +653,14 @@ let contains case v sub =
       if i < l then
         try
           for i = i to l - 1 do
-            if v.[i] = c then ( p := i;failwith "" )
+            if v.[i] = c then ( p := i;raise Local_break )
             else
               match case with
-                  `Ignore -> if lc v.[i] = lc_c then ( p := i;failwith "" )
+                  `Ignore -> if lc v.[i] = lc_c then ( p := i;raise Local_break )
                 | `Exact -> ()
           done;
           raise Not_found
-        with Failure "" -> !p
+        with Local_break -> !p
       else raise Not_found
   in
     if sl = 0 then true
@@ -671,12 +671,12 @@ let contains case v sub =
           while true do
             let index = index_from case v !last_p initial_c in
               last_p := index + 1;
-              if test_position index then failwith ""
+              if test_position index then raise Local_break
           done;
           false
         with
             Not_found -> false
-          | Failure "" -> true
+          | Local_break -> true
 
 (* 2.5.13.4 NAME 'caseIgnoreSubstringsMatch' SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 *)
 let case_ignore_substrings_match {substr_initial=i;substr_any=a;substr_final=f} v =

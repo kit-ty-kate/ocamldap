@@ -3,10 +3,10 @@ open Ldap_schema
 exception Invalid_syntax of string
 
 (* 1.3.6.1.4.1.1466.115.121.1.3 DESC 'Attribute Type Description' *)
-let attribute_type_description_syntax v = ()
+let attribute_type_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.5 DESC 'Binary' *)
-let binary_syntax v = ()
+let binary_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.6 DESC 'Bit String' *)
 let bitstring_rex = Pcre.regexp ~study:true "^\'[01]*\'B$"
@@ -20,13 +20,13 @@ let boolean_syntax v =
     raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.8 DESC 'Certificate' *)
-let certificate_syntax v = ()
+let certificate_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.9 DESC 'Certificate List' *)
-let certificate_list_syntax v = ()
+let certificate_list_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.10 DESC 'Certificate Pair' *)
-let certificate_pair_syntax v = ()
+let certificate_pair_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.11 DESC 'Country String' *)
 let country_string_rex = Pcre.regexp ~study:true "^[a-zA-Z]{2}$"
@@ -37,162 +37,162 @@ let country_string_syntax v =
 (* 1.3.6.1.4.1.1466.115.121.1.12 DESC 'DN' *)
 let dn_syntax v =
   try ignore (Ldap_dn.of_string v)
-  with exn ->
+  with _ ->
     raise (Invalid_syntax v)
 
 (* 1.3.6.1.4.1.1466.115.121.1.15 DESC 'Directory String' *)
-let directory_string_syntax v = ()
+let directory_string_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.22 DESC 'Facsimile Telephone Number' *)
-let facsimile_telephone_number_syntax v = ()
+let facsimile_telephone_number_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.23 DESC 'Fax' *)
-let fax_syntax v = ()
+let fax_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.24 DESC 'Generalized Time' *)
 let generalized_time_rex = Pcre.regexp ~study:true "^[0-9]{4}()"
-let generalized_time_syntax v = ()
+let generalized_time_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.26 DESC 'IA5 String' *)
-let ia5_string_syntax v = ()
+let ia5_string_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.27 DESC 'INTEGER' *)
-let integer_syntax v = ()
+let integer_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.28 DESC 'JPEG' *)
-let jpeg_syntax v = ()
+let jpeg_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.30 DESC 'Matching Rule Description' *)
-let matching_rule_description_syntax v = ()
+let matching_rule_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.31 DESC 'Matching Rule Use Description' *)
-let matching_rule_use_description_syntax v = ()
+let matching_rule_use_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.33 DESC 'MHS OR Address' *)
-let mhs_or_address_syntax v = ()
+let mhs_or_address_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.34 DESC 'Name And Optional UID' *)
-let name_and_optional_uid v = ()
+let name_and_optional_uid _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.35 DESC 'Name Form Description' *)
-let name_form_description_syntax v = ()
+let name_form_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.36 DESC 'Numeric String' *)
-let numeric_string_syntax v = ()
+let numeric_string_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.37 DESC 'Object Class Description' *)
-let object_class_description_syntax v = ()
+let object_class_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.38 DESC 'OID' *)
-let oid_syntax v = ()
+let oid_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.39 DESC 'Other Mailbox' *)
-let other_mailbox_syntax v = ()
+let other_mailbox_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.41 DESC 'Postal Address' *)
-let postal_address_syntax v = ()
+let postal_address_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.43 DESC 'Presentation Address' *)
-let presentation_address_syntax v = ()
+let presentation_address_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.44 DESC 'Printable String' *)
-let printable_string_syntax v = ()
+let printable_string_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.50 DESC 'Telephone Number' *)
-let telephone_number_syntax v = ()
+let telephone_number_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.53 DESC 'UTC Time' *)
-let utc_time_syntax v = ()
+let utc_time_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.54 DESC 'LDAP Syntax Description' *)
-let ldap_syntax_description v = ()
+let ldap_syntax_description _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.17 DESC 'DIT Structure Rule Description' *)
-let dit_structure_rule_description_syntax v = ()
+let dit_structure_rule_description_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.40 DESC 'Octet String' *)
-let octet_string v = ()
+let octet_string _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.13 DESC 'Data Quality Syntax' *)
-let data_quality_syntax v = ()
+let data_quality_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.51 DESC 'Teletex Terminal Identifier' *)
-let teletex_terminal_identifier v = ()
+let teletex_terminal_identifier _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.25 DESC 'Guide' *)
-let guide v = ()
+let guide _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.52 DESC 'Telex Number' *)
-let telex_number v = ()
+let telex_number _v = ()
 
 (* 1.3.6.1.1.1.0.1 DESC 'RFC2307 Boot Parameter Syntax' *)
-let rfc2307_boot_paramater_syntax v = ()
+let rfc2307_boot_paramater_syntax _v = ()
 
 (* 1.3.6.1.1.1.0.0 DESC 'RFC2307 NIS Netgroup Triple' *)
-let rfc2307_nis_netgroup_triple v = ()
+let rfc2307_nis_netgroup_triple _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.21 DESC 'Enhanced Guide' *)
-let enhanced_guide v = ()
+let enhanced_guide _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.1 DESC 'ACI Item' *)
-let aci_item v = ()
+let aci_item _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.2 DESC 'Access Point' *)
-let access_point v = ()
+let access_point _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.4 DESC 'Audio' *)
-let audio v = ()
+let audio _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.14 DESC 'Delivery Method' *)
-let delivery_method v = ()
+let delivery_method _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.16 DESC 'DIT Content Rule Description' *)
-let dit_content_rule_description v = ()
+let dit_content_rule_description _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.18 DESC 'DL Submit Permission' *)
-let dl_submit_permission v = ()
+let dl_submit_permission _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.19 DESC 'DSA Quality Syntax' *)
-let dsa_quality_syntax v = ()
+let dsa_quality_syntax _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.20 DESC 'DSE Type' *)
-let dse_type v = ()
+let dse_type _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.29 DESC 'Master And Shadow Access Points' *)
-let master_and_shadow_access_points v = ()
+let master_and_shadow_access_points _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.32 DESC 'Mail Preference' *)
-let mail_preference v = ()
+let mail_preference _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.42 DESC 'Protocol Information' *)
-let protocol_information v = ()
+let protocol_information _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.45 DESC 'Subtree Specification' *)
-let subtree_specification v = ()
+let subtree_specification _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.46 DESC 'Supplier Information' *)
-let supplier_information v = ()
+let supplier_information _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.47 DESC 'Supplier Or Consumer' *)
-let supplier_or_consumer v = ()
+let supplier_or_consumer _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.48 DESC 'Supplier And Consumer' *)
-let supplier_and_consumer v = ()
+let supplier_and_consumer _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.49 DESC 'Supported Algorithm' *)
-let supported_algorithm v = ()
+let supported_algorithm _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.55 DESC 'Modify Rights' *)
-let modify_rights v = ()
+let modify_rights _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.56 DESC 'LDAP Schema Definition' *)
-let ldap_schema_definition v = ()
+let ldap_schema_definition _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.57 DESC 'LDAP Schema Description' *)
-let ldap_schema_description v = ()
+let ldap_schema_description _v = ()
 
 (* 1.3.6.1.4.1.1466.115.121.1.58 DESC 'Substring Assertion' *)
-let substring_assertion v = ()
+let substring_assertion _v = ()
 
 let syntaxes =
   List.fold_left

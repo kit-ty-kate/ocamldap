@@ -70,7 +70,7 @@ object (self)
       List.fold_left
         (fun (must, may) oc ->
            let mkset l = setOfList (List.rev_map (attrNameToOid schema) l) in
-           let {oc_must=oc_must;oc_may=oc_may} = oidToOc schema oc in
+           let {oc_must=oc_must;oc_may=oc_may;_} = oidToOc schema oc in
              (Oidset.union must (mkset oc_must), Oidset.union may (mkset oc_may)))
         (Oidset.empty, Oidset.empty)
         presentOcslst
@@ -134,7 +134,7 @@ object (self)
       (fun (name, vals) -> (attrNameToAttr schema name, vals))
       ops
 
-  method private new_attribute ({at_oid=atoid;at_name=name;at_syntax=syn} as attr) =
+  method private new_attribute ({at_oid=_atoid;at_name=_name;at_syntax=syn;_} as attr) =
     let ordering_match =
       match lookupMatchingRule schema `Ordering attr with
           Some oid ->
@@ -189,8 +189,8 @@ object (self)
   method private add' data ops =
     List.fold_left
       (fun data ->
-         function (attr, []) -> data
-           | ({at_oid=oid} as attr, values) ->
+         function (_attr, []) -> data
+           | ({at_oid=oid;_} as attr, values) ->
                let attr_object =
                  try Oidmap.find oid data
                  with Not_found ->
@@ -214,7 +214,7 @@ object (self)
 
   method private delete' data ops =
     List.fold_left
-      (fun data ({at_oid=oid}, (values: string list)) ->
+      (fun data ({at_oid=oid;_}, (values: string list)) ->
          let (attr_obj: Ldap_matchingrules.attribute_t) =
            try Oidmap.find oid data
            with Not_found ->
@@ -242,7 +242,7 @@ object (self)
 
   method private replace' data ops =
     List.fold_left
-      (fun data ({at_oid=oid} as attr, values) ->
+      (fun data ({at_oid=oid;_} as attr, values) ->
          let attr_obj =
            try Oidmap.find oid data
            with Not_found ->
@@ -288,7 +288,7 @@ object (self)
     ignore (Ldap_dn.of_string dn'); (* check for validity *)
     dn <- dn'
   method print = print_endline "This deprecated method has been removed"
-  method diff (e: Ldap_ooclient.ldapentry_t) =
+  method diff (_e: Ldap_ooclient.ldapentry_t) =
     ([]: (Ldap_types.modify_optype * string * string list) list)
 
   method of_entry (e: Ldap_ooclient.ldapentry_t) =
@@ -303,7 +303,7 @@ object (self)
         self#set_dn e#dn;
         self#commit_changes data' [];
         changetype <- e#changetype
-      with exn -> dn <- dn'
+      with _ -> dn <- dn'
 
   method private oid_lst_to_name_lst lst =
     List.rev_map
@@ -311,7 +311,7 @@ object (self)
       lst
 
   method attributes_byoid =
-    Oidmap.fold (fun k v s -> Oidset.add k s) data Oidset.empty
+    Oidmap.fold (fun k _v s -> Oidset.add k s) data Oidset.empty
   method attributes = self#oid_lst_to_name_lst (Oidset.elements self#attributes_byoid)
 
   method objectclasses_byoid = presentOcs
@@ -341,7 +341,7 @@ object (self)
   method objectclasses_not_allowed_byoid =
     let all_ocs =
       Oidmap.fold
-        (fun k v s -> Oidset.add k s)
+        (fun k _v s -> Oidset.add k s)
         schema.objectclasses_byoid
         Oidset.empty
     in
@@ -358,7 +358,7 @@ object (self)
   method may_byoid = may
 
   method attributes_not_allowed_byoid =
-    let oids = setOfList (Oidmap.fold (fun k v l -> k :: l) schema.attributes_byoid []) in
+    let oids = setOfList (Oidmap.fold (fun k _v l -> k :: l) schema.attributes_byoid []) in
       Oidset.diff oids (Oidset.union must may)
 
   method attributes_not_allowed =
@@ -389,8 +389,8 @@ object (self)
         | `ApproxMatch {attributeDesc=attrname;assertionValue=asserted_value} ->
             (try (lookup_attr attrname)#approximate_match asserted_value
              with Not_found -> false)
-        | `ExtensibleMatch {matchingRule=mruleoid;ruletype=rtype;
-                            matchValue=asserted_value;dnAttributes=dnattrs} ->
+        | `ExtensibleMatch {matchingRule=_mruleoid;ruletype=_rtype;
+                            matchValue=_asserted_value;dnAttributes=_dnattrs} ->
             failwith "extensible match is not implemented"
 
   method match_filterstring fstring = self#match_filter (Ldap_filter.of_string fstring)
@@ -486,7 +486,7 @@ object (self)
           with Invalid_attribute _ -> false
         in
         let rec sup oc =
-          let {oc_sup=sups} = oidToOc schema oc in
+          let {oc_sup=sups;_} = oidToOc schema oc in
             (List.flatten
                (List.rev_map
                   (fun s ->
@@ -505,15 +505,15 @@ object (self)
               Some oc -> oc :: (sup oc)
             | None -> raise Not_found
       in
-      let (missing, illegal, missingOc, illegalOc, singleValue) =
+      let (missing, illegal, missingOc, _illegalOc, _singleValue) =
         eval_proposed_changes obj proposed_changes
       in
-      let (proposed_changes, missing, missingOc, illegal) =
+      let (proposed_changes, _missing, missingOc, _illegal) =
         List.fold_left
           (fun (mods, missing, missingOc, illegal) op ->
              match op with
                  (* deleted an attribute which is required *)
-                 (`DELETE, attrname, vals) when
+                 (`DELETE, attrname, _vals) when
                    (Oidset.mem (attrNameToOid schema attrname) missing) ->
                      (mods, Oidset.remove (attrNameToOid schema attrname) missing,
                       missingOc, illegal)
@@ -523,7 +523,7 @@ object (self)
                    let (vals, missingOc, illegal) =
                      List.fold_left
                        (fun (vals, missingOc, illegal) v ->
-                          let {oc_oid=oid;oc_must=must;oc_may=may} = ocNameToOc schema v in
+                          let {oc_oid=oid;oc_must=must;oc_may=may;_} = ocNameToOc schema v in
                           let allowed =
                             setOfList
                               (List.rev_map
@@ -559,7 +559,7 @@ object (self)
         else
           proposed_changes
       in
-      let (missing, illegal, missingOc, illegalOc, singleValue) =
+      let (missing, illegal, _missingOc, _illegalOc, _singleValue) =
         eval_proposed_changes obj proposed_changes
       in
       let ocs_to_add =
@@ -585,7 +585,7 @@ object (self)
          things from the object until it is legal. *)
 
     let rec reductive_adapt obj proposed_changes =
-      let (missing, illegal, missingOc, illegalOc, singleValue) =
+      let (_missing, illegal, _missingOc, illegalOc, singleValue) =
         eval_proposed_changes obj proposed_changes
       in
         check_single_value singleValue;
@@ -633,7 +633,7 @@ object (self)
                (Oidset.elements (Oidset.diff illegal attrsDeleting)))
             proposed_changes'
         in
-        let (missing, illegal, missingOc, illegalOc, singleValue) =
+        let (_missing, illegal, _missingOc, illegalOc, _singleValue) =
           eval_proposed_changes obj proposed_changes'
         in
           if Oidset.is_empty illegal && Oidset.is_empty illegalOc then

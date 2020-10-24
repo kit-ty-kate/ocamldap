@@ -161,7 +161,7 @@ let attrNameToAttr schema attr =
     with Not_found ->
       (match
          Lcmap.fold
-           (fun k v matches ->
+           (fun _k v matches ->
               if (List.exists
                     (fun n -> Lcstring.compare attr (Lcstring.of_string n) = 0)
                     v.at_name)
@@ -180,7 +180,7 @@ let ocNameToOc schema oc =
     with Not_found ->
       (match
          Lcmap.fold
-           (fun k v matches ->
+           (fun _k v matches ->
               if (List.exists
                     (fun n -> Lcstring.compare oc (Lcstring.of_string n) = 0)
                     v.oc_name)
@@ -230,6 +230,8 @@ let rec lookupMatchingRule schema rtype attr =
             None
             attr.at_sup
 
+exception Depth
+
 let schema_print_depth = ref 10
 let format_schema s =
   let indent = 3 in
@@ -237,15 +239,15 @@ let format_schema s =
     let i = ref 0 in
       try
         Lcmap.iter
-          (fun aname aval ->
+          (fun aname _aval ->
              if !i < !schema_print_depth then begin
                Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
                Format.print_break 1 indent;
                i := !i + 1
              end
-             else failwith "depth")
+             else raise Depth)
           tbl
-      with Failure "depth" -> Format.print_string "..."
+      with Depth -> Format.print_string "..."
   in
     Format.open_box 0;
     Format.print_string "{objectclasses = <HASHTBL ";
@@ -268,7 +270,7 @@ exception Parse_error_at of Lexing.lexbuf * attribute * string;;
 exception Syntax_error_oc of Lexing.lexbuf * objectclass * string;;
 exception Syntax_error_at of Lexing.lexbuf * attribute * string;;
 
-let rec readSchema oclst attrlst =
+let readSchema oclst attrlst =
   let empty_oc =
     {oc_name=[];oc_oid=Oid.of_string "";oc_desc="";oc_obsolete=false;oc_sup=[];
      oc_must=[];oc_may=[];oc_type=Abstract;oc_xattr=[]}
@@ -313,7 +315,7 @@ let rec readSchema oclst attrlst =
     in
       readLparen lxbuf oc
   in
-  let rec readAttr lxbuf attr =
+  let readAttr lxbuf attr =
     let rec readOptionalFields lxbuf attr =
       try match (lexattr lxbuf) with
           Name s              -> readOptionalFields lxbuf {attr with at_name=s}

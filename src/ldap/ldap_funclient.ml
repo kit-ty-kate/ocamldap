@@ -145,9 +145,9 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
               (List.map
                  (fun host ->
                     (match Ldap_url.of_string host with
-                         {Ldap_types.url_mech=mech;url_host=(Some host);url_port=(Some port)} ->
+                         {Ldap_types.url_mech=mech;url_host=(Some host);url_port=(Some port);_} ->
                            (mech, host, int_of_string port)
-                       | {Ldap_types.url_mech=mech;url_host=(Some host);url_port=None} ->
+                       | {Ldap_types.url_mech=mech;url_host=(Some host);url_port=None;_} ->
                            (mech, host, 389)
                        | _ -> raise
                            (Ldap_types.LDAP_Failure (`LOCAL_ERROR, "invalid ldap url", ext_res))))
@@ -173,7 +173,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    else
                      (previous_signal :=
                         Sys.signal Sys.sigalrm
-                          (Sys.Signal_handle (fun _ -> failwith Timout));
+                          (Sys.Signal_handle (fun _ -> raise Timeout));
                       ignore (Unix.alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
                                        Ssl.SSLv23
@@ -218,8 +218,8 @@ let bind_s ?(who = "") ?(cred = "") ?(auth_method = `SIMPLE) con =
                         bind_authentication=(Ldap_types.Simple cred)};
           controls=None};
        match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result={Ldap_types.result_code=`SUCCESS}}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result=res}} ->
+           {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result={Ldap_types.result_code=`SUCCESS;_};_};_} -> ()
+         | {Ldap_types.protocolOp=Ldap_types.Bind_response {Ldap_types.bind_result=res;_};_} ->
              raise (Ldap_types.LDAP_Failure
                       (res.Ldap_types.result_code, res.Ldap_types.error_message,
                        {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
@@ -268,11 +268,11 @@ let search ?(base = "") ?(scope = `SUBTREE) ?(aliasderef=`NEVERDEREFALIASES)
 let get_search_entry con msgid =
   try
     match receive_message con msgid with
-        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e} -> `Entry e
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r} -> `Referral r
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS}} ->
+        {Ldap_types.protocolOp=Ldap_types.Search_result_entry e;_} -> `Entry e
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_reference r;_} -> `Referral r
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done {Ldap_types.result_code=`SUCCESS;_};_} ->
           raise (Ldap_types.LDAP_Failure (`SUCCESS, "success", ext_res))
-      | {Ldap_types.protocolOp=Ldap_types.Search_result_done res} ->
+      | {Ldap_types.protocolOp=Ldap_types.Search_result_done res;_} ->
         raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                              {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                               ext_referral=res.Ldap_types.ldap_referral}))
@@ -329,8 +329,8 @@ let add_s con (entry: entry) =
           Ldap_types.protocolOp=Ldap_types.Add_request entry;
           controls=None};
        match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Add_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Add_response res} ->
+           {Ldap_types.protocolOp=Ldap_types.Add_response {Ldap_types.result_code=`SUCCESS;_};_} -> ()
+         | {Ldap_types.protocolOp=Ldap_types.Add_response res;_} ->
              raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
@@ -346,8 +346,8 @@ let delete_s con ~dn =
           Ldap_types.protocolOp=Ldap_types.Delete_request dn;
           controls=None};
        match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Delete_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Delete_response res} ->
+           {Ldap_types.protocolOp=Ldap_types.Delete_response {Ldap_types.result_code=`SUCCESS;_};_} -> ()
+         | {Ldap_types.protocolOp=Ldap_types.Delete_response res;_} ->
              raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
@@ -382,8 +382,8 @@ let modify_s con ~dn ~mods =
                         modification=convertmods mods};
           controls=None};
        match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Modify_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Modify_response res} ->
+           {Ldap_types.protocolOp=Ldap_types.Modify_response {Ldap_types.result_code=`SUCCESS;_};_} -> ()
+         | {Ldap_types.protocolOp=Ldap_types.Modify_response res;_} ->
              raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))
@@ -404,8 +404,8 @@ let modrdn_s ?(deleteoldrdn=true) ?(newsup=None) con ~dn ~newdn =
                         modn_newSuperior=None};
           controls=None};
        match receive_message con msgid with
-           {Ldap_types.protocolOp=Ldap_types.Modify_dn_response {Ldap_types.result_code=`SUCCESS}} -> ()
-         | {Ldap_types.protocolOp=Ldap_types.Modify_dn_response res} ->
+           {Ldap_types.protocolOp=Ldap_types.Modify_dn_response {Ldap_types.result_code=`SUCCESS;_};_} -> ()
+         | {Ldap_types.protocolOp=Ldap_types.Modify_dn_response res;_} ->
              raise (Ldap_types.LDAP_Failure (res.Ldap_types.result_code, res.Ldap_types.error_message,
                                   {Ldap_types.ext_matched_dn=res.Ldap_types.matched_dn;
                                    ext_referral=res.Ldap_types.ldap_referral}))

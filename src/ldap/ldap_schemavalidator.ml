@@ -1,6 +1,4 @@
 open Ldap_schema
-open Ldap_matchingrules
-open Ldap_syntaxes
 
 type schema_object =
     [ `Attribute of string
@@ -20,7 +18,7 @@ let validate schema =
   (* check that all musts, and all mays are attributes which exist. *)
   let errors =
     Lcmap.fold
-      (fun oc {oc_must=musts;oc_may=mays} errors ->
+      (fun oc {oc_must=musts;oc_may=mays;_} errors ->
          let oc = Lcstring.to_string oc in
          let check_error errors attr =
            try ignore (attrNameToAttr schema attr);errors
@@ -42,10 +40,10 @@ let validate schema =
     let oids = Hashtbl.create 100 in
     let seen = Hashtbl.create 100 in
       Oidmap.iter
-        (fun oid {at_name=n} -> Hashtbl.add oids oid (`Attribute (List.hd n)))
+        (fun oid {at_name=n;_} -> Hashtbl.add oids oid (`Attribute (List.hd n)))
         schema.attributes_byoid;
       Oidmap.iter
-        (fun oid {oc_name=n} -> Hashtbl.add oids oid (`Objectclass (List.hd n)))
+        (fun oid {oc_name=n;_} -> Hashtbl.add oids oid (`Objectclass (List.hd n)))
         schema.objectclasses_byoid;
       Hashtbl.fold
         (fun oid name errors ->
@@ -63,7 +61,7 @@ let validate schema =
     (* make sure all superior ocs are defined *)
   let errors =
     Lcmap.fold
-      (fun oc {oc_sup=sups} errors ->
+      (fun oc {oc_sup=sups;_} errors ->
          let oc = Lcstring.to_string oc in
            List.fold_left
              (fun errors sup ->
@@ -81,7 +79,7 @@ let validate schema =
     (* check that we know all of the syntaxes defined in the schema *)
   let errors =
     Lcmap.fold
-      (fun attr {at_syntax=syntax} errors ->
+      (fun attr {at_syntax=syntax;_} errors ->
          let attr = Lcstring.to_string attr in
            if Oidmap.mem syntax Ldap_syntaxes.syntaxes then errors
            else (`Attribute attr, Unknown_syntax syntax) :: errors)
@@ -97,7 +95,7 @@ let validate schema =
          let attrname = Lcstring.to_string attrname in
            try
              begin match lookupMatchingRule schema `Equality attr with
-                 Some mrule -> errors
+                 Some _mrule -> errors
                | None -> (* try it by syntax *)
                    if Oidmap.mem attr.at_syntax Ldap_matchingrules.equality_bysyntax then errors
                    else (`Attribute attrname, No_equality_matching_rule_defined) :: errors
