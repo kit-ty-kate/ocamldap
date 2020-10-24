@@ -177,6 +177,8 @@ let typecheck_schema schema =
   in
     errors
 
+exception Depth
+
 let schema_print_depth = ref 10
 let format_schema s =
   let indent = 3 in
@@ -190,9 +192,9 @@ let format_schema s =
                Format.print_break 1 indent;
                i := !i + 1
              end
-             else failwith "depth")
+             else raise Depth)
           tbl
-      with Failure "depth" -> Format.print_string "..."
+      with Depth -> Format.print_string "..."
   in
     Format.open_box 0;
     Format.print_string "{objectclasses = <HASHTBL ";
