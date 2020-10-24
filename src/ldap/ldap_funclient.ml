@@ -134,6 +134,8 @@ let receive_message con msgid =
       | Readbyte_error End_of_stream ->
           raise (LDAP_Failure (`LOCAL_ERROR, "bug in ldap decoder detected", ext_res))
 
+exception Timeout
+
 let init ?(connect_timeout = 1) ?(version = 3) hosts =
   if ((version < 2) || (version > 3)) then
     raise (LDAP_Failure (`LOCAL_ERROR, "invalid protocol version", ext_res))
@@ -169,7 +171,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                        try
                          previous_signal :=
                            signal sigalrm
-                             (Signal_handle (fun _ -> failwith "timeout"));
+                             (Signal_handle (fun _ -> raise Timeout));
                          ignore (alarm connect_timeout);
                          connect s (ADDR_INET (addr, port));
                          ignore (alarm 0);
@@ -179,7 +181,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    else
                      (previous_signal :=
                         signal sigalrm
-                          (Signal_handle (fun _ -> failwith "timeout"));
+                          (Signal_handle (fun _ -> raise Timeout));
                       ignore (alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
                                        Ssl.SSLv23
@@ -195,7 +197,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    | Unix_error (ECONNRESET, _, _)
                    | Unix_error (ECONNABORTED, _, _)
                    | Ssl.Connection_error _
-                   | Failure "timeout" ->
+                   | Timeout ->
                        ignore (alarm 0);
                        set_signal sigalrm !previous_signal;
                        open_con tl)
