@@ -52,7 +52,6 @@ type log_level =
     | `ERROR
     | `TRACE ]
 
-type msgid = int
 type opcnt = int
 type pending_operations = (unit -> unit) list
 
@@ -72,18 +71,18 @@ let allocate_connection_id si =
     (si.si_current_connection_id <- 1;1)
 
 let log_result conn_id op_nr si msg =
-  let log_search_result {result_code=err;error_message=text} =
+  let log_search_result {result_code=err;error_message=text;_} =
     si.si_log `OPERATIONS
       (sprintf "conn=%d op=%d SEARCH RESULT tag=0 err=%d nentries=0 text=%s"
          conn_id op_nr (Ldap_protocol.encode_resultcode err) text)
   in
-  let log_normal_result {result_code=err;error_message=text} =
+  let log_normal_result {result_code=err;error_message=text;_} =
     si.si_log `OPERATIONS
       (sprintf "conn=%d op=%d RESULT tag=0 err=%d text=%s"
          conn_id op_nr (Ldap_protocol.encode_resultcode err) text)
   in
     match msg.protocolOp with
-        Bind_response {bind_result=result}
+        Bind_response {bind_result=result;_}
       | Modify_response result
       | Add_response result
       | Delete_response result
@@ -109,7 +108,7 @@ let send_message si conn_id op_nr fd msg =
       (try close fd with _ -> ());
       raise (Server_error "data cannot be written")
 
-let keys h = Hashtbl.fold (fun k v l -> k :: l) h []
+let keys h = Hashtbl.fold (fun k _v l -> k :: l) h []
 
 let init ?(log=(fun _ _ -> ())) ?(port=389) bi =
   let s =
@@ -151,7 +150,7 @@ let dispatch_request si conn_id op_nr rb fd =
   in
   let message = decode_ldapmessage rb in
     match message with
-        {protocolOp=Bind_request {bind_name=dn;bind_authentication=auth}} ->
+        {protocolOp=Bind_request {bind_name=dn;bind_authentication=auth;_};_} ->
           si.si_log `OPERATIONS
             (sprintf "conn=%d op=%d BIND dn=\"%s\" method=128" conn_id op_nr dn);
           si.si_log `OPERATIONS
@@ -169,7 +168,7 @@ let dispatch_request si conn_id op_nr rb fd =
                                               {bind_result=not_implemented;
                                                bind_serverSaslCredentials=None}));
                           raise Finished))
-      | {protocolOp=Unbind_request} ->
+      | {protocolOp=Unbind_request;_} ->
           si.si_log `OPERATIONS
             (sprintf "conn=%d op=%d UNBIND" conn_id op_nr);
           (match bi.bi_op_unbind with
@@ -179,11 +178,11 @@ let dispatch_request si conn_id op_nr rb fd =
                        {baseObject=base;
                         scope=scope;
                         derefAliases=deref;
-                        sizeLimit=sizelimit;
-                        timeLimit=timelimit;
-                        typesOnly=attrsonly;
+                        sizeLimit=_sizelimit;
+                        timeLimit=_timelimit;
+                        typesOnly=_attrsonly;
                         filter=filter;
-                        s_attributes=attrs})} ->
+                        s_attributes=attrs});_} ->
           si.si_log `OPERATIONS
             (sprintf "conn=%d op=%d SRCH base=\"%s\" scope=%d deref=%d filter=\"%s\""
                conn_id op_nr base
@@ -216,7 +215,7 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Search_result_done not_implemented));
                           raise Finished))
-      | {protocolOp=Modify_request {mod_dn=modify;modification=modlst}} ->
+      | {protocolOp=Modify_request {mod_dn=modify;modification=modlst};_} ->
           si.si_log `OPERATIONS
             (sprintf "conn=%d op=%d MOD dn=\"%s\"" conn_id op_nr modify);
           si.si_log `OPERATIONS
@@ -235,7 +234,7 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Modify_response not_implemented));
                           raise Finished))
-      | {protocolOp=Add_request {sr_dn=dn}} ->
+      | {protocolOp=Add_request {sr_dn=dn;_};_} ->
           si.si_log `OPERATIONS (sprintf "conn=%d op=%d ADD dn=\"%s\"" conn_id op_nr dn);
           (match bi.bi_op_add with
                Some f -> (fun () ->
@@ -244,7 +243,7 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Add_response not_implemented));
                           raise Finished))
-      | {protocolOp=Delete_request dn} ->
+      | {protocolOp=Delete_request dn;_} ->
           si.si_log `OPERATIONS (sprintf "conn=%d op=%d DEL dn=\"%s\"" conn_id op_nr dn);
           (match bi.bi_op_delete with
                Some f -> (fun () ->
@@ -253,7 +252,7 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Delete_response not_implemented));
                           raise Finished))
-      | {protocolOp=Modify_dn_request {modn_dn=dn}} ->
+      | {protocolOp=Modify_dn_request {modn_dn=dn;_};_} ->
           si.si_log `OPERATIONS (sprintf "conn=%d op=%d MODRDN dn=\"%s\"" conn_id op_nr dn);
           (match bi.bi_op_modrdn with
                Some f -> (fun () ->
@@ -262,7 +261,7 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Modify_dn_response not_implemented));
                           raise Finished))
-      | {protocolOp=Compare_request {cmp_dn=dn;cmp_ava=ava}} ->
+      | {protocolOp=Compare_request {cmp_dn=dn;cmp_ava=ava};_} ->
           si.si_log `OPERATIONS
             (sprintf "conn=%d op=%d CMP dn=\"%s\" attr=\"%s\""
                conn_id op_nr dn ava.attributeDesc);
@@ -273,12 +272,12 @@ let dispatch_request si conn_id op_nr rb fd =
              | None -> (fun () -> send_message si conn_id op_nr fd
                           (not_imp message (Compare_response not_implemented));
                           raise Finished))
-      | {protocolOp=Abandon_request msgid} ->
+      | {protocolOp=Abandon_request msgid;_} ->
           si.si_log `OPERATIONS (sprintf "conn=%d op=%d ABANDON msgid=%ld" conn_id op_nr msgid);
           (match bi.bi_op_abandon with
                Some f -> (fun () -> f conn_id message;raise Finished)
              | None -> (fun () -> raise Finished))
-      | {protocolOp=Extended_request _} ->
+      | {protocolOp=Extended_request _;_} ->
           (match bi.bi_op_extended with
                Some f -> (fun () ->
                             send_message si conn_id op_nr fd (f conn_id message);

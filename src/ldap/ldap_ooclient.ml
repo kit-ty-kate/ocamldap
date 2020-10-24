@@ -53,30 +53,6 @@ object
   method print : unit
 end;;
 
-class type ldapcon_t =
-object
-  method add : ldapentry_t -> unit
-  method bind :
-    ?cred:string -> ?meth:Ldap_funclient.authmethod -> string -> unit
-  method delete : string -> unit
-  method modify :
-    string ->
-    (Ldap_types.modify_optype * string * string list) list -> unit
-  method modrdn : string -> ?deleteoldrdn:bool -> string -> unit
-  method rawschema : ldapentry_t
-  method schema : Ldap_schemaparser.schema
-  method search :
-    ?scope:Ldap_types.search_scope ->
-    ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> ldapentry_t list
-  method search_a :
-    ?scope:Ldap_types.search_scope ->
-    ?attrs:string list ->
-    ?attrsonly:bool -> ?base:string -> string -> (?abandon:bool -> unit -> ldapentry_t)
-  method unbind : unit
-  method update_entry : ldapentry_t -> unit
-end
-
 let format_entry e =
   Format.open_box 0;
   Format.open_box 2;
@@ -113,6 +89,8 @@ let format_entry e =
     Format.print_string ">";
     Format.close_box ()
 
+exception Limit
+
 let format_entries lst =
   let length = List.length lst in
   let i = ref 0 in
@@ -122,7 +100,7 @@ let format_entries lst =
       try
         List.iter
           (fun e ->
-             if !i > 49 then failwith "limit"
+             if !i > 49 then raise Limit
              else if !i < length - 1 then begin
                Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">; ");
                Format.print_cut ();
@@ -130,7 +108,7 @@ let format_entries lst =
              end else
                Format.print_string ("<ldapentry_t " ^ (String.escaped e#dn) ^ ">"))
           lst
-      with Failure "limit" -> Format.print_string "..."
+      with Limit -> Format.print_string "..."
     else
       List.iter
         (fun e ->
@@ -147,7 +125,7 @@ let format_entries lst =
 module CaseInsensitiveString =
   (struct
      type t = string * string
-     let of_string s = (s, String.lowercase s)
+     let of_string s = (s, String.lowercase_ascii s)
      let to_string x = fst x
      let compare x y = String.compare (snd x) (snd y)
    end
@@ -199,13 +177,13 @@ object (self)
   method flush_changes = changes <- []
   method changes = changes
 
-  method exists x = Hashtbl.mem data (String.lowercase x)
+  method exists x = Hashtbl.mem data (String.lowercase_ascii x)
   method add (x:op_lst) =
     let rec do_add (x:op_lst) =
       match x with
           [] -> ()
         | (name, value) :: lst ->
-            let lcname = String.lowercase name in
+            let lcname = String.lowercase_ascii name in
               try
                 Ulist.addlst (Hashtbl.find data lcname) value; do_add lst
               with Not_found ->
@@ -268,7 +246,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst ->
-            let lcname = String.lowercase attr in
+            let lcname = String.lowercase_ascii attr in
               match values with
                   [] -> Hashtbl.remove data lcname;do_delete lst
                 | _  ->
@@ -286,7 +264,7 @@ object (self)
       match x with
           [] -> ()
         | (attr, values) :: lst -> let n = Ulist.create 5 in
-            Ulist.addlst n values; Hashtbl.replace data (String.lowercase attr) n;
+            Ulist.addlst n values; Hashtbl.replace data (String.lowercase_ascii attr) n;
             do_replace lst;
     in
       do_replace x; self#push_change `REPLACE x
@@ -309,7 +287,7 @@ object (self)
     in
       keys data
 
-  method get_value attr = Ulist.tolst (Hashtbl.find data (String.lowercase attr))
+  method get_value attr = Ulist.tolst (Hashtbl.find data (String.lowercase_ascii attr))
   method set_dn x = dn <- x
   method dn = dn
   method print =
@@ -404,6 +382,8 @@ let fold (f:ldapentry -> 'a -> 'a) (v:'a) (res: ?abandon:bool -> unit -> ldapent
 (* a connection to an ldap server *)
 class ldapcon ?(connect_timeout=1) ?(referral_policy=`RETURN) ?(version = 3) hosts =
 object (self)
+  val _referral_policy = referral_policy (* TODO: not used?? *)
+
   val mutable bdn = ""
   val mutable pwd = ""
   val mutable mth = `SIMPLE
@@ -443,13 +423,13 @@ object (self)
 
   method delete dn =
     if not (reconnect_successful && bound) then self#reconnect;
-    try delete_s con dn
+    try delete_s con ~dn
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#delete dn
 
   method modify dn mods =
     if not (reconnect_successful && bound) then self#reconnect;
-    try modify_s con dn mods
+    try modify_s con ~dn ~mods
     with LDAP_Failure(`SERVER_DOWN, _, _) ->
       self#reconnect;self#modify dn mods
 
@@ -609,7 +589,7 @@ let attrToOid schema (attr:Lcstring.t) =
   try (Hashtbl.find schema.attributes attr).at_oid (* try canonical name first *)
   with Not_found ->
     (match (Hashtbl.fold
-              (fun k v matches ->
+              (fun _k v matches ->
                  if (List.exists
                        (fun n -> attr = (Lcstring.of_string n))
                        v.at_name)
@@ -699,7 +679,7 @@ object (self)
                              (fun sup -> lstRequired schema sup)
                              (getOc schema oc).oc_sup))
     in
-    let rec generate_requiredocs schema ocs =
+    let generate_requiredocs schema ocs =
       setOfList
         (List.rev_map
            (ocToOid schema)
@@ -882,8 +862,8 @@ object (self)
       let attr = getAttr schema (Lcstring.of_string (fst op)) in
         (if attr.at_single_value then
            (match op with
-                (attr, v1 :: v2 :: tail) -> false
-              | (attr, v1 :: tail) ->
+                (_attr, _v1 :: _v2 :: _tail) -> false
+              | (attr, _v1 :: _tail) ->
                   (if consider_present && (super#exists attr) then
                      false
                    else true)
@@ -896,18 +876,18 @@ object (self)
                          else self#single_val_check tail consider_present)
         |  [] -> ()
 
-  method add x =
+  method! add x =
     self#single_val_check x true;super#add x;
     self#drive_updatecon;self#drive_reconsile Optimistic
 
-  method delete x =
+  method! delete x =
     super#delete x;self#drive_updatecon;self#drive_reconsile Pessimistic
 
-  method replace x =
+  method! replace x =
     self#single_val_check x false;super#replace x;
     self#drive_updatecon;self#drive_reconsile Optimistic
 
-  method modify x =
+  method! modify x =
     let filter_mod x op =
       List.rev_map
         (fun (_, a, v) -> (a, v))
@@ -920,14 +900,14 @@ object (self)
       self#drive_updatecon;
       self#drive_reconsile Pessimistic
 
-  method get_value x =
+  method! get_value x =
     try super#get_value x with Not_found ->
       if (Setstr.mem (attrToOid schema (Lcstring.of_string x)) missingAttrs) then
         ["required"]
       else
         raise Not_found
 
-  method attributes =
+  method! attributes =
     List.rev_append
       super#attributes
       (List.rev_map
@@ -967,7 +947,7 @@ exception Service_dep_unsatisfiable of string;;
 exception Generator_dep_unsatisfiable of string * string;;
 exception Cannot_sort_dependancies of (string list);;
 
-let diff_values convert_to_oid convert_from_oid attr attrvals svcvals =
+let diff_values _convert_to_oid convert_from_oid attr attrvals svcvals =
     (attr, (List.rev_map
               convert_from_oid
               (Setstr.elements
@@ -977,7 +957,7 @@ let diff_values convert_to_oid convert_from_oid attr attrvals svcvals =
 
 (* compute the intersection of values between an attribute and a service,
    you need to pass this function as an argument to apply_set_op_to_values *)
-let intersect_values convert_to_oid convert_from_oid attr attrvals svcvals =
+let intersect_values _convert_to_oid convert_from_oid attr attrvals svcvals =
   (attr, (List.rev_map
             convert_from_oid
             (Setstr.elements
@@ -986,7 +966,7 @@ let intersect_values convert_to_oid convert_from_oid attr attrvals svcvals =
 (* this function allows you to apply a set operation to the values of an attribute, and
    the static values on a service *)
 let apply_set_op_to_values schema (attr:string) e svcval opfun =
-  let lc = String.lowercase in
+  let lc = String.lowercase_ascii in
   let convert_to_oid = (match lc ((getAttr schema (Lcstring.of_string attr)).at_equality) with
                             "objectidentifiermatch" ->
                               (fun oc -> ocToOid schema (Lcstring.of_string oc))
@@ -1047,7 +1027,7 @@ object (self)
                  (Hashtbl.find generators generator).required)))
       in
         (* collect a flat list of all generatable dependancies *)
-      let rec find_generatable_deps generators genlst =
+      let find_generatable_deps generators genlst =
         (List.flatten
            (List.rev_map
               (find_generatable_dep generators)
@@ -1057,7 +1037,7 @@ object (self)
            can generate. *)
       let generateing = (List.filter
                            (fun gen ->
-                              if (Hashtbl.mem generators (String.lowercase (oidToAttr schema gen))) then
+                              if (Hashtbl.mem generators (String.lowercase_ascii (oidToAttr schema gen))) then
                                 true
                               else false)
                            (List.rev_append
@@ -1072,7 +1052,7 @@ object (self)
           (List.rev_append generateing (find_generatable_deps
                                           generators
                                           (List.rev_map
-                                             (fun e -> String.lowercase (oidToAttr schema e))
+                                             (fun e -> String.lowercase_ascii (oidToAttr schema e))
                                              generateing)))
     in
     let generate_missing togen generators =
@@ -1095,7 +1075,7 @@ object (self)
       toGenerate <- generate_togenerate generators super#list_missing toGenerate;
       neededByGenerators <- generate_missing toGenerate generators;
 
-  method list_missing =
+  method! list_missing =
     let allmissing =
       Setstr.union neededByGenerators (setOfList super#list_missing)
     in
@@ -1108,7 +1088,7 @@ object (self)
                  toGenerate
                  (setOfList super#list_present))))
 
-  method attributes =
+  method! attributes =
     (List.rev_map (oidToAttr schema)
        (Setstr.elements
           (Setstr.union toGenerate
@@ -1117,7 +1097,7 @@ object (self)
                    (fun a -> attrToOid schema (Lcstring.of_string a))
                    super#attributes)))))
 
-  method is_missing x = (not (Setstr.mem
+  method! is_missing x = (not (Setstr.mem
                                 (attrToOid schema (Lcstring.of_string x))
                                 toGenerate))
                         || (super#is_missing x)
@@ -1155,13 +1135,13 @@ object (self)
                   self#add [(attr, (Hashtbl.find generators attr).genfun (self:>ldapentry_t))])
                (sort_genlst generators
                   (List.rev_map
-                     (fun elt -> String.lowercase (oidToAttr schema elt))
+                     (fun elt -> String.lowercase_ascii (oidToAttr schema elt))
                      (Setstr.elements toGenerate))));
             toGenerate <- Setstr.empty
         | a  -> raise (Generation_failed
                          (Missing_required (List.rev_map (oidToAttr schema) a)))
 
-  method get_value x =
+  method! get_value x =
     if (Setstr.mem (attrToOid schema (Lcstring.of_string x)) toGenerate) then
       ["generate"]
     else
@@ -1175,7 +1155,7 @@ object (self)
        static_attrs=(List.filter
                           (fun cons ->
                              match cons with
-                                 (attr, []) -> false
+                                 (_attr, []) -> false
                                | _          -> true)
                           (List.rev_map
                              (fun cons -> apply_set_op_to_values schema (fst cons) self cons diff_values)
@@ -1190,7 +1170,7 @@ object (self)
 (* add a service to the account, if they already satisfy the service
    then do nothing *)
   method add_service svc =
-    let service = try Hashtbl.find services (String.lowercase svc)
+    let service = try Hashtbl.find services (String.lowercase_ascii svc)
     with Not_found -> raise (No_service svc) in
       (try List.iter (self#add_service) service.depends
        with (No_service x) -> raise (Service_dep_unsatisfiable x));
@@ -1224,12 +1204,12 @@ object (self)
               deplst)
          services [])
     in
-    let service = try Hashtbl.find services (String.lowercase svc)
+    let service = try Hashtbl.find services (String.lowercase_ascii svc)
     with Not_found -> raise (No_service svc) in
       (List.iter (self#delete_service) (find_deps services svc));
       (List.iter
          (fun e -> match e with
-              (attr, []) -> ()
+              (_attr, []) -> ()
             | a -> (try (ignore (super#get_value (fst a)));super#delete [a]
                     with Not_found -> ()))
          (List.rev_map
@@ -1249,7 +1229,7 @@ object (self)
                    with Not_found -> raise (No_service service))
     in
       match self#adapt_service service with
-          {svc_name=s;
+          {svc_name=_s;
            static_attrs=[];
            generate_attrs=[];
            depends=d} -> (match d with
@@ -1259,16 +1239,16 @@ object (self)
 
   method services_present =
     Hashtbl.fold
-      (fun k v l ->
+      (fun _k v l ->
          if self#service_exists v.svc_name then
            v.svc_name :: l
          else l)
       services []
 
-  method of_entry ?(scflavor=Pessimistic) e = super#of_entry ~scflavor e;self#resolve_missing
+  method! of_entry ?(scflavor=Pessimistic) e = super#of_entry ~scflavor e;self#resolve_missing
 
   method add_generate x =
-    (if (Hashtbl.mem generators (String.lowercase x)) then
+    (if (Hashtbl.mem generators (String.lowercase_ascii x)) then
        toGenerate <- Setstr.add (attrToOid schema (Lcstring.of_string x)) toGenerate
      else raise (No_generator x));
     self#resolve_missing
@@ -1287,7 +1267,7 @@ object (self)
       Setstr.remove
         (attrToOid schema (Lcstring.of_string x)) toGenerate
 
-  method add x = (* add x, remove all attributes in x from the list of generated attributes *)
+  method! add x = (* add x, remove all attributes in x from the list of generated attributes *)
     super#add x;
     (List.iter
       (fun a ->
@@ -1296,8 +1276,8 @@ object (self)
                           toGenerate))
        x);
     self#resolve_missing
-  method delete x = super#delete x;self#resolve_missing
-  method replace x = (* replace x, removeing it from the list of generated attrs *)
+  method! delete x = super#delete x;self#resolve_missing
+  method! replace x = (* replace x, removeing it from the list of generated attrs *)
     super#replace x;
     (List.iter
        (fun a ->

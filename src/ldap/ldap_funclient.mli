@@ -21,9 +21,7 @@
 
 (** a functional ldap client interface *)
 
-open Unix
 open Ldap_types
-open Lber
 
 type msgid
 type conn
@@ -39,6 +37,7 @@ type page_control =
   [ `Noctrl
   | `Initctrl of int
   | `Subctrl of (int * string) ]
+
 (** Initializes the conn data structure, and opens a connection to the
   server.  init
   [["ldap://rrhost.example.com/";"ldap://backup.example.com:1389"]].

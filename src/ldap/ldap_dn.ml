@@ -20,7 +20,6 @@
 *)
 
 open Ldap_types
-open Ldap_dnparser
 open Ldap_dnlexer
 open Printf
 
@@ -96,7 +95,7 @@ let escape_value valu =
           Buffer.add_string buf "\\ ";
           Stream.junk strm;
           escape strm buf
-      | Some c -> escape strm buf
+      | Some _c -> escape strm buf
       | None -> ""
 
 let to_string dn =
@@ -130,4 +129,4 @@ let to_string dn =
   in
     components_to_dn "" (dn_to_strcomponents dn)
 
-let canonical_dn dn = String.lowercase (to_string (of_string dn))
+let canonical_dn dn = String.lowercase_ascii (to_string (of_string dn))

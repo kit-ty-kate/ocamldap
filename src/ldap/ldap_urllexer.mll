@@ -21,7 +21,6 @@
 
 {
   open Ldap_types
-  open Str
 
   type lexeme = SCHEME
                 | COLONSLASHSLASH

@@ -45,7 +45,7 @@ let format_oid id =
 module Lcstring =
   (struct
      type t = string
-     let of_string s = String.lowercase s
+     let of_string s = String.lowercase_ascii s
      let to_string x = x
      let compare x y = String.compare x y
    end
@@ -94,89 +94,6 @@ type schema = {objectclasses: (Lcstring.t, objectclass) Hashtbl.t;
                attributes: (Lcstring.t, attribute) Hashtbl.t;
                attributes_byoid: (Oid.t, attribute) Hashtbl.t};;
 
-type schema_error = Undefined_attr_reference of string
-                    | Undefined_oc_reference of string
-                    | Cross_linked_oid of string list
-
-let typecheck_schema schema =
-  let attribute_exists_p schema attr =
-    if Hashtbl.mem schema.attributes attr then true
-    else
-      Hashtbl.fold
-        (fun _ {at_name=names} b ->
-           if b then b
-           else
-             List.exists
-               (fun name -> (Lcstring.of_string name) = attr)
-               names)
-        schema.attributes
-        false
-  in
-    (* check that all musts, and all mays are attributes which
-       exist. It would be an error to specify a must or a may which does
-       not exist. *)
-  let errors =
-    Hashtbl.fold
-      (fun oc {oc_must=musts;oc_may=mays} errors ->
-         let check_error errors attr =
-           if not (attribute_exists_p schema attr) then
-             (Lcstring.to_string oc,
-              Undefined_attr_reference (Lcstring.to_string attr)) :: errors
-           else errors
-         in
-           (List.rev_append
-              errors
-              (List.rev_append
-                 (List.fold_left check_error [] musts)
-                 (List.fold_left check_error [] mays))))
-      schema.objectclasses
-      []
-  in
-    (* check for cross linked oids *)
-  let errors =
-    let oids = Hashtbl.create 100 in
-    let seen = Hashtbl.create 100 in
-      Hashtbl.iter
-        (fun oid {at_name=n} -> Hashtbl.add oids oid (List.hd n))
-        schema.attributes_byoid;
-      Hashtbl.iter
-        (fun oid {oc_name=n} -> Hashtbl.add oids oid (List.hd n))
-        schema.objectclasses_byoid;
-      Hashtbl.fold
-        (fun oid name errors ->
-           if List.length (Hashtbl.find_all oids oid) > 1 then
-             if Hashtbl.mem seen oid then
-               errors
-             else (
-               Hashtbl.add seen oid ();
-               (name, Cross_linked_oid (Hashtbl.find_all oids oid)) :: errors
-             )
-           else
-             errors
-        )
-        oids
-        errors
-  in
-    (* make sure all superior ocs are defined *)
-  let errors =
-    Hashtbl.fold
-      (fun oc {oc_sup=sups} errors ->
-          List.rev_append
-            errors
-            (List.rev_map
-               (fun missing -> (missing, Undefined_oc_reference missing))
-               (List.filter
-                  (fun oc ->
-                     not
-                       (Hashtbl.mem
-                          schema.objectclasses
-                          (Lcstring.of_string oc)))
-                  (List.rev_map Lcstring.to_string sups))))
-      schema.objectclasses
-      errors
-  in
-    errors
-
 exception Depth
 
 let schema_print_depth = ref 10
@@ -186,7 +103,7 @@ let format_schema s =
     let i = ref 0 in
       try
         Hashtbl.iter
-          (fun aname aval ->
+          (fun aname _aval ->
              if !i < !schema_print_depth then begin
                Format.print_string ("<KEY " ^ (Lcstring.to_string aname) ^ ">");
                Format.print_break 1 indent;
@@ -217,7 +134,7 @@ exception Parse_error_at of Lexing.lexbuf * attribute * string;;
 exception Syntax_error_oc of Lexing.lexbuf * objectclass * string;;
 exception Syntax_error_at of Lexing.lexbuf * attribute * string;;
 
-let rec readSchema oclst attrlst =
+let readSchema oclst attrlst =
   let empty_oc = {oc_name=[];oc_oid=Oid.of_string "";oc_desc="";oc_obsolete=false;oc_sup=[];
                   oc_must=[];oc_may=[];oc_type=Abstract;oc_xattr=[]}
   in
@@ -272,7 +189,7 @@ let rec readSchema oclst attrlst =
           Hashtbl.add schema.objectclasses_byoid oc.oc_oid oc;readOcs l schema
       | [] -> ()
   in
-  let rec readAttr lxbuf attr =
+  let readAttr lxbuf attr =
     let rec readOptionalFields lxbuf attr =
       try match (lexattr lxbuf) with
           Name s              -> readOptionalFields lxbuf {attr with at_name=s}

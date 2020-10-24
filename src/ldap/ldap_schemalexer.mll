@@ -50,6 +50,8 @@
   let splitoidlst buf regex = Str.split regex buf;;
   let stripquote buf = Str.global_replace quote "" buf
   let stripquotes lst = List.map (fun item -> stripquote item) lst
+
+  [@@@ocaml.warning "-26"]
 }
 
 (* conversion definitions, from rfc 2252. I've tried to keep the names

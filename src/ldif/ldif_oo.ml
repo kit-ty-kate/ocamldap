@@ -21,11 +21,9 @@
 *)
 
 
-open Str
 open Netencoding
 open Ldap_ooclient
 open Ldif_parser
-open Ldap_types
 
 let safe_string_regex =
   Str.regexp "^[\x01-\x09\x0b-\x0c\x0e-\x7f]+$"
@@ -98,7 +96,7 @@ let fold f ldif v =
     List.fold_left f v objects
 
 class ldif ?(in_ch=stdin) ?(out_ch=stdout) () =
-object (self)
+object (_self)
   val in_ch  = {stream=(Stream.of_channel in_ch);buf=Buffer.create 256;line=1}
   val out_ch = out_ch
   val outbuf = Buffer.create 50

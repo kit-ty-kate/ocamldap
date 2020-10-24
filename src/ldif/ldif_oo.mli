@@ -45,8 +45,8 @@ val read_ldif_file : string -> Ldap_ooclient.ldapentry list
 val write_ldif_file : string -> Ldap_ooclient.ldapentry list -> unit
 
 class ldif:
-  ?in_ch:Pervasives.in_channel ->
-  ?out_ch:Pervasives.out_channel ->
+  ?in_ch:in_channel ->
+  ?out_ch:out_channel ->
   unit ->
 object
   method read_entry: Ldap_ooclient.ldapentry

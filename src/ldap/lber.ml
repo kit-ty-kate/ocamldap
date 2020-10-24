@@ -127,7 +127,7 @@ let readbyte_of_ber_element limit (rb:readbyte) =
           raise (Readbyte_error Not_implemented)
 
 (* return a readbyte implementation which works using a string *)
-let readbyte_of_string octets =
+let readbyte_of_string _octets =
 (*  let strm = Stream.of_string octets in
   let peek_counter = ref 1 in
   let limit = ref 0 in
@@ -164,7 +164,7 @@ let readbyte_of_readfun rfun =
   let peek_buf_len = ref 0 in
   let read buf off len =
     try rfun buf off len
-    with exn -> raise (Readbyte_error Transport_error)
+    with _ -> raise (Readbyte_error Transport_error)
   in
   let read_at_least_nbytes buf off len nbytes =
     let total = ref 0 in
@@ -348,7 +348,7 @@ let encode_ber_header {ber_class=cls;ber_primitive=pri;ber_tag=tag;ber_length=le
     else
       Buffer.add_char buf (char_of_int tag)
   in
-  let rec long_form_length len buf = (* sec 8.1.3.5 encode the length in up to 1 + 4 octets *)
+  let long_form_length len buf = (* sec 8.1.3.5 encode the length in up to 1 + 4 octets *)
     if len < 255 then (* fits in 8 bits? *)
       (Buffer.add_char buf (char_of_int 0b1000_0001); (* long form with one octet *)
        Buffer.add_char buf (char_of_int len))
@@ -402,11 +402,6 @@ let read_contents ?(peek=false) (readbyte:readbyte) len =
         Definite n -> if n = 0 then "" else readbyte ~peek n
       | Indefinite -> readuntileoc readbyte (Buffer.create 5)
 
-let decode_ber_end_of_contents ?(peek=false) (readbyte:readbyte) =
-  if not (((int_of_char (readbyte ~peek 1).[0]) = 0) &&
-          (int_of_char (readbyte ~peek 1).[0]) = 0) then
-    raise (Decoding_error "missing end of contents octets")
-
 (* sec. 8.2 *)
 let decode_ber_bool ?(peek=false) ?(cls=Universal) ?(tag=1) ?(contents=None)
   (readbyte:readbyte) =
@@ -416,7 +411,7 @@ let decode_ber_bool ?(peek=false) ?(cls=Universal) ?(tag=1) ?(contents=None)
     match contents with
         None ->
           (match decode_ber_header ~peek:peek readbyte with
-               {ber_class=c;ber_tag=t;ber_length=bool_length} when c=cls && t=tag ->
+               {ber_class=c;ber_tag=t;ber_length=bool_length;_} when c=cls && t=tag ->
                  decode_ber_bool' (read_contents ~peek:peek readbyte bool_length)
              | _ -> raise (Decoding_error "expected bool"))
       | Some contents -> decode_ber_bool' contents
@@ -461,7 +456,7 @@ let decode_ber_int32 ?(peek=false) ?(cls=Universal) ?(tag=2) ?(contents=None)
     match contents with
         None -> (* we have not yet read the header, and unpacked the contents *)
           (match decode_ber_header ~peek:peek readbyte with
-               {ber_class=c;ber_tag=t;ber_length=int_length} when c=cls && t=tag ->
+               {ber_class=c;ber_tag=t;ber_length=int_length;_} when c=cls && t=tag ->
                  decode_ber_int32' (read_contents ~peek:peek readbyte int_length)
              | _ -> raise (Decoding_error "expected int"))
       | Some contents -> decode_ber_int32' contents (* we already have the contents *)
@@ -630,7 +625,7 @@ let decode_ber_octetstring ?(peek=false) ?(cls=Universal) ?(tag=4) ?(contents=No
   match contents with
       None -> (* have not yet read the header, or unpacked the contents *)
         (match decode_ber_header readbyte with
-             {ber_class=c;ber_tag=t;ber_length=octetstring_length} when c=cls && t=tag ->
+             {ber_class=c;ber_tag=t;ber_length=octetstring_length;_} when c=cls && t=tag ->
                read_contents ~peek readbyte octetstring_length
            | _ -> raise (Decoding_error "expected octetstring"))
     | Some contents -> contents
@@ -655,11 +650,11 @@ let encode_ber_null ?(cls=Universal) ?(tag=5) () =
 
 let decode_ber_null ?(peek=false) ?(cls=Universal) ?(tag=5) ?(contents=None)
   (readbyte:readbyte) =
-  let decode_ber_null' contents = () in
+  let decode_ber_null' _contents = () in (* TODO: Is this normal?! *)
     match contents with
         None ->
           (match decode_ber_header ~peek:peek readbyte with
-               {ber_class=c; ber_tag=t; ber_length=l}
+               {ber_class=c; ber_tag=t; ber_length=l; _}
                  when c=cls && t=tag && l=Definite 0 ->
                    decode_ber_null' None
              | _ -> raise (Decoding_error "expected null"))
