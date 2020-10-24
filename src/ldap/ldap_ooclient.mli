@@ -102,8 +102,8 @@ object
     (** clear all accumulated changes *)
     method flush_changes : unit
 
-    (** get the value of an attribute @raise Not_found If the
-        attribute does not exist. *)
+    (** get the value of an attribute
+        @raise Not_found If the attribute does not exist. *)
     method get_value : string -> string list
 
     (** Apply modifications to object in memory, does not change the
@@ -151,7 +151,8 @@ type changerec =
     | `Delete of string
     | `Modrdn of string * int * string]
 
-(** {1 Communication With {!Ldap_funclient}} *)
+(** {1 Communication with Ldap_funclient} *)
+(** See {!Ldap_funclient} *)
 
 (** given a search_result_entry as returned by ldap_funclient, produce an
     ldapentry containing either the entry, or the referral object *)
@@ -358,14 +359,15 @@ val fold : (ldapentry -> 'a -> 'a) -> 'a -> (?abandon:bool -> unit -> ldapentry)
 
 (** {1 Schema Aware ldapentry Derivatives} *)
 
-(** {2 General Schema Aware Entry} {!Ldap_ooclient.scldapentry}, A
-    schema aware derivative of {!Ldap_ooclient.ldapentry}. It contains
-    an rfc2252 schema checker, and given the database schema, it can
+(** {2 General Schema Aware Entry} *)
+(** {!Ldap_ooclient.scldapentry}, A schema aware derivative of {!Ldap_ooclient.ldapentry}.
+    It contains an rfc2252 schema checker, and given the database schema, it can
     be used to garentee that operations performed in memory are valid
     against a standards compliant database. It has numerious uses,
     translation between two databases with different schemas an
     example of where it finds natural usage. For an example
-    application @see <http://tdir.sourceforge.net> tdir *)
+    application
+    @see <http://tdir.sourceforge.net> tdir *)
 
 (** an ordered oid type, for placing oids in sets *)
 module OrdOid :
@@ -374,7 +376,8 @@ sig
   val compare : t -> t -> int
 end
 
-(** A set of Oids @deprecated the name is historical, and may be changed *)
+(** A set of Oids
+    @deprecated the name is historical, and may be changed *)
 module Setstr :
 sig
   type elt = OrdOid.t
@@ -416,32 +419,29 @@ type scflavor =
       (** Delete objectclasses which must attributes which are
           missing, and delete illegal attributes. *)
 
-(** given a name of an attribute name (canonical or otherwise), return
-    its oid @raise Invalid_attribute If the attribute is not found in the schema. *)
+(** given a name of an attribute name (canonical or otherwise), return its oid
+    @raise Invalid_attribute If the attribute is not found in the schema. *)
 val attrToOid :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t
 
-(** given the oid of an attribute, return its canonical name @raise
-    Invalid_attribute If the attribute is not found in the schema. *)
+(** given the oid of an attribute, return its canonical name
+    @raise Invalid_attribute If the attribute is not found in the schema. *)
 val oidToAttr : Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string
 
-(** given a name of an objectclass (canonical or otherwise), return
-    its oid. @raise Invalid_objectclass If the objectclass is not
-    found in the schema. *)
+(** given a name of an objectclass (canonical or otherwise), return its oid.
+    @raise Invalid_objectclass If the objectclass is not found in the schema. *)
 val ocToOid :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Oid.t
 
-(** given the oid of an objectclass, return its canonical name @raise
-    Invalid_objectclass If the objectclass is not found in the
-    schema. *)
+(** given the oid of an objectclass, return its canonical name
+    @raise Invalid_objectclass If the objectclass is not found in the schema. *)
 val oidToOc : Ldap_schemaparser.schema -> Ldap_schemaparser.Oid.t -> string
 
 (** get an objectclass structure by one of its names (canonical or
-    otherwise, however getting it by canonical name is currently much
-    faster) @raise Invalid_objectclass If the objectclass is not found
-    in the schema. *)
+    otherwise, however getting it by canonical name is currently much faster)
+    @raise Invalid_objectclass If the objectclass is not found in the schema. *)
 val getOc :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.objectclass
@@ -455,9 +455,8 @@ val getAttr :
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.attribute
 
 (** equate attributes by oid. This allows non canonical names to be
-    handled correctly, for example "uid" and "userID" are actually the
-    same attribute. @raise Invalid_attribute If either attribute is
-    not found in the schema. *)
+    handled correctly, for example "uid" and "userID" are actually the same attribute.
+    @raise Invalid_attribute If either attribute is not found in the schema. *)
 val equateAttrs :
   Ldap_schemaparser.schema ->
   Ldap_schemaparser.Lcstring.t -> Ldap_schemaparser.Lcstring.t -> bool
@@ -569,8 +568,8 @@ object
   method set_dn : string -> unit
 end
 
-(** {1 Schema Aware Entry for Account Managment} A derivative of
-    {!Ldap_ooclient.scldapentry} which includes abstractions for
+(** {1 Schema Aware Entry for Account Managment} *)
+(** A derivative of {!Ldap_ooclient.scldapentry} which includes abstractions for
     managing user accounts in the directory. This class is
     experimantal, and may be drastically changed in the next version.
     As with all experimental code, use with caution. A few of its features.
@@ -696,7 +695,8 @@ object
       method in order to run any generators at all.  *)
   method generate : unit
 
-  (** {2 Inherited Methods} Unless explicitly stated, these methods
+  (** {2 Inherited Methods} *)
+  (** Unless explicitly stated, these methods
       do exactly the same thing as in {!Ldap_ooclient.scldapentry} *)
 
   (** Missing attributes may be marked for generation. *)
