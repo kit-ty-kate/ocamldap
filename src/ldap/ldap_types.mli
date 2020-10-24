@@ -20,8 +20,8 @@
 *)
 
 (** Common data types used by ocamldap. Most of these types are taken
-  from the ASN.1 specification for LDAP as defined in rfc2251 @see
-  <http://www.ietf.org/rfc/rfc2251.txt> rfc2251*)
+  from the ASN.1 specification for LDAP as defined in rfc2251
+  @see <http://www.ietf.org/rfc/rfc2251.txt> rfc2251 *)
 
 (** An encoding error has occurred, the argument contains a
   description of the error This is likely a bug, so it should be
