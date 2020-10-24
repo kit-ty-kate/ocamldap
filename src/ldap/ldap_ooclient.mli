@@ -214,6 +214,7 @@ class ldapcon :
   ?version:int ->
   string list ->
 object
+
   (** {1 Authentication} *)
 
   (** bind to the database using dn.
@@ -469,6 +470,7 @@ exception Objectclass_is_required
 class scldapentry :
   Ldap_schemaparser.schema ->
 object
+
   (** {2 New Methods} *)
 
   (** Returns true if the attributed specified is allowed by the
