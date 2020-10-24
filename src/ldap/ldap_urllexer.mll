@@ -37,6 +37,8 @@
                 | SLASH
                 | WHSP
                 | COMMA
+
+  exception SyntaxError
 }
 
 let port = ['0' - '9']+
@@ -47,7 +49,7 @@ let filter = [' ' '(' ')' '&' '|' '!' '~' '=' '>' '<' '.' '\\' '0' - '9' 'a' - '
 let scope = "base" | "one" | "sub"
 
 rule lexurl = parse
-    (("ldap" 's'?) as mech) "://" (host as host)? (':' (port as port))? '/'? eof
+  | (("ldap" 's'?) as mech) "://" (host as host)? (':' (port as port))? '/'? eof
       {{url_mech=(match mech with "ldap" -> `PLAIN | "ldaps" -> `SSL
                     | _ -> failwith "invalid mechanism") ;
         url_host=host;
@@ -57,6 +59,7 @@ rule lexurl = parse
         url_scope=None;
         url_filter=None;
         url_ext=None}}
+  | _ | eof { raise SyntaxError }
 
 (*
 rule lexurl = parse
