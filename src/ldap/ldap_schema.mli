@@ -144,7 +144,8 @@ exception Parse_error_at of Lexing.lexbuf * attribute * string
 exception Syntax_error_oc of Lexing.lexbuf * objectclass * string
 exception Syntax_error_at of Lexing.lexbuf * attribute * string
 
-(** {1 Schema Access Functions} A set of functions which should be
+(** {1 Schema Access Functions} *)
+(** A set of functions which should be
     used to access the schema. All functions on Oid types are O(1),
     all functions dealing with names are O(1) for canonical names, and
     O(n) for non canonical names. Functions which return names will
