@@ -17,7 +17,7 @@ build: [
     "@doc" {with-doc}
 ]
 depends: [
-  "ocaml" {>= "4.02.3"}
+  "ocaml" {>= "4.03.0"}
   "dune" {>= "1.0"}
   "ocamlnet" {>= "3.6.0"}
   "pcre"

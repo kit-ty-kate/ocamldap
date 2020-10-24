@@ -19,25 +19,19 @@
    USA
 *)
 
-open Ldap_types
-open Ldap_url
-open Ldap_funclient
 open Ldap_ooclient
 open Ldif_oo
 open Arg
-open Printf
 
-let _ =
+let () =
   (* stuff to handle command line args *)
   let usg = "testoo -H <ldapurl> -D <dn> -w <pass> -b <base> <filter>" in
   let host = ref "" in
-  let port = ref 389 in
   let binddn = ref "" in
   let cred = ref "" in
   let base = ref "" in
   let filter = ref "" in
   let set_host x = host := x in
-  let set_port x = port := x in
   let set_binddn x = binddn := x in
   let set_cred x = cred := x in
   let set_base x = base := x in
