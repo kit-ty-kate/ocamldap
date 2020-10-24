@@ -22,8 +22,6 @@
 
 (* $Id$ *)
 
-open Ldif_oo
-
 let _ =
   let ldif = new Ldif_oo.ldif () in
     ldif#write_entry ldif#read_entry,

@@ -24,7 +24,6 @@
 open Ldap_types
 open Ldap_funclient
 open Arg
-open Printf
 
 let ldif_buffer = Buffer.create 3124
 let print_entry e =
@@ -46,18 +45,16 @@ let print_entry e =
 	Buffer.add_string ldif_buffer "\n";
 	Buffer.output_buffer stdout ldif_buffer;
 	Buffer.clear ldif_buffer
-    | `Referral f -> ()
+    | `Referral _f -> ()
 
 let main () =
   let usg = "test -H <ldapurl> -D <dn> -w <pass> -b <base> <filter>" in
   let host = ref "" in
-  let port = ref 389 in
   let binddn = ref "" in
   let cred = ref "" in
   let base = ref "" in
   let filter = ref "" in
   let set_host x = host := x in
-  let set_port x = port := x in
   let set_binddn x = binddn := x in
   let set_cred x = cred := x in
   let set_base x = base := x in
