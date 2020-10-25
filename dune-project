@@ -1,6 +1,6 @@
 (lang dune 2.7)
 (name ldap)
-(version 2.4.1)
+(version 2.4.2)
 
 (formatting disabled)
 (generate_opam_files true)

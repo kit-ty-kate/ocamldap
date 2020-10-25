@@ -1,3 +1,8 @@
+2.4.2
+    * Upgrade to dune 2.7
+    * Cleanup: Remove every warnings (tested from OCaml 4.03 to 4.11)
+    * Drop the OCaml 4.02 compatibility
+    * Setup a documentation website at https://kit-ty-kate.github.io/ocamldap
 2.4.1
     * Switched from jbuilder to dune
     * Fix suspicious int literal (by @hhugo)
