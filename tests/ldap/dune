@@ -2,8 +2,8 @@
   (names test page_result_control_test lber_tests)
   (libraries ldap))
 
-(alias
-  (name runtest)
+(rule
+  (alias runtest)
   (deps test.exe)
   (action
     (progn
