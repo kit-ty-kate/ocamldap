@@ -6,7 +6,7 @@
 (generate_opam_files true)
 (implicit_transitive_deps true)
 
-(license "LGPL-2.1 with OCaml linking exception")
+(license "LGPL-2.1-only with OCaml-LGPL-linking-exception")
 (maintainers "Kate <kit.ty.kate@disroot.org>")
 (authors "Eric Stokes <letaris@me.com>")
 (source (github kit-ty-kate/ocamldap))
