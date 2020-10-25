@@ -1,6 +1,6 @@
 (executables
   (names testldif testoo)
-  (libraries ldif))
+  (libraries ldap ldif))
 
 (alias
   (name runtest)

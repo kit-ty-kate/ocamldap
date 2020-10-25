@@ -4,7 +4,7 @@
 
 (formatting disabled)
 (generate_opam_files true)
-(implicit_transitive_deps true)
+(implicit_transitive_deps false)
 
 (license "LGPL-2.1-only with OCaml-LGPL-linking-exception")
 (maintainers "Kate <kit.ty.kate@disroot.org>")
