@@ -97,5 +97,5 @@ changerec:
                                              ($1,
                                               int_of_string (snd $3),
                                               snd $4)}
-| End_of_input {failwith "end"}
+| End_of_input {raise Ldif_types.Changerec_parser_end}
 ;

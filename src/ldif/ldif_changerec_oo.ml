@@ -76,13 +76,13 @@ object (_self)
   method read_changerec =
     try changerec lexcr lxbuf
     with
-      Failure "end" [@ocaml.warning "-52"] (* TODO: find a way to remove this *) -> raise End_of_changerecs
+        Ldif_types.Changerec_parser_end -> raise End_of_changerecs
       | Failure s -> raise (Invalid_changerec s)
   method of_string (s:string) =
     let lx = Lexing.from_string s in
       try changerec lexcr lx
       with
-          Failure "end" [@ocaml.warning "-52"] (* TODO: find a way to remove this *) -> raise End_of_changerecs
+          Ldif_types.Changerec_parser_end -> raise End_of_changerecs
         | Failure s -> raise (Invalid_changerec s)
   method to_string (e:changerec) =
     let res = Buffer.contents (insert_change buf e) in
