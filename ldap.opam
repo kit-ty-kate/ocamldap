@@ -3,7 +3,7 @@ version: "2.5.0"
 synopsis: "Implementation of the Light Weight Directory Access Protocol"
 maintainer: ["Kate <kit-ty-kate@outlook.com>"]
 authors: ["Eric Stokes <letaris@me.com>"]
-license: "LGPL-2.1-only with OCaml-LGPL-linking-exception"
+license: "LGPL-2.1-only WITH OCaml-LGPL-linking-exception"
 tags: ["ldap"]
 homepage: "https://github.com/kit-ty-kate/ocamldap"
 doc: "https://kit-ty-kate.github.io/ocamldap"
