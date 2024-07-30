@@ -1,3 +1,9 @@
+2.5.0 (30/07/2024)
+------------------
+    * Disable implicit transitive dependencies when building
+    * Use camlp-streams to remove a deprecation warning in OCaml 4.14
+    * Switch from using pcre to re (pure OCaml regexp implementation)
+
 2.4.2 (25/10/2020)
 ------------------
     * Upgrade to dune 2.7
