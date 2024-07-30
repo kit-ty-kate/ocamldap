@@ -183,7 +183,7 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                           (Signal_handle (fun _ -> raise Timeout));
                       ignore (alarm connect_timeout);
                       let ssl = Ssl (Ssl.open_connection
-                                       Ssl.SSLv23
+                                       (Ssl.SSLv23 [@ocaml.alert "-deprecated"])
                                        (ADDR_INET (addr, port)))
                       in
                         ignore (alarm 0);

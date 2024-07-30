@@ -22,11 +22,11 @@
   open Ldap_filterparser
   open Ldap_types
 
-  let star = Pcre.regexp ~study:true "\\*"
+  let star = Re.compile (Re.char '*')
   let substr_proto = {substr_initial=[];substr_any=[];substr_final=[]}
 
   let to_substr v =
-    let substrs = Pcre.split ~rex:star v in
+    let substrs = Re.split star v in
       (if v.[0] = '*' then
          (* pcre puts the empty string on the front of the list if the
             delimeter is the first char in the string *)

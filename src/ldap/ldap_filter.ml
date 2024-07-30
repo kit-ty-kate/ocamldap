@@ -27,17 +27,17 @@ exception Invalid_filter of int * string
 
 (* escape a string to be put in a string representation of a search
    filter *)
-let star_rex = Pcre.regexp ~study:true "\\*"
-let lparen_rex = Pcre.regexp ~study:true "\\("
-let rparen_rex = Pcre.regexp ~study:true "\\)"
-let backslash_rex = Pcre.regexp ~study:true "\\Q\\\\E"
-let null_rex = Pcre.regexp ~study:true "\\000"
+let star_rex = Re.compile (Re.char '*')
+let lparen_rex = Re.compile (Re.char '(')
+let rparen_rex = Re.compile (Re.char ')')
+let backslash_rex = Re.compile (Re.char '\\')
+let null_rex = Re.compile (Re.char '\000')
 let escape_filterstring s =
-  (Pcre.qreplace ~rex:star_rex ~templ:"\\2a"
-     (Pcre.qreplace ~rex:lparen_rex ~templ:"\\28"
-        (Pcre.qreplace ~rex:rparen_rex ~templ:"\\29"
-           (Pcre.qreplace ~rex:null_rex ~templ:"\\00"
-              (Pcre.qreplace ~rex:backslash_rex ~templ:"\\5c" s)))))
+  (Re.replace_string star_rex ~by:"\\2a"
+     (Re.replace_string lparen_rex ~by:"\\28"
+        (Re.replace_string rparen_rex ~by:"\\29"
+           (Re.replace_string null_rex ~by:"\\00"
+              (Re.replace_string backslash_rex ~by:"\\5c" s)))))
 
 let of_string f =
   let lxbuf = Lexing.from_string f in
@@ -160,4 +160,3 @@ let to_string (f:filter) =
   let buf = Buffer.create 100 in
     to_string' buf f;
     Buffer.contents buf
-

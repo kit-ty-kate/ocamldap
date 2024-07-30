@@ -6,4 +6,4 @@
   (public_name ldap)
   (wrapped false)
   (modules_without_implementation ldap_urlparser)
-  (libraries str pcre ssl))
+  (libraries str camlp-streams re ssl))
