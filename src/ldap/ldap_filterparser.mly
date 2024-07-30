@@ -22,17 +22,19 @@
 %{
   open Ldap_types
 
-  let star_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\2a")
-  let lparen_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\28")
-  let rparen_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\29")
-  let backslash_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\5c")
-  let null_escape_rex = Pcre.regexp ~study:true ("\\" ^ "\\00")
+  module Pcre = Re.Pcre
+
+  let star_escape_rex = Pcre.regexp ("\\" ^ "\\2a")
+  let lparen_escape_rex = Pcre.regexp ("\\" ^ "\\28")
+  let rparen_escape_rex = Pcre.regexp ("\\" ^ "\\29")
+  let backslash_escape_rex = Pcre.regexp ("\\" ^ "\\5c")
+  let null_escape_rex = Pcre.regexp ("\\" ^ "\\00")
   let unescape s =
-    (Pcre.qreplace ~rex:star_escape_rex ~templ:"*"
-       (Pcre.qreplace ~rex:lparen_escape_rex ~templ:"("
-          (Pcre.qreplace ~rex:rparen_escape_rex ~templ:")"
-             (Pcre.qreplace ~rex:null_escape_rex ~templ:"\000"
-                (Pcre.qreplace ~rex:backslash_escape_rex ~templ:"\\" s)))))
+    (Re.replace_string star_escape_rex ~by:"*"
+       (Re.replace_string lparen_escape_rex ~by:"("
+          (Re.replace_string rparen_escape_rex ~by:")"
+             (Re.replace_string null_escape_rex ~by:"\000"
+                (Re.replace_string backslash_escape_rex ~by:"\\" s)))))
 %}
 
 %token WHSP LPAREN RPAREN AND OR NOT EOF
