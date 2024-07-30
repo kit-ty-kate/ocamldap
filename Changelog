@@ -2,7 +2,9 @@
 ------------------
     * Disable implicit transitive dependencies when building
     * Use camlp-streams to remove a deprecation warning in OCaml 4.14
+      (by @glondu)
     * Switch from using pcre to re (pure OCaml regexp implementation)
+      (co-authored by @glondu)
 
 2.4.2 (25/10/2020)
 ------------------
