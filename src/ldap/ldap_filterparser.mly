@@ -22,13 +22,11 @@
 %{
   open Ldap_types
 
-  module Pcre = Re.Pcre
-
-  let star_escape_rex = Pcre.regexp ("\\" ^ "\\2a")
-  let lparen_escape_rex = Pcre.regexp ("\\" ^ "\\28")
-  let rparen_escape_rex = Pcre.regexp ("\\" ^ "\\29")
-  let backslash_escape_rex = Pcre.regexp ("\\" ^ "\\5c")
-  let null_escape_rex = Pcre.regexp ("\\" ^ "\\00")
+  let star_escape_rex = Re.compile (Re.str ("\\" ^ "\\2a"))
+  let lparen_escape_rex = Re.compile (Re.str ("\\" ^ "\\28"))
+  let rparen_escape_rex = Re.compile (Re.str ("\\" ^ "\\29"))
+  let backslash_escape_rex = Re.compile (Re.str ("\\" ^ "\\5c"))
+  let null_escape_rex = Re.compile (Re.str ("\\" ^ "\\00"))
   let unescape s =
     (Re.replace_string star_escape_rex ~by:"*"
        (Re.replace_string lparen_escape_rex ~by:"("

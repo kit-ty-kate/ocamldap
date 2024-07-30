@@ -23,17 +23,15 @@ open Ldap_filterparser
 open Ldap_filterlexer
 open Str
 
-module Pcre = Re.Pcre
-
 exception Invalid_filter of int * string
 
 (* escape a string to be put in a string representation of a search
    filter *)
-let star_rex = Pcre.regexp "\\*"
-let lparen_rex = Pcre.regexp "\\("
-let rparen_rex = Pcre.regexp "\\)"
-let backslash_rex = Re.(compile (char '\\'))
-let null_rex = Re.(compile (char '\000'))
+let star_rex = Re.compile (Re.char '*')
+let lparen_rex = Re.compile (Re.char '(')
+let rparen_rex = Re.compile (Re.char ')')
+let backslash_rex = Re.compile (Re.char '\\')
+let null_rex = Re.compile (Re.char '\000')
 let escape_filterstring s =
   (Re.replace_string star_rex ~by:"\\2a"
      (Re.replace_string lparen_rex ~by:"\\28"
@@ -162,4 +160,3 @@ let to_string (f:filter) =
   let buf = Buffer.create 100 in
     to_string' buf f;
     Buffer.contents buf
-
