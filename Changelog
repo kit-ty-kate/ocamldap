@@ -1,3 +1,8 @@
+2.5.1 (31/07/2024)
+------------------
+    * Fix double escaping of backslashes
+      (by @glondu)
+
 2.5.0 (30/07/2024)
 ------------------
     * Disable implicit transitive dependencies when building
