@@ -6,6 +6,4 @@
   (public_name ldap.ldif)
   (wrapped false)
   (modules_without_implementation ldif_types)
-  (libraries camlp-streams ldap threads netstring))
-
-; TODO: remove threads. See https://gitlab.camlcity.org/gerd/lib-ocamlnet3/issues/14
+  (libraries camlp-streams ldap str base64))

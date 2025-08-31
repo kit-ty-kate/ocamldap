@@ -21,7 +21,6 @@
 *)
 
 
-open Netencoding
 open Ldap_ooclient
 open Ldif_parser
 
@@ -44,14 +43,14 @@ let safe_val buf s =
   end
   else begin
     Buffer.add_string buf ":: ";
-    Buffer.add_string buf (Base64.encode s)
+    Buffer.add_string buf (Base64.encode_exn s)
   end
 
 let safe_attr_val buf a v =
   if Str.string_match password_regex a 0 then begin
     Buffer.add_string buf a;
     Buffer.add_string buf ":: ";
-    Buffer.add_string buf (Base64.encode v)
+    Buffer.add_string buf (Base64.encode_exn v)
   end
   else begin
     Buffer.add_string buf a;

@@ -21,7 +21,6 @@
 
 
 open Ldap_types
-open Netencoding
 
 exception Illegal_char of char * int
 exception End
@@ -165,7 +164,7 @@ let value_spec s =
       ':' -> (Stream.junk s.stream);
         (match (optval (Stream.peek s.stream)) with
              ' ' -> (Stream.junk s.stream);
-               (Base64.decode (safe_string s))
+               (Base64.decode_exn (safe_string s))
            |  c  -> raise (Illegal_char (c, s.line)))
     | '<' -> (Stream.junk s.stream);(match (optval (Stream.peek s.stream)) with
                                   ' ' -> (Stream.junk s.stream);(safe_string s) (* a url *)
@@ -200,7 +199,7 @@ let distinguishedName s =
       ':' -> (Stream.junk s.stream);
         (match (optval (Stream.peek s.stream)) with
              ' ' -> (Stream.junk s.stream);
-               (Base64.decode (safe_string s))
+               (Base64.decode_exn (safe_string s))
            |  c  -> raise (Illegal_char (c, s.line)))
     | ' ' -> (Stream.junk s.stream);safe_string s
     |  c  -> raise (Illegal_char (c, s.line))
