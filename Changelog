@@ -1,3 +1,8 @@
+2.5.2 (31/08/2025)
+------------------
+    * Use base64 instead of ocamlnet. This allows use of OCaml >= 5.0
+      (by @smimram)
+
 2.5.1 (31/07/2024)
 ------------------
     * Fix double escaping of backslashes
