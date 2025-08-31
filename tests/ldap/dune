@@ -1,6 +1,6 @@
 (executables
   (names test page_result_control_test lber_tests)
-  (libraries ldap))
+  (libraries unix ldap))
 
 (rule
   (alias runtest)

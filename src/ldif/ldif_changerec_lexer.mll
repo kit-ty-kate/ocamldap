@@ -20,7 +20,6 @@
 
 {
   open Ldif_changerec_parser
-  open Netencoding
 }
 
 let nl = '\n'
@@ -41,7 +40,7 @@ rule lexcr = parse
   | "delete:" mustsp (attrname as name) nl {Delete name}
   | "replace:" mustsp (attrname as name) nl {Replace name}
   | (attrname as attr) ':' mustsp (attrval as valu) nl {Attr (attr, valu)}
-  | (attrname as attr) "::" mustsp (attrval as valu) nl {Attr (attr, Base64.decode valu)}
+  | (attrname as attr) "::" mustsp (attrval as valu) nl {Attr (attr, Base64.decode_exn valu)}
   | '-' nl {Dash}
   | nl + {Newline}
   | eof {End_of_input}
