@@ -26,7 +26,7 @@ open Sys
 
 type msgid = Int32.t
 
-type ld_socket = Ssl of Ssl.socket
+type ld_socket = Ssl of Tls_unix.t
                  | Plain of file_descr
 
 type conn = {
@@ -51,8 +51,6 @@ type page_control =
 
 let ext_res = {ext_matched_dn="";
                ext_referral=None}
-
-let _ = Ssl.init ()
 
 (* limits us to Int32.max_int active async operations
    at any one time *)
@@ -80,13 +78,14 @@ let send_message con msg =
   let write ld_socket buf off len =
     match ld_socket with
         Ssl s ->
-          (try Ssl.write s buf off len
-           with Ssl.Write_error _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
-      | Plain s -> Unix.write s buf off len
+          (try Tls_unix.write s buf ~off ~len; len
+           with Tls_unix.Closed_by_peer
+              | Tls_unix.Tls_alert _
+              | Tls_unix.Tls_failure _ -> raise (Unix_error (EPIPE, "Ssl.write", "")))
+      | Plain s -> Unix.write_substring s buf off len
   in
   let e_msg = Ldap_protocol.encode_ldapmessage msg in
-  let e_msg = Bytes.of_string e_msg in
-  let len = Bytes.length e_msg in
+  let len = String.length e_msg in
   let written = ref 0 in
     try
       while !written < len
@@ -160,10 +159,16 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                            (LDAP_Failure (`LOCAL_ERROR, "invalid ldap url", ext_res))))
                  hosts)))
       in
+      let auth =
+        match Ca_certs.authenticator () with
+        | Ok auth -> auth
+        | Error (`Msg msg) -> raise (LDAP_Failure (`CA_CERT_ERROR, msg, ext_res))
+      in
       let rec open_con addrs =
         let previous_signal = ref Signal_default in
           match addrs with
               (mech, addr, port) :: tl ->
+                let exception Ca_cert_fail of string in
                 (try
                    if mech = `PLAIN then
                      let s = socket PF_INET SOCK_STREAM 0 in
@@ -182,9 +187,8 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                         signal sigalrm
                           (Signal_handle (fun _ -> raise Timeout));
                       ignore (alarm connect_timeout);
-                      let ssl = Ssl (Ssl.open_connection
-                                       (Ssl.SSLv23 [@ocaml.alert "-deprecated"])
-                                       (ADDR_INET (addr, port)))
+                      let ssl = Ssl (Tls_unix.connect auth
+                                       (Unix.string_of_inet_addr addr, port))
                       in
                         ignore (alarm 0);
                         set_signal sigalrm !previous_signal;
@@ -195,7 +199,9 @@ let init ?(connect_timeout = 1) ?(version = 3) hosts =
                    | Unix_error (EHOSTUNREACH, _, _)
                    | Unix_error (ECONNRESET, _, _)
                    | Unix_error (ECONNABORTED, _, _)
-                   | Ssl.Connection_error _
+                   | End_of_file
+                   | Tls_unix.Tls_alert _
+                   | Tls_unix.Tls_failure _
                    | Timeout ->
                        ignore (alarm 0);
                        set_signal sigalrm !previous_signal;
@@ -365,7 +371,7 @@ let delete_s con ~dn =
 let unbind con =
   try
     (match con.socket with
-         Ssl s -> Ssl.shutdown s
+         Ssl s -> Tls_unix.close s
        | Plain s -> close s)
   with _ -> ()
 

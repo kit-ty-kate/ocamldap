@@ -69,7 +69,7 @@ val readbyte_of_fd: Unix.file_descr -> readbyte
     otherwise the same as readbyte_of_fd.
 
     @raise Readbyte_error in the event of a an io error, or the end of file *)
-val readbyte_of_ssl: Ssl.socket -> readbyte
+val readbyte_of_ssl: Tls_unix.t -> readbyte
 
 (** decoding and encoding of the ber header *)
 val decode_ber_header : ?peek:bool -> readbyte -> ber_val_header
