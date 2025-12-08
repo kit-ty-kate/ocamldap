@@ -92,6 +92,7 @@ type ldap_resultcode = [
   | `MORE_RESULTS_TO_RETURN
   | `CLIENT_LOOP
   | `REFERRAL_LIMIT_EXCEEDED
+  | `CA_CERT_ERROR
   | `UNKNOWN_ERROR of int ]
 
 type ldap_result = {

@@ -275,9 +275,9 @@ let readbyte_of_fd fd =
 let readbyte_of_ssl fd =
   readbyte_of_readfun
     (fun buf off len ->
-       try Ssl.read fd buf off len
+       try Tls_unix.read fd buf ~off ~len
        with exn ->
-         (try Ssl.shutdown fd with _ -> ());raise exn)
+         (try Tls_unix.close fd with _ -> ());raise exn)
 
 let decode_ber_length ?(peek=false) (readbyte:readbyte) = (* sec. 8.1.3.3, the definite length form *)
   let octet = int_of_char (readbyte ~peek:peek 1).[0] in
